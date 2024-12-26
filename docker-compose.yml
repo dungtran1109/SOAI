@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  chatbot:
+    container_name: soai_chatbot
+    image: soai_chatbot:latest
+    build:
+      context: ./backend/services/chatbot
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - soai-net
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend/services/chatbot/app:/app
+
+networks:
+  soai-net:
+    driver: bridge
+    ipam:
+      driver: default

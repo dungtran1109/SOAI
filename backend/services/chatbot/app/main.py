@@ -1,0 +1,17 @@
+from fastapi import FastAPI
+from routers import router
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="Endava Chatbot API", version="1.0.0")
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include all routers
+app.include_router(router, prefix="/api/v1/chat", tags=["chat"])
