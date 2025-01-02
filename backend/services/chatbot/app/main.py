@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Endava Chatbot API", version="1.0.0")
+app = FastAPI(
+    title="Endava Chatbot API",
+    version="1.0.0",
+    docs_url="/api/v1/chat/docs",  # New Swagger UI endpoint
+    redoc_url="/api/v1/chat/redoc",
+    openapi_url="/api/v1/chat/openapi.json"
+)
 
 # Enable CORS
 app.add_middleware(

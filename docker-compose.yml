@@ -15,6 +15,23 @@ services:
     volumes:
       - ./backend/services/chatbot/app:/app
 
+  nginx:
+    container_name: soai_nginx
+    image: soai_nginx:latest
+    build:
+      context: ./backend/services/webserver
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - soai-net
+    ports:
+      - "443:443"
+    volumes:
+      - nginx_conf:/etc/nginx/ssl/certs
+
+volumes:
+  nginx_conf:
+
 networks:
   soai-net:
     driver: bridge
