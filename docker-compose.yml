@@ -29,8 +29,19 @@ services:
     volumes:
       - nginx_conf:/etc/nginx/ssl/certs
 
+  ollama:
+    container_name: soai_ollama
+    image: soai_ollama:latest
+    build:
+      context: ./backend/services/ollama
+    networks:
+      - soai-net
+    volumes:
+      - ollama:/root/.ollama
+
 volumes:
   nginx_conf:
+  ollama:
 
 networks:
   soai-net:

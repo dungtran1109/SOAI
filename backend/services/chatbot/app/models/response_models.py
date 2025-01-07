@@ -18,4 +18,3 @@ class APIResponse(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    references: List[str]
