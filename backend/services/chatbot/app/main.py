@@ -22,9 +22,4 @@ app.add_middleware(
 
 # Include all routers
 app.include_router(router, prefix="/api/v1/chat", tags=["chat"])
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
-
 ServiceRegistration.register_service()
