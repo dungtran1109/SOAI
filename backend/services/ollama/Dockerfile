@@ -28,6 +28,3 @@ WORKDIR /home/soai-ollama/.ollama
 
 # Switch to the new user
 USER soai-ollama
-
-# Default command
-CMD ["ollama", "serve"]

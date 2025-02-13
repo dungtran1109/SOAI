@@ -45,7 +45,9 @@ package-helm:
 image: 	image-chatbot \
 		image-consul \
 		image-ollama \
-		image-webserver
+		image-webserver \
+		image-knowledge_base \
+		image-qdrant
 
 image-chatbot:
 	@echo "build chatbot Image"
@@ -59,11 +61,19 @@ image-ollama:
 image-webserver:
 	@echo "build webserver Image"
 	$(TOP_DIR)/vas.sh build_image --name=webserver
+image-knowledge_base:
+	@echo "build knowledge_base Image"
+	$(TOP_DIR)/vas.sh build_image --name=knowledge_base
+image-qdrant:
+	@echo "build qdrant Image"
+	$(TOP_DIR)/vas.sh build_image --name=qdrant
 
 push: 	push-chatbot \
 		push-consul \
 		push-ollama \
 		push-webserver \
+		push-knowledge_base \
+		push-qdrant \
 		push-helm
 
 push-chatbot:
@@ -78,6 +88,12 @@ push-ollama:
 push-webserver:
 	@echo "push image-webserver"
 	$(TOP_DIR)/vas.sh push_image --name=webserver
+push-knowledge_base:
+	@echo "push image-knowledge_base"
+	$(TOP_DIR)/vas.sh push_image --name=knowledge_base
+push-qdrant:
+	@echo "push image-qdrant"
+	$(TOP_DIR)/vas.sh push_image --name=qdrant
 push-helm:
 	@echo "push helm chart"
 	$(TOP_DIR)/vas.sh push_helm
