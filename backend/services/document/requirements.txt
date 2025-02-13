@@ -1,0 +1,7 @@
+fastapi==0.115.6
+pandas==2.2.3
+pdfplumber==0.9.0
+python-docx==0.8.11
+python-multipart==0.0.20
+requests==2.32.3
+uvicorn==0.34.0
