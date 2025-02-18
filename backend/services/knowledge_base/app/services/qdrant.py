@@ -3,7 +3,7 @@ import logging
 import qdrant_client
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 from services.embedding import Embedding
-from config.constants import DEFAULT_COLLECTION_NAME, DEFAULT_EMBEDDING_MODEL
+from config.constants import DEFAULT_COLLECTION_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,9 @@ class QdrantDB:
 
                 for point in points:
                     if current_offset >= offset:
-                        documents.append(point.payload.get("text", "No text found"))
+                        documents.append(
+                            point.payload.get("page_content", "No text found")
+                        )
 
                     current_offset += 1
 
@@ -60,7 +62,7 @@ class QdrantDB:
             )
 
             return [
-                {"text": point.payload["text"], "score": point.score}
+                {"page_content": point.payload["page_content"], "score": point.score}
                 for point in search_results
             ]
 
@@ -81,7 +83,7 @@ class QdrantDB:
                 PointStruct(
                     id=str(uuid.uuid4()),
                     vector=embedding_vector,
-                    payload={"text": text},
+                    payload={"page_content": text},
                 )
                 for text, embedding_vector in zip(texts, embeddings)
             ]
