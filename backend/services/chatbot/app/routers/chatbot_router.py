@@ -19,6 +19,7 @@ async def completions_stream(chat_request: ChatRequest):
             messages=chat_request.messages,
             model=chat_request.model,
             temperature=chat_request.temperature,
+            collection_name=chat_request.collection_name,
         ):
             yield chunk
 
