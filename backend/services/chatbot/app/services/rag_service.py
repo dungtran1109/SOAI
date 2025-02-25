@@ -2,6 +2,7 @@ import os
 import logging
 from langchain_qdrant import Qdrant
 from langchain_huggingface import HuggingFaceEmbeddings
+
 from services.ollama_service import OllamaService
 
 os.environ["HF_HOME"] = "/.cache/huggingface"
@@ -38,14 +39,13 @@ class RAGService:
             url=f"http://{host}:{port}",
         )
         # Create a retriever
-        self.retriever = self.vector_store.as_retriever(
-            search_type="similarity", search_kwargs={"k": 5}  # Retrieve top 5 matches
-        )
+        self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 5})
         logger.debug(f"RAGService initialized with collection: {collection_name}")
 
     def retrieve_documents(self, query: str):
         """Retrieves relevant documents from Qdrant."""
         try:
+
             retrieved_docs = self.retriever.invoke(query) or []
 
             # Debug: Print retrieved documents
@@ -67,6 +67,7 @@ class RAGService:
         """Retrieves relevant documents and generates an answer using the Ollama API."""
         retrieved_docs = self.retrieve_documents(query)
         context = " ".join([doc for doc in retrieved_docs])
+        logger.debug(f"Context: {context}")
         messages = [
             {"role": "system", "content": f"Context: {context}"},
             {"role": "user", "content": query},
