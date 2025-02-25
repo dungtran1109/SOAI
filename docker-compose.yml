@@ -121,6 +121,19 @@ services:
     volumes:
       - ./web:/frontend
     command: sh -c "/frontend/loader.sh"
+  flowise:
+    container_name: soai_flowise
+    image: soai_flowise:latest
+    build:
+      context: ./backend/services/flowise
+      dockerfile: ./Dockerfile
+    environment:
+      - FLOWISE_USERNAME=soai
+      - FLOWISE_PASSWORD=soai
+    ports:
+      - "3003:3000"
+    networks:
+      - soai-net
 volumes:
   nginx_conf:
   ollama:
