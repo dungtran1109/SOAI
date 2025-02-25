@@ -2,7 +2,7 @@ import { useState } from "react";
 import useChatbot from "../hooks/useChatbot";
 
 const Chatbot = () => {
-    const { messages, sendMessage, loading, selectedModel, setSelectedModel, collectionName, setCollectionName } = useChatbot();
+    const { messages, sendMessage, loading, selectedModel, setSelectedModel, collectionName, setCollectionName, executedModel, executionTime, models, modelsLoading } = useChatbot();
     const [input, setInput] = useState("");
 
     const handleSend = () => {
@@ -11,18 +11,19 @@ const Chatbot = () => {
             setInput("");
         }
     };
-
     return (
         <div className="chatbot-container">
-            <div className="model-selector">
+            <div className="chat-options">
                 <label>Select Model:</label>
-                <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-                    <option value="llama3.2">Llama 3.2</option>
-                    <option value="deepseek-r1:1.5b">Deepseek r1 1.5b</option>
-                    <option value="llama3.2:1b">Llama3.2 1b</option>
-                </select>
-            </div>
-            <div className="collection-name-input">
+                {modelsLoading ? (
+                    <p>Loading models...</p>
+                ) : (
+                    <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
+                        {models.map((model, index) => (
+                            <option key={index} value={model}>{model}</option>
+                        ))}
+                    </select>
+                )}
                 <label>Collection Name:</label>
                 <input
                     type="text"
@@ -34,11 +35,19 @@ const Chatbot = () => {
             <div className="chat-window">
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.type}`}>
-                        {msg.isLoading ? <div className="loading-spinner"></div> : msg.text}
+                        <div className={`message ${msg.type}`}>
+                            {msg.isLoading ? <div className="loading-spinner"></div> : msg.text}
+                        </div>
+                        {index === messages.length - 1 && msg.type === "bot" && executedModel && (
+                            <div className="message-meta">
+                                <p><strong>Model:</strong> {executedModel}</p>
+                                <p><strong>Execution Time:</strong> {executionTime.toFixed(3)}s</p>
+                            </div>
+                        )}
                     </div>
+
                 ))}
             </div>
-
             <div className="input-container">
                 <input
                     type="text"

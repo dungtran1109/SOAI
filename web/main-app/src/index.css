@@ -56,6 +56,19 @@ select {
   100% { transform: rotate(360deg); }
 }
 
+.model-execution-info {
+  margin-top: 10px;
+  padding: 10px;
+  background: #f1f1f1;
+  border-radius: 5px;
+  text-align: left;
+}
+
+.model-execution-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
 select, .collection-name-input input {
   width: 100%;
   flex: 1;

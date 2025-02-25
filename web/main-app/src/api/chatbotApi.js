@@ -1,7 +1,6 @@
+const API_BASE_URL = "https://127.0.0.1";
 export const sendMessageToAPI = async (message, model, collection_name) => {
     try {
-        const API_BASE_URL = "https://127.0.0.1"; // Replace with your actual API URL
-
         const payload = {
             model: model,
             messages: [{ role: "user", content: message }],
@@ -20,6 +19,8 @@ export const sendMessageToAPI = async (message, model, collection_name) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let botResponse = "";
+        let executedModel = "";
+        let executionTime = 0;
 
         while (true) {
             const { done, value } = await reader.read();
@@ -37,15 +38,40 @@ export const sendMessageToAPI = async (message, model, collection_name) => {
                     if (parsedChunk.message?.content) {
                         botResponse += parsedChunk.message.content; // Append content
                     }
+                    if (parsedChunk.model) {
+                        executedModel = parsedChunk.model; // Capture executed model
+                        console.log(executedModel);
+                    }
+                    if (parsedChunk.total_duration) {
+                        executionTime = parsedChunk.total_duration / 1e9; // Convert nanoseconds to seconds
+                        console.log(executionTime);
+                    }
                 } catch (error) {
                     console.error("Error parsing JSON chunk:", jsonChunk, error);
                 }
             }
         }
 
-        return { reply: botResponse.trim() };
+        return { reply: botResponse.trim(), executedModel, executionTime };
     } catch (error) {
         console.error("Streaming API error:", error);
         return { reply: "Sorry, something went wrong. Please try again." };
+    }
+};
+
+export const getSupportedModels = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/chat/models`);
+
+        if (!response.ok) throw new Error("Failed to fetch models");
+
+        const data = await response.json();
+
+        // Extract model names from `data`
+        const models = data.data ? data.data.map(model => model.name) : [];
+        return models;
+    } catch (error) {
+        console.error("Error fetching models:", error);
+        return []; // Return empty array if error occurs
     }
 };
