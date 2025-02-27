@@ -134,6 +134,21 @@ services:
       - "3003:3000"
     networks:
       - soai-net
+  ai_agent:
+    container_name: soai_ai_agent
+    image: soai_ai_agent:latest
+    build:
+      context: ./backend/services/ai_agent
+      dockerfile: ./Dockerfile
+    environment:
+      - CONSUL_HOST=consul
+      - SERVICE_NAME=ai_agent-service
+      - SERVICE_PORT=8003
+    restart: always
+    networks:
+      - soai-net
+    volumes:
+      - ./backend/services/ai_agent/app:/app
 volumes:
   nginx_conf:
   ollama:
