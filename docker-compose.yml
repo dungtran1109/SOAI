@@ -118,6 +118,7 @@ services:
       - soai-net
     ports:
       - "3000:3000"
+    command: sh -c "/frontend/loader.sh"
     volumes:
       - ./web:/frontend
   flowise:
@@ -148,14 +149,26 @@ services:
       - soai-net
     volumes:
       - ./backend/services/ai_agent/app:/app
+  n8n:
+    container_name: soai_n8n
+    image: soai_n8n:latest
+    build:
+      context: ./backend/services/n8n
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - 5678:5678
+    networks:
+      - soai-net
+    volumes:
+      - n8n_data:/home/node/.n8n
 volumes:
   nginx_conf:
   ollama:
   qdrant_data:
   uploads:
   huggingface:
-
-
+  n8n_data:
 networks:
   soai-net:
     driver: bridge
