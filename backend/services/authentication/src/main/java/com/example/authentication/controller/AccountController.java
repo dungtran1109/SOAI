@@ -30,7 +30,7 @@ public class AccountController {
     }
 
     // Get all accounts
-    @GetMapping
+    @GetMapping("/accounts")
     public ResponseEntity<List<Accounts>> getAllAccounts() {
         return ResponseEntity.ok(accountService.getAllAccounts());
     }
