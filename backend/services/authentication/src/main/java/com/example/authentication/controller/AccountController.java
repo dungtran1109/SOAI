@@ -36,25 +36,25 @@ public class AccountController {
     }
 
     // Get account by ID
-    @GetMapping("/{id}")
+    @GetMapping("/accounts/{id}")
     public ResponseEntity<Accounts> getAccountById(@PathVariable Long id) {
         return ResponseEntity.ok(accountService.getAccountsById(id));
     }
 
     // Get account ID by username
-    @GetMapping("/search")
+    @GetMapping("/accounts/search")
     public ResponseEntity<Long> getAccIdByUserName(@RequestParam String userName) {
         return ResponseEntity.ok(accountService.getAccIdByUserName(userName));
     }
 
     // Update account password
-    @PutMapping("/{id}")
+    @PutMapping("/accounts/{id}")
     public ResponseEntity<Accounts> updateAccountPassword(@PathVariable Long id, @RequestBody Accounts account) {
         return ResponseEntity.ok(accountService.updatePasswordAccount(id, account));
     }
 
     // Delete account
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/accounts/{id}")
     public ResponseEntity<Boolean> deleteAccount(@PathVariable Long id) {
         return ResponseEntity.ok(accountService.deleteAccount(id));
     }
