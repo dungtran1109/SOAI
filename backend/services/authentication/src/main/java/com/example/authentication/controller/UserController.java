@@ -11,7 +11,7 @@ import com.example.authentication.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 
 @RestController 
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/authentications/users")
 @RequiredArgsConstructor
 public class UserController {
 
