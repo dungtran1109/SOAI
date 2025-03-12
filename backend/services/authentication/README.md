@@ -69,13 +69,13 @@ $ curl -X DELETE http://localhost:90908/api/user/1
 ## Account APIs
 | Path                   | Method |
 |------------------------|--------|
-| `/api/v1/account/signin`  | POST   |
-| `/api/v1/account/signup`  | POST   |
-| `/api/v1/accounts`        | GET    |
-| `/api/v1/account/:id`     | GET    |
-| `/api/v1/account/:userName` | GET  |
-| `/api/v1/accounts/:id`    | PUT    |
-| `/api/v1/accounts/:id`    | DELETE |
+| `/api/v1/authentications/signin`  | POST   |
+| `/api/v1/authentications/signup`  | POST   |
+| `/api/v1/authentications/accounts`        | GET    |
+| `/api/v1/authentications/account/:id`     | GET    |
+| `/api/v1/authentications/account/:userName` | GET  |
+| `/api/v1/authentications/accounts/:id`    | PUT    |
+| `/api/v1/authentications/accounts/:id`    | DELETE |
 
 ## Swagger docs
 All the API docs visible in
