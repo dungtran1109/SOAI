@@ -1,6 +1,41 @@
 version: "3"
 
 services:
+  mysql:
+    image: mysql:latest
+    container_name: soai_mysql
+    restart: always
+    environment:
+      - MYSQL_DATABASE=soai_db
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=soai_user
+      - MYSQL_PASSWORD=soai_password
+    ports:
+      - "3306:3306"
+    networks:
+      - soai-net
+  
+  authentication:
+    image: authentication:latest
+    container_name: soai_authentication
+    build:
+      context: ./backend/services/authentication
+      dockerfile: ./Dockerfile
+    ports:
+      - 9090:9090
+    environment:
+      - DB_HOST=soai_mysql
+      - DB_PORT=3306
+      - DB_NAME=soai_db
+      - DB_USERNAME=soai_user
+      - DB_PASSWORD=soai_password
+    command: "java -jar app.jar"
+    restart: always
+    networks:
+      - soai-net
+    depends_on:
+      - mysql
+
   qdrant:
     image: soai_qdrant:latest
     container_name: soai_qdrant
@@ -28,7 +63,6 @@ services:
       - CONSUL_HOST=consul
       - SERVICE_NAME=document-service
       - SERVICE_PORT=8002
-
     restart: always
     networks:
       - soai-net
