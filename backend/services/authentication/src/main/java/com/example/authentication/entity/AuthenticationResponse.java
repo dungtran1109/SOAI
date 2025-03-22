@@ -12,5 +12,4 @@ public class AuthenticationResponse {
     private String token;
     private Instant expiresAt;
     private String tokenType;
-    private String role;
 }

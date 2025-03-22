@@ -1,6 +1,9 @@
-const API_BASE_URL = "https://127.0.0.1";
+import { API_BASE_URL } from "../constants/constants";
+import { getToken } from "./authApi";
+
 export const sendMessageToAPI = async (message, model, collection_name) => {
     try {
+        const token = getToken();
         const payload = {
             model: model,
             messages: [{ role: "user", content: message }],
@@ -10,7 +13,10 @@ export const sendMessageToAPI = async (message, model, collection_name) => {
 
         const response = await fetch(`${API_BASE_URL}/api/v1/chat/completions`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify(payload),
         });
 
@@ -61,7 +67,14 @@ export const sendMessageToAPI = async (message, model, collection_name) => {
 
 export const getSupportedModels = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/chat/models`);
+        const token = getToken();
+        const response = await fetch(`${API_BASE_URL}/api/v1/chat/models`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
 
         if (!response.ok) throw new Error("Failed to fetch models");
 

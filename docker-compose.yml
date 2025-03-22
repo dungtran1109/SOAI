@@ -105,7 +105,12 @@ services:
       dockerfile: ./Dockerfile
     environment:
       - CONSUL_HOST=consul
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
       - SERVICE_NAME=chatbot-service
+      - SERVICE_HOST=chatbot
       - SERVICE_PORT=8000
     restart: always
     networks:
@@ -113,6 +118,10 @@ services:
     volumes:
       - ./backend/services/chatbot/app:/app
       - huggingface:/.cache/huggingface
+    depends_on:
+      - authentication # For JWT validation
+      - consul # For health check
+      - ollama # For pulling ollama model
 
   nginx:
     container_name: soai_nginx
@@ -137,6 +146,8 @@ services:
       - OLLAMA_MODEL_PATH=/home/soai-ollama/.ollama/models
     networks:
       - soai-net
+    ports:
+      - "11434:11434"
     volumes:
       - ollama:/home/soai-ollama/.ollama:rw
   frontend:
@@ -152,9 +163,9 @@ services:
       - soai-net
     ports:
       - "3000:3000"
-    command: sh -c "/frontend/loader.sh"
     volumes:
       - ./web:/frontend
+    command: sh -c "/frontend/loader.sh"
   flowise:
     container_name: soai_flowise
     image: soai_flowise:latest

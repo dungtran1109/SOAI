@@ -4,7 +4,6 @@ from services.rag_service import RAGService
 
 logger = logging.getLogger(__file__)
 
-
 class ChatBotService:
     @staticmethod
     def list_models():

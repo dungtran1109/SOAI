@@ -1,10 +1,9 @@
-import logging
+from config.logging import AppLogger
 from fastapi import APIRouter
 
 router = APIRouter()
 
-logger = logging.getLogger(__file__)
-
+logger = AppLogger(__name__)
 
 @router.get("/health")
 def health_check():

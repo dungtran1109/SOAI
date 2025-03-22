@@ -1,19 +1,13 @@
-import aiohttp
-import asyncio
-import logging
-import json
 import requests
 import httpx
 from typing import Optional, List
+from config.constants import *
+from config.logging import AppLogger
 
-from config.constants import MESSAGE_CHATBOT_DONT_UNDERSTAND
-
-
-logger = logging.getLogger(__file__)
-
+logger = AppLogger(__name__)
 
 class OllamaService:
-    OLLAMA_URL = "http://ollama:11434"
+    OLLAMA_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}"
 
     def __init__(self):
         pass
@@ -47,7 +41,7 @@ class OllamaService:
             response = requests.get(f"{self.OLLAMA_URL}/api/tags")
             response.raise_for_status()  # Raise an exception for HTTP errors
             models = response.json().get("models", [])
-            logger.debug(f"Retrieved models: {models}")
+            logger.info(f"Retrieved models: {models}")
             return models
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to retrieve models from Ollama API: {e}")
