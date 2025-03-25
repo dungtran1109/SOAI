@@ -1,16 +1,9 @@
-import aiohttp
-import asyncio
 import logging
-import json
 import requests
 import httpx
 from typing import Optional, List
 
-from config.constants import MESSAGE_CHATBOT_DONT_UNDERSTAND
-
-
 logger = logging.getLogger(__file__)
-
 
 class OllamaService:
     OLLAMA_URL = "http://ollama:11434"

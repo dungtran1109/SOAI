@@ -12,23 +12,8 @@ LABEL \
 
 WORKDIR /frontend
 # Copy the app source code
-COPY main-app/ ./
-COPY loader.sh ./
-# Define non-root user and group
-ARG USER_ID=1001
-# Create group and user with specific UID/GID
-RUN addgroup -g ${USER_ID} soai-group && \
-    adduser -u ${USER_ID} -G soai-group -S soai-user
+COPY . .
 
-# Install dependencies
-RUN npm ci
-
-# Ensure the working directory and build folder are owned by the new user
-RUN chown -R soai-user:soai-group /frontend
-
-# Switch to non-root user
-USER soai-user
+USER 0
 
 EXPOSE 3000
-
-ENTRYPOINT ["./loader.sh"]

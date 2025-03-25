@@ -1,14 +1,13 @@
 import os
-import logging
+from config.logging import AppLogger
 from langchain_qdrant import Qdrant
 from langchain_huggingface import HuggingFaceEmbeddings
-
+from config.constants import *
 from services.ollama_service import OllamaService
 
 os.environ["HF_HOME"] = "/.cache/huggingface"
 
-logger = logging.getLogger(__file__)
-
+logger = AppLogger(__name__)
 
 class RAGService:
     """Handles Qdrant vector database operations."""
@@ -18,8 +17,8 @@ class RAGService:
         model_name: str,
         collection_name: str = "knowledge_base",
         embedding_model=None,  # Default: HuggingFaceEmbeddings
-        host: str = "qdrant",
-        port: int = 6333,
+        host: str = QDRANT_HOST,
+        port: int = QDRANT_PORT,
         embedding_model_name: str = "hkunlp/instructor-large",
         temperature: float = 0.7,
     ):

@@ -55,13 +55,11 @@ public class AccountServiceImpl implements AccountService {
                 });
 
         String jwtToken = jwtService.generateToken(account);
-        String role = account.getRole().name();
         logger.info("Authentication successful for user: {}", accounts.getUserName());
         return AuthenticationResponse.builder()
             .token(jwtToken)
             .expiresAt(jwtService.getTokenExpirationTime())
             .tokenType("Bearer")
-            .role(role)
             .build();
     }
 
@@ -101,14 +99,12 @@ public class AccountServiceImpl implements AccountService {
     
         // 4. Generate JWT Token
         String jwtToken = jwtService.generateToken(accountEntity);
-        String role = accountEntity.getRole().name();
         logger.info("Account created successfully for user: {}", accounts.getUserName());
     
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .expiresAt(jwtService.getTokenExpirationTime())
                 .tokenType("Bearer")
-                .role(role)
                 .build();
     }
 

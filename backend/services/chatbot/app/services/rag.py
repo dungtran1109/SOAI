@@ -1,14 +1,8 @@
-import os
-import uuid
-from typing import List
 import aiohttp
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams, PointStruct
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.llms import Ollama
 from langchain_community.vectorstores import Qdrant
-from langchain.prompts import PromptTemplate
-from langchain.chains.question_answering import load_qa_chain
+from config.constants import *
 
 # Constants
 COLLECTION_NAME = "rag_collection"
@@ -29,7 +23,7 @@ class RAGPipeline:
         self,
         vector_db: QdrantDB,
         embedding_model: EmbeddingModel,
-        model: str = "deepseek-r1:1.5b",
+        model: str = {DEFAULT_MODEL_NAME},
     ):
         self.vector_db = vector_db
         self.embedding_model = embedding_model
