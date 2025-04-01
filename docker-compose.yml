@@ -1,6 +1,21 @@
-version: "3"
-
 services:
+  genai:
+    image: soai_genai:latest
+    container_name: soai_genai
+    build:
+      context: ./backend/services/gen_ai_provider
+      dockerfile: ./Dockerfile
+    environment:
+      - CONSUL_HOST=consul
+      - SERVICE_NAME=gen-ai-service
+      - SERVICE_PORT=8004
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./backend/services/gen_ai_provider/app:/app
+    restart: always
+    networks:
+      - soai-net
   mysql:
     image: mysql:latest
     container_name: soai_mysql
