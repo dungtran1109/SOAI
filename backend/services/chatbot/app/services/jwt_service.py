@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
-from config.logging import AppLogger
+from config.log_config import AppLogger
 import base64
 
 logger = AppLogger(__name__)

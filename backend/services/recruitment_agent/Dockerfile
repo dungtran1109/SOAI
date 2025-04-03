@@ -15,7 +15,7 @@ COPY --chmod=0755 --chown=${USER_ID}:0 requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Copy the application code to the container
-COPY . .
+COPY app/ .
 
 RUN echo "${USER_ID}:x:${USER_ID}:${USER_ID}:An Identity for soai-aiagent:/nonexistent:/bin/false" > /etc/passwd & \
     echo "${USER_ID}:!::0:::::" >> /etc/shadow
@@ -29,7 +29,7 @@ RUN mkdir -p /.cache/huggingface && chmod -R 777 /.cache/huggingface
 LABEL \
     soai.app.commit=$COMMIT \
     soai.app.version=$APP_VERSION \
-    soai.image.title="SOAI Backend AI Agent Service" \
+    soai.image.title="SOAI Backend Recruitment Agent Service" \
     soai.image.created="$BUILD_TIME"
 
 # Expose the port on which the FastAPI app runs

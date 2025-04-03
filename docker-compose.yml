@@ -149,8 +149,6 @@ services:
       - soai-net
     ports:
       - "443:443"
-    volumes:
-      - nginx_conf:/etc/nginx/ssl/certs
 
   ollama:
     image: soai_ollama:latest
@@ -176,8 +174,6 @@ services:
     stdin_open: true
     networks:
       - soai-net
-    ports:
-      - "3000:3000"
     volumes:
       - ./web:/frontend
     command: sh -c "/frontend/loader.sh"
@@ -194,21 +190,21 @@ services:
       - "3003:3000"
     networks:
       - soai-net
-  ai_agent:
-    container_name: soai_ai_agent
-    image: soai_ai_agent:latest
+  recruitment:
+    container_name: soai_recruitment
+    image: soai_recruitment:latest
     build:
-      context: ./backend/services/ai_agent
+      context: ./backend/services/recruitment_agent
       dockerfile: ./Dockerfile
     environment:
       - CONSUL_HOST=consul
-      - SERVICE_NAME=ai-agent-service
+      - SERVICE_NAME=recruitment-service
       - SERVICE_PORT=8003
     restart: always
     networks:
       - soai-net
     volumes:
-      - ./backend/services/ai_agent/app:/app
+      - ./backend/services/recruitment_agent/app:/app
   n8n:
     container_name: soai_n8n
     image: soai_n8n:latest
@@ -223,7 +219,6 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
 volumes:
-  nginx_conf:
   ollama:
   qdrant_data:
   uploads:

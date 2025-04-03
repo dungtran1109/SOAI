@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 from config.service_registration import ServiceRegistration
-from config.logging import LoggingConfig
+from config.log_config import LoggingConfig
 
 LoggingConfig.setup_logging()
 

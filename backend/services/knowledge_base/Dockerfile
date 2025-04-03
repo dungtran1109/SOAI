@@ -14,7 +14,7 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Copy the application code to the container
-COPY . .
+COPY app/ .
 
 # Expose the port on which the FastAPI app runs
 EXPOSE 8001

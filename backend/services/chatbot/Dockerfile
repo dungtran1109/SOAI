@@ -15,7 +15,7 @@ COPY --chmod=0755 --chown=${USER_ID}:0 requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Copy the application code to the container
-COPY . .
+COPY app/ .
 
 RUN echo "${USER_ID}:x:${USER_ID}:${USER_ID}:An Identity for soai-chatbot:/nonexistent:/bin/false" > /etc/passwd & \
     echo "${USER_ID}:!::0:::::" >> /etc/shadow

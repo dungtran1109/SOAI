@@ -2,7 +2,7 @@ import requests
 import httpx
 from typing import Optional, List
 from config.constants import *
-from config.logging import AppLogger
+from config.log_config import AppLogger
 
 logger = AppLogger(__name__)
 

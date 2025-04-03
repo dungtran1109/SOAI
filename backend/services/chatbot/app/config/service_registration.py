@@ -1,4 +1,4 @@
-from config.logging import AppLogger
+from config.log_config import AppLogger
 import requests
 from config.constants import *
 

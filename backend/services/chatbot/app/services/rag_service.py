@@ -1,5 +1,5 @@
 import os
-from config.logging import AppLogger
+from config.log_config import AppLogger
 from langchain_qdrant import Qdrant
 from langchain_huggingface import HuggingFaceEmbeddings
 from config.constants import *

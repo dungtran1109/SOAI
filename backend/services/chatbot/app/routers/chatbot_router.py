@@ -1,11 +1,10 @@
-from config.logging import AppLogger
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
 from models.response_models import StandardResponse
 from models.request_models import ChatRequest
 from services.chatbot_service import ChatBotService
 from services.jwt_service import get_current_user
-
+from config.log_config import AppLogger
 router = APIRouter()
 logger = AppLogger(__name__)
 

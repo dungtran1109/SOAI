@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 from config.service_registration import ServiceRegistration
-from config.logging import *
+from config.log_config import *
 app = FastAPI(
     title="Endava Document API",
     version="1.0.0",

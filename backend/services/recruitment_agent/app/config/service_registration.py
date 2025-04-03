@@ -13,10 +13,10 @@ class ServiceRegistration:
         service_definition = {
             "ID": SERVICE_NAME,
             "Name": SERVICE_NAME,
-            "Address": "ai_agent",
+            "Address": "recruitment",
             "Port": SERVICE_PORT,
             "Check": {
-                "HTTP": f"http://ai_agent:{SERVICE_PORT}/api/v1/ai-agents/health",
+                "HTTP": f"http://recruitment:{SERVICE_PORT}/api/v1/recruitment/health",
                 "Interval": "10s",
             },
         }
