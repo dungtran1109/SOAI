@@ -148,7 +148,7 @@ services:
     networks:
       - soai-net
     ports:
-      - "443:443"
+      - "80:80"
 
   ollama:
     image: soai_ollama:latest
@@ -174,6 +174,8 @@ services:
     stdin_open: true
     networks:
       - soai-net
+    ports:
+      - "3000:3000"
     volumes:
       - ./web:/frontend
     command: sh -c "/frontend/loader.sh"

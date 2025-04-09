@@ -114,43 +114,6 @@ generate_ca() {
         || die "Failed to copy $SSL_TEST_DIR/$cert_file to $HELM_TEMPLATE_FILE_DIR/$cert_file"s
 }
 
-# Generate certificates and copy to $VAS_GIT/backend/services/webserver
-# DNS set to localhost for local setup
-generate_certificates() {
-    test -n "$TEST_DIR" || die "Module [TEST_DIR] not set"
-    test -n "$__target" || die "Module target_dir is required"
-
-    SSL_TEST_DIR="$TEST_DIR/ssl"
-    gen_cert_path="$TEST_DIR/generate_certificates.sh"
-    nginx_key_file="nginx-selfsigned.key"
-    nginx_cert_file="nginx-selfsigned.crt"
-    nginx_dhparam_file="nginx-dhparam.pem"
-
-    echo "############### Generating Ceritificate Files ############"
-    $gen_cert_path --dns "localhost"
-
-    # Check if /etc/ssl/certs exists in webserver folder, if not, create the directory
-    if [ ! -d "$__target" ]; then
-        echo "Creating directory $__target"
-        mkdir -p "$__target" \
-            || die "Failed to create directory $__target"
-    fi
-
-    echo "========== Copy CERTIFICATES to $__target ==============="
-    # Copy nginx TLS key file
-    echo "Copy $nginx_key_file file from $SSL_TEST_DIR/$nginx_key_file to $__target/$nginx_key_file"
-    cp -f "$SSL_TEST_DIR/$nginx_key_file" "$__target/$nginx_key_file" \
-        || die "Failed to copy $SSL_TEST_DIR/$nginx_key_file to $__target/$nginx_key_file"
-    # Copy nginx TLS cert file
-    echo "Copy $nginx_cert_file file from $SSL_TEST_DIR/$nginx_cert_file to $__target/$nginx_cert_file"
-    cp -f "$SSL_TEST_DIR/$nginx_cert_file" "$__target/$nginx_cert_file" \
-        || die "Failed to copy $SSL_TEST_DIR/$nginx_cert_file to $__target/$nginx_cert_file"
-    # Copy nginx dhparam file
-    echo "Copy $nginx_dhparam_file file from $SSL_TEST_DIR/$nginx_dhparam_file to $__target/$nginx_dhparam_file"
-    cp -f "$SSL_TEST_DIR/$nginx_dhparam_file" "$__target/$nginx_dhparam_file" \
-        || die "Failed to copy $SSL_TEST_DIR/$nginx_dhparam_file to $__target/$nginx_dhparam_file"
-}
-
 ## build_image
 ## Build docker image from Dockerfile
 ##
@@ -164,12 +127,6 @@ build_image() {
     target_dir="$VAS_GIT/backend/services/$__name"
 
     version=$(get_version)
-
-    # Generate certificates for webserver
-    if [ $__name == "webserver" ]; then
-        WEBSERVER_SSL_DIR="$VAS_GIT/backend/services/webserver/etc/ssl/certs"
-        $vas generate_certificates --target=$WEBSERVER_SSL_DIR
-    fi
 
     if [ $__name == "web" ]; then
         target_dir="$VAS_GIT/$__name"
