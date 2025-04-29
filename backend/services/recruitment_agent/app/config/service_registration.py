@@ -1,9 +1,8 @@
-import logging
+from config.logging import AppLogger
 import requests
 from config.constants import *
 
-logger = logging.getLogger(__file__)
-
+logger = AppLogger(__name__)
 
 class ServiceRegistration:
     CONSUL_URL = f"http://{CONSUL_HOST}:8500/v1/agent/service/register"

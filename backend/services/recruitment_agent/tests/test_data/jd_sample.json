@@ -1,0 +1,50 @@
+[
+  {
+    "position": "Senior Data Analyst (PowerBI)",
+    "skills_required": ["PowerBI", "SQL", "Python", "DAX"],
+    "experience_required": 5,
+    "level": "Senior"
+  },
+  {
+    "position": "Senior Data Engineer (Azure)",
+    "skills_required": ["Azure Data Factory", "Databricks", "SQL", "Python"],
+    "experience_required": 5,
+    "level": "Senior"
+  },
+  {
+    "position": "Senior Automation Tester",
+    "skills_required": ["Selenium", "Cypress", "Java", "TestNG"],
+    "experience_required": 4,
+    "level": "Mid-Senior"
+  },
+  {
+    "position": "Data Scientist Consultant",
+    "skills_required": ["Machine Learning", "Python", "Deep Learning", "TensorFlow"],
+    "experience_required": 5,
+    "level": "Senior"
+  },
+  {
+    "position": "Business Analyst",
+    "skills_required": ["Business Analysis", "Stakeholder Management", "Agile", "Scrum"],
+    "experience_required": 3,
+    "level": "Mid"
+  },
+  {
+    "position": "DevOps Engineer",
+    "skills_required": ["AWS", "Docker", "Kubernetes", "Terraform"],
+    "experience_required": 5,
+    "level": "Mid-Senior"
+  },
+  {
+    "position": "Fullstack Developer",
+    "skills_required": ["ReactJS", "NodeJS", "MongoDB"],
+    "experience_required": 2,
+    "level": "Mid"
+  },
+  {
+    "position": "Frontend Developer",
+    "skills_required": ["ReactJS", "Redux Toolkit", "NextJS"],
+    "experience_required": 1,
+    "level": "Junior"
+  }
+]

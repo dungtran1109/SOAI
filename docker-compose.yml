@@ -14,6 +14,8 @@ services:
     volumes:
       - ./backend/services/gen_ai_provider/app:/app
     restart: always
+    ports:
+      - "8004:8004"
     networks:
       - soai-net
   mysql:
@@ -100,11 +102,22 @@ services:
       - CONSUL_HOST=consul
       - SERVICE_NAME=recruitment-service
       - SERVICE_PORT=8003
+      - DB_HOST=soai_mysql
+      - DB_PORT=3306
+      - DB_NAME=soai_db
+      - DB_USERNAME=soai_user
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: always
+    ports:
+      - "8003:8003"
     networks:
       - soai-net
     volumes:
       - ./backend/services/recruitment_agent/app:/app
+    depends_on:
+      - genai # Model retrival
+      - authentication # JWT depends
+      - consul # Health check (Optional for register health)
 networks:
   soai-net:
     driver: bridge

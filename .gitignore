@@ -13,12 +13,15 @@
 /test/ssl
 
 #__pycache__
-backend/services/chatbot/app/__pycache__
-backend/services/chatbot/app/config/__pycache__
-backend/services/chatbot/app/models/__pycache__
-backend/services/chatbot/app/routers/__pycache__
-backend/services/chatbot/app/services/__pycache__
-
+backend/services/recruitment_agent/app/__pycache__
+backend/services/recruitment_agent/app/agents/__pycache__
+backend/services/recruitment_agent/app/config/__pycache__
+backend/services/recruitment_agent/app/models/__pycache__
+backend/services/recruitment_agent/app/routers/__pycache__
+backend/services/recruitment_agent/app/schemas/__pycache__
+backend/services/recruitment_agent/app/services/__pycache__
+backend/services/recruitment_agent/app/utils/__pycache__
+backend/services/recruitment_agent/cv_uploads/
 build/
 venv/
 # Compiled Dynamic libraries
