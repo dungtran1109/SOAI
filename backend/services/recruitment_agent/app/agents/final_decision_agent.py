@@ -1,8 +1,6 @@
-import json
 from agents.base_agent import BaseAgent
 from agents.state import RecruitmentState
 from utils.email_sender import EmailSender
-from models.cv_application import CVApplication
 from config.constants import *
 from config.logging import AppLogger
 
@@ -20,42 +18,6 @@ class FinalDecisionAgent(BaseAgent):
         if not state.parsed_cv:
             logger.warning("[FinalDecisionAgent] No parsed CV data.")
             return state
-
-        try:
-            name = state.parsed_cv.get("name", "Unknown")
-            email = state.parsed_cv.get("email", "")
-            skills = sorted(state.parsed_cv.get("skills", []))
-            experience_years = state.parsed_cv.get("experience_years", 0)
-            matched_position = state.matched_jd.get('position') if state.matched_jd else None
-            is_matched = bool(state.matched_jd)
-
-            existing = self.db.query(CVApplication).filter(
-                CVApplication.candidate_name == name,
-                CVApplication.email == email,
-                CVApplication.matched_position == matched_position,
-                CVApplication.status.in_(["Pending", "Approved"])
-            ).first()
-
-            if existing:
-                logger.info(f"[FinalDecisionAgent] CV already exists: {name}")
-            else:
-                new_cv = CVApplication(
-                    candidate_name=name,
-                    email=email,
-                    matched_position=matched_position or "",
-                    skills=json.dumps(skills),
-                    experience_years=experience_years,
-                    is_matched=is_matched,
-                    status="Approved" if is_matched else "Rejected",
-                    parsed_cv=json.dumps(state.parsed_cv)
-                )
-                self.db.add(new_cv)
-                self.db.commit()
-                logger.info(f"[FinalDecisionAgent] Saved new CV: {name}, Matched: {is_matched}")
-
-        except Exception as e:
-            self.db.rollback()
-            logger.error(f"[FinalDecisionAgent] Failed to save CV: {str(e)}")
 
         if state.matched_jd is None:
             logger.info("[FinalDecisionAgent] No JD matched. CV is rejected.")
