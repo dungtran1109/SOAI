@@ -31,19 +31,20 @@ class FinalDecisionAgent(BaseAgent):
                 or state.parsed_cv.get("email")
                 or DEFAULT_CANDIDATE_EMAIL
             )
-
-            subject = "Congratulations! You are hired"
+            subject = "Your Application Has Been Approved"
             body = f"""
 Dear {state.approved_candidate.get('name')},
 
-Congratulations! We are pleased to offer you the position of {state.matched_jd.get('position')} at our company.
+We are excited to inform you that your application has passed our screening process.
+Your qualifications are an excellent match for the {state.matched_jd.get('position')} role at our company.
 
-Please reply to confirm acceptance.
+Our hiring team was impressed by your CV, and we would like to proceed with the next steps in our hiring process.
 
-Best regards,
+Please confirm your interest and availability for an interview by replying to this email.
+
+Best regards,  
 Talent Acquisition Team
 """
-
             if recipient_email:
                 self.email_sender.send_email(recipient_email, subject, body)
                 logger.info(f"[FinalDecisionAgent] Offer email sent to {recipient_email}")
