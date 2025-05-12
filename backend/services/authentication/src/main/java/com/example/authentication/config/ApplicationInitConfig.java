@@ -1,5 +1,6 @@
 package com.example.authentication.config;
 
+import com.example.authentication.entity.Role;
 import com.example.authentication.model.Accounts;
 import com.example.authentication.repository.AccountRepository;
 import com.example.authentication.service.interfaces.AccountService;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 public class ApplicationInitConfig {
     private final String DEFAULT_ADMIN = "admin";
     private final String DEFAULT_PASSWORD = "Admin@123";
+    private final Role DEFAULT_ROLE = Role.ADMIN;
     private final AccountRepository accountRepository;
     @Bean
     ApplicationRunner applicationRunner(AccountService accountService) {
@@ -25,7 +27,7 @@ public class ApplicationInitConfig {
             if (accountRepository.findByUserName(DEFAULT_ADMIN).isPresent()) {
                 log.warn("ADMIN user has been created before");
             } else {
-                accountService.createAccount(new Accounts(DEFAULT_ADMIN, DEFAULT_PASSWORD));
+                accountService.createAccount(new Accounts(DEFAULT_ADMIN, DEFAULT_PASSWORD, DEFAULT_ROLE));
                 log.warn("ADMIN user has been created with default password: {}, please change it", DEFAULT_PASSWORD);
             }
         };
