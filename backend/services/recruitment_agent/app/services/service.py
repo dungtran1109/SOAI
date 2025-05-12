@@ -306,3 +306,110 @@ class RecruitmentService:
 # - (7) Manage Job Descriptions (edit / delete JD)
 # - (8) Export CV Application list (CSV / Excel format)
 # ----------------------------------------------------------------
+    def update_cv_application(self, cv_id: int, update_data: dict, db: Session):
+        """Admin updates CV Application fields."""
+        logger.info(f"Updating CV application ID={cv_id}")
+        cv = db.query(CVApplication).filter_by(id=cv_id).first()
+        if not cv:
+            raise ValueError("CV Application not found.")
+
+        for key, value in update_data.items():
+            if hasattr(cv, key):
+                setattr(cv, key, value)
+
+        db.commit()
+        logger.info("CV application updated.")
+        return CVUploadResponseSchema(message="CV application updated successfully.")
+
+    def delete_cv_application(self, cv_id: int, db: Session):
+        """Admin deletes a CV Application (hard delete)."""
+        logger.info(f"Deleting CV application ID={cv_id}")
+        cv = db.query(CVApplication).filter_by(id=cv_id).first()
+        if not cv:
+            raise ValueError("CV Application not found.")
+
+        db.delete(cv)
+        db.commit()
+        logger.info("CV application deleted.")
+        return CVUploadResponseSchema(message="CV application deleted.")
+
+    def get_cv_application_by_id(self, cv_id: int, db: Session):
+        """Fetch full CV detail by ID."""
+        cv = db.query(CVApplication).filter_by(id=cv_id).first()
+        if not cv:
+            raise ValueError("CV Application not found.")
+        return {
+            "id": cv.id,
+            "candidate_name": cv.candidate_name,
+            "email": cv.email,
+            "position": cv.matched_position,
+            "experience_years": cv.experience_years,
+            "skills": json.loads(cv.skills),
+            "jd_skills": json.loads(cv.matched_jd_skills),
+            "status": cv.status,
+            "parsed_cv": json.loads(cv.parsed_cv),
+        }
+
+    def list_all_cv_applications(self, db: Session, position: Optional[str] = None):
+        """List all CVs with optional filtering."""
+        if not position or position.lower() == "null":
+            query = db.query(CVApplication)
+        else:
+            query = db.query(CVApplication).filter(CVApplication.matched_position.ilike(f"%{position}%"))
+        cvs = query.all()
+        logger.info(f"Fetched {len(cvs)} CV applications.")
+        return [{
+            "id": cv.id,
+            "candidate_name": cv.candidate_name,
+            "email": cv.email,
+            "matched_position": cv.matched_position,
+            "status": cv.status,
+        } for cv in cvs]
+
+    def update_interview(self, interview_id: int, update_data: dict, db: Session):
+        """Admin updates interview details (reschedule, interviewer)."""
+        logger.info(f"Updating interview ID={interview_id}")
+        interview = db.query(InterviewSchedule).filter_by(id=interview_id).first()
+        if not interview:
+            raise ValueError("Interview not found.")
+
+        for key, value in update_data.items():
+            if hasattr(interview, key):
+                setattr(interview, key, value)
+
+        db.commit()
+        logger.info("Interview updated.")
+        return CVUploadResponseSchema(message="Interview updated successfully.")
+
+    def cancel_interview(self, interview_id: int, db: Session):
+        """Cancel an interview (mark as cancelled)."""
+        logger.info(f"Cancelling interview ID={interview_id}")
+        interview = db.query(InterviewSchedule).filter_by(id=interview_id).first()
+        if not interview:
+            raise ValueError("Interview not found.")
+        interview.status = FinalDecisionStatus.REJECTED.value
+        db.commit()
+        logger.info("Interview cancelled.")
+        return CVUploadResponseSchema(message="Interview cancelled.")
+
+    def edit_jd(self, jd_id: int, update_data: dict, db: Session):
+        """Edit JD details."""
+        jd = db.query(JobDescription).filter_by(id=jd_id).first()
+        if not jd:
+            raise ValueError("JD not found.")
+        for key, value in update_data.items():
+            if hasattr(jd, key):
+                setattr(jd, key, value)
+        db.commit()
+        logger.info("JD updated.")
+        return CVUploadResponseSchema(message="JD updated.")
+
+    def delete_jd(self, jd_id: int, db: Session):
+        """Delete JD from database."""
+        jd = db.query(JobDescription).filter_by(id=jd_id).first()
+        if not jd:
+            raise ValueError("JD not found.")
+        db.delete(jd)
+        db.commit()
+        logger.info("JD deleted.")
+        return CVUploadResponseSchema(message="JD deleted.")
