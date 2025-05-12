@@ -63,16 +63,24 @@ $ show tables;
 ```
 4. Recruitment API Endpoint Summary
 
-| Endpoint                | Method | Description                                | Request Parameters / Body                                                                 | Auth Required | Role Access        |
-|-------------------------|--------|--------------------------------------------|--------------------------------------------------------------------------------------------|----------------|---------------------|
-| `/upload-cv`            | POST   | Upload and parse candidate CV              | FormData: `file`, `override_email` (optional), `position_applied_for`                      | Yes            | All authenticated   |
-| `/upload-jd`            | POST   | Upload job descriptions                    | File upload (JSON format)                                                                  | Yes            | All authenticated   |
-| `/approve-cv`           | POST   | Approve a candidate’s CV                   | FormData: `candidate_id`                                                                   | Yes            | DEV, QA, ADMIN      |
-| `/pending-cv-list`      | GET    | Get list of CVs with `PENDING` status      | Query: `candidate_name` (optional)                                                         | Yes            | All authenticated   |
-| `/schedule-interview`   | POST   | Schedule an interview for a candidate      | JSON Body: `InterviewScheduleCreateSchema`                                                 | Yes            | All authenticated   |
-| `/accept-interview`     | PUT    | Candidate accepts a scheduled interview    | JSON Body: `InterviewAcceptSchema`                                                         | Yes            | All authenticated   |
-| `/interview-list`       | GET    | Get list of interviews (optional filters)  | Query: `interview_date`, `candidate_name` (optional)                                       | Yes            | All authenticated   |
-| `/jd-list`              | GET    | Get list of job descriptions               | Query: `position` (optional)                                                               | Yes            | All authenticated   |
+| Endpoint                  | Method | Description                                | Request Parameters / Body                                                                 | Auth Required | Role Access        |
+|---------------------------|--------|--------------------------------------------|--------------------------------------------------------------------------------------------|---------------|---------------------|
+| `/upload-cv`              | POST   | Upload and parse candidate CV              | FormData: `file`, `override_email` (optional), `position_applied_for`                      | Yes             | All authenticated   |
+| `/upload-jd`              | POST   | Upload job descriptions                    | File upload (JSON array format)                                                            | Yes             | ADMIN only          |
+| `/approve-cv`             | POST   | Approve a candidate’s CV                   | FormData: `candidate_id`                                                                   | Yes             | ADMIN only          |
+| `/pending-cv-list`        | GET    | Get list of CVs with `PENDING` status      | Query: `candidate_name` (optional)                                                         | Yes             | ADMIN only          |
+| `/cv/update/{cv_id}`      | PUT    | Update a CV application                    | JSON Body: partial fields (`status`, etc.)                                                 | Yes             | ADMIN only          |
+| `/cv/delete/{cv_id}`      | DELETE | Delete a CV application                    | Path: `cv_id`                                                                              | Yes             | ADMIN only          |
+| `/cv/list`                | GET    | List all CVs (filter by position)          | Query: `position` (optional)                                                               | Yes             | ADMIN only          |
+| `/cv/{cv_id}`             | GET    | Get CV detail by ID                        | Path: `cv_id`                                                                              | Yes             | ADMIN only          |
+| `/schedule-interview`     | POST   | Schedule an interview                      | JSON Body: `InterviewScheduleCreateSchema`                                                 | Yes             | ADMIN only          |
+| `/interview/update/{id}`  | PUT    | Update an interview                        | JSON Body: fields to update                                                                | Yes             | ADMIN only          |
+| `/interview/cancel/{id}`  | PUT    | Cancel an interview                        | Path: `interview_id`                                                                       | Yes             | ADMIN only          |
+| `/interview-list`         | GET    | Get list of interviews                     | Query: `interview_date`, `candidate_name` (optional)                                       | Yes             | ADMIN only          |
+| `/accept-interview`       | PUT    | Candidate accepts an interview             | JSON Body: `InterviewAcceptSchema`                                                         | Yes             | All authenticated   |
+| `/jd-list`                | GET    | Get list of job descriptions               | Query: `position` (optional)                                                               | Yes             | ADMIN only          |
+| `/jd/update/{jd_id}`      | PUT    | Update a job description                   | JSON Body: fields to update                                                                | Yes             | ADMIN only          |
+| `/jd/delete/{jd_id}`      | DELETE | Delete a job description                   | Path: `jd_id`                                                                              | Yes             | ADMIN only          |
 5. If you want to test APIs, run the test files in [Test Recruitment]("https://gitlab.endava.com/cuong.quang.nguyen/soai/-/tree/main/backend/services/recruitment_agent/tests?ref_type=heads") (Updating)
 ```
 $ ./backend/services/recruitment_agent/tests/test_api_recruitment.py
