@@ -17,9 +17,9 @@ spring:
 
 springdoc:
   swagger-ui:
-    path: /api/v1/authentications/swagger-ui.html
+    path: /api/v1/authentications/swagger-ui/index.html
   api-docs:
-    path: /api/v1/authentications/v3/api-docs
+    path: /api/v1/authentications/docs
 
 management:
   endpoints:
