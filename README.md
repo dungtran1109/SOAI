@@ -1,4 +1,4 @@
-# SOAI Project Developing Multiple AI-AGENT.
+# SOAI Project Developing Multiple AI-AGENTs.
 
 ![ReactJS](https://img.shields.io/badge/-ReactJs-61DAFB?logo=react&logoColor=white&style=for-the-badge)
 ![Redux](https://img.shields.io/badge/Redux-593D88?style=for-the-badge&logo=redux&logoColor=white)
