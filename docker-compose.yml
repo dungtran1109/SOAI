@@ -38,7 +38,7 @@ services:
       - soai-net
   
   authentication:
-    image: authentication:latest
+    image: soai_authentication:latest
     container_name: soai_authentication
     build:
       context: ./backend/services/authentication
