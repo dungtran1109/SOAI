@@ -35,6 +35,3 @@ app.add_middleware(
 app.include_router(router, prefix=API_PREFIX, tags=["Recruitment"])
 # Include health check router
 ServiceRegistration.register_service()
-# # Add this block to allow running by "python3 main.py"
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=SERVICE_PORT, reload=True)

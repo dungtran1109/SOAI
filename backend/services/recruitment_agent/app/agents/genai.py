@@ -1,9 +1,12 @@
 import requests
-import logging
+from config.log_config import AppLogger
+from config.constants import DEFAULT_MODEL
 
-logger = logging.getLogger(__file__)
+logger = AppLogger(__name__)
+
+
 class GenAI:
-    def __init__(self, model="gpt-4o-mini", temperature=0.5):
+    def __init__(self, model=DEFAULT_MODEL, temperature=0.5):
         self.model = model
         self.temperature = temperature
 
