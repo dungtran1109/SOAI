@@ -1,12 +1,26 @@
 import logging
+import os
+from logging.handlers import RotatingFileHandler
+from config.constants import *
 
 class LoggingConfig:
     @staticmethod
     def setup_logging():
+        log_file_path = os.path.join(LOG_DIR, "gen-ai_agent.log")
+        level_map = {
+            "DEBUG": logging.DEBUG,
+            "INFO": logging.INFO,
+            "WARN": logging.WARN,
+            "WARNING": logging.WARNING,
+            "ERROR": logging.ERROR,
+        }
+
+        log_level = level_map.get(LOG_LEVEL, logging.INFO)
         logging.basicConfig(
-            level=logging.DEBUG,
+            level=log_level,
             format="%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
-            handlers=[logging.StreamHandler()]
+            handlers=[logging.StreamHandler(),
+                      RotatingFileHandler(log_file_path, maxBytes=5 * 1024 * 1024, backupCount=5)]
         )
 
         # Optional: Set log levels for specific components

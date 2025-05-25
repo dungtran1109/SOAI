@@ -53,7 +53,6 @@ class JWTService:
             # }
             logger.info(f"Decoding token: {token}")
             decoded_key = base64.b64decode(cls.SECRET_KEY_ENCODED)
-            logger.info(f"Decoded key: {decoded_key}")
             payload = jwt.decode(token, decoded_key, algorithms=[cls.ALGORITHM])
             logger.info(f"Payload: {payload}")
             username = payload.get("sub")

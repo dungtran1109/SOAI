@@ -1,10 +1,9 @@
 import os
-import logging
 from anthropic import Anthropic
 from services.base_ai_service import BaseAIService
+from config.log_config import AppLogger
 
-logger = logging.getLogger(__file__)
-
+logger = AppLogger(__name__)
 
 class AnthropicAIService(BaseAIService):
     def __init__(self, model="claude-3-opus-20240229"):

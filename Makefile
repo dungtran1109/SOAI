@@ -36,6 +36,10 @@ init:
 		$(TOP_DIR)/vas.sh get_version > $(TOP_DIR)/build/var/.version; \
 	fi
 
+git-tag:
+	@echo "Create git tag version"
+	$(TOP_DIR)/vas.sh create_git_tag
+
 test-recruitment:
 	@echo "Automation test for Recruitment Agent"
 	$(RECRUITMENT_DIR)/tests/test_api_recruitment.py 2>&1 | tee "$(TOP_DIR)/build/test_api_recruitment.log"

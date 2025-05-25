@@ -1,10 +1,10 @@
-import logging
 from services.ollama_service import OllamaService
 from services.openai_service import OpenAIService
 from services.gemini_service import GeminiAIService
 from services.service_factory import get_ai_service
+from config.log_config import AppLogger
 
-logger = logging.getLogger(__file__)
+logger = AppLogger(__name__)
 
 
 class GenAIService:

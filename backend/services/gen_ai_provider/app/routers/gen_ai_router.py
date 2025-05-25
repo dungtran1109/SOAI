@@ -1,4 +1,4 @@
-from config.logging import AppLogger
+from config.log_config import AppLogger
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
 from models.response_models import StandardResponse

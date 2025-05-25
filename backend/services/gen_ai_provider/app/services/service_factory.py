@@ -1,10 +1,10 @@
-import logging
 from typing import Optional
 from services.openai_service import OpenAIService
 from services.ollama_service import OllamaService
 from services.gemini_service import GeminiAIService
+from config.log_config import AppLogger
 
-logger = logging.getLogger(__name__)
+logger = AppLogger(__name__)
 
 
 def get_ai_service(model: str) -> Optional[object]:

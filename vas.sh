@@ -42,6 +42,9 @@ help() {
 test -n "$1" || help
 echo "$1" | grep -qi "^help\|-h" && help
 
+## dir_est
+## Set up DIR for deployment
+##
 dir_est() {
     echo "Creating [BUILD] directories if they do not exist..."
 
@@ -56,34 +59,83 @@ dir_est() {
     echo "Directory setup complete."
 }
 
+## get_version
+## Get release version or dirty version
+## This is needed for building helm chart and package docker images
+##
+## export RELEASE=true/false
+##
 get_version() {
-    test -n "$BUILD/var" || mkdir $BUILD/var
+    mkdir -p "$BUILD_DIR/var"
+
+    # Read version prefix from file
+    test -f "$VAS_GIT/VERSION_PREFIX" || die "Missing VERSION_PREFIX file"
+    version_prefix=$(cat "$VAS_GIT/VERSION_PREFIX")
+
+    # Get commit count in current branch
+    commit_count=$(git rev-list --count HEAD)
+
+    # Compose base version
+    base_version="${version_prefix}-${commit_count}"
+
     if [[ "$RELEASE" = true ]]; then
+        # Priority to get the version in file first. Avoiding to get new version released
         if [[ -s $BUILD_DIR/var/.release_version ]]; then
-            cat $BUILD_DIR/var/.release_version
-            exit 0
+                cat $BUILD_DIR/var/.release_version
+                exit 0
         fi
-        release_version=$(git tag | sort -V | tail -1)
-        echo "${release_version}"
+        echo "$base_version" > "$BUILD_DIR/var/.release_version"
+        echo "$base_version"
     else
+        # Priority to get the version in file first. Avoid to get new version when new commit comes.
         if [[ -s $BUILD_DIR/var/.version ]]; then
             cat $BUILD_DIR/var/.version
             exit 0
         fi
+        # Generate suffix if working directory is dirty
         suffix=$(git rev-parse HEAD | sed 's/^0*//g' | cut -c1-7 | tr 'a-f' '1-6')
         suffix+=$(git diff --quiet && git diff --cached --quiet || echo '9999')
-        echo "$(<$VAS_GIT/VERSION_PREFIX)-${suffix}"
+
+        version="${base_version}${suffix}"
+        echo "$version" > "$BUILD_DIR/var/.version"
+        echo "$version"
     fi
 }
 
-# This will mount UID/GID in Dockerfile in order to run as non-root user
+## create_git_tag
+## Create the git tag and push the git tag to git
+## For create drop release version
+##
+create_git_tag() {
+    test -n "$VAS_GIT" || die "Not set [VAS_GIT]"
+    test -d "$VAS_GIT/.git" || die "Not a git repository: $VAS_GIT"
+    version=$(get_version)
+
+    # Check if the tag already exists
+    if git tag | grep -qx "$version"; then
+        echo "Tag $version already exists. Skipping creation."
+        return 0
+    fi
+
+    echo "Creating Git tag: $version"
+    git tag -a "$version" -m "Release version $version" || die "Failed to create git tag $version"
+    git push origin "$version" || die "Failed to push git tag $version to origin"
+
+    echo "Git tag $version created and pushed successfully."
+}
+
+## get_user_id
+## This will mount UID/GID in Dockerfile in order to run as non-root user
+##
 get_user_id() {
     local_container=$1
     local hash=$(sha256sum <<< "${container}" | cut -f1 -d ' ')
     bc -q <<< "scale=0;obase=10;ibase=16;(${hash^^}%30D41)+186A0"
 }
 
-# Copy CA file to helm charts => This will need to create TLS secrets in helm chart with cert-manager
+## Copy CA file to helm charts
+## This will need to create TLS secrets in helm chart with cert-manager
+##
 generate_ca() {
     test -n "$HELM_CHART_DIR" || die "Module [HELM_CHART_DIR] not set"
     test -n "$TEST_DIR" || die "Module [TEST_DIR] not set"
@@ -142,30 +194,8 @@ build_image() {
         || die "Failed to build docker images: $__name"
 }
 
-## save_image
-## Save image from local build repository
-##
-## --name=<module name>
-##
-save_image() {
-    test -n "$VAS_GIT" || die "Not set [VAS_GIT]"
-    test -n "$__name" || die "Module name required"
-    image_name=soai-$__name
-
-    mkdir -p $BUILD_DIR/images
-    cd $BUILD_DIR/images
-    version=$(get_version)
-
-    echo "Save image: $image_name"
-    rm -rf ${image_name}:$version.tgz && rm -rf ${image_name}:$version.sha256
-    docker save $DOCKER_REGISTRY/${image_name}:$version \
-            | gzip -vf - > ${image_name}-$version.tgz
-    sha256sum "${image_name}-$version.tgz" > "${image_name}-$version.sha256"
-    cat "${image_name}-$version.sha256"
-}
-
 ## create helm_md5sum
-## Create the md5sum file for Helm chart
+## Create the md5sum file for Helm chart for validation
 ##
 create_helm_md5sum() {
     cd $BUILD_DIR/helm-build/soai-application

@@ -1,12 +1,12 @@
 import os
-import logging
 from openai import OpenAI
 from services.base_ai_service import BaseAIService
 from config.constants import (
     MAPPING_AI_PROVIDER_TO_MODEL,
 )
+from config.log_config import AppLogger
 
-logger = logging.getLogger(__file__)
+logger = AppLogger(__name__)
 
 
 class OpenAIService(BaseAIService):

@@ -9,6 +9,9 @@ SERVICE_NAME = os.getenv("SERVICE_NAME", "recruitment_agent-service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8003))
 API_PREFIX = "/api/v1/recruitment"
 MATCHING_SCORE_PERCENTAGE = 70
+# LOGGING Configurations
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+LOG_DIR = os.getenv("LOG_DIR", ".")
 # DB Setting - MySQL
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
