@@ -35,33 +35,22 @@ The recommend standard development environment is Ubuntu 18.04 LTS or later. You
 #### Documentation and Workplace
 Please view at [Recruitment Agent]("https://gitlab.endava.com/cuong.quang.nguyen/soai/-/tree/main/backend/services/recruitment_agent?ref_type=heads")
 #### Local Development
-1. If you want to developing the recruitment AI Agent locally. Install python version >= 3.11. Create venv
+1. All the docker container started by docker-compose.yml for development. Hot reloading are enabled and will apply the changes with the host mounted between local
+and docker container.
+To start all the components
 ```bash
-$ python3 -m venv venv
-$ source venv/bin/activate
-$ pip install -r backend/services/recruitment_agent/requirements.txt
+$ docker compose up -d
 ```
-2. You need to run before start the recruitment agent
-```bash
-$ docker compose up authentication -d
-```
-Or even if you don't need to run the application locally, just run
-```bash
-docker compose up recruitment -d
-```
-This will install dependencies and recruitment docker container start for you. This will run authentication for JWT verification and MySQL database for storing datas.
+This will install dependencies and recruitment docker container start for you. This will run authentication for JWT verification and MySQL database for storing database.
 
-3. Run the application
-```bash
-$ python3 backend/services/recruitment_agent/app/main.py
-```
+2. For recruitment agent.
 The repository used `sqlachemy` to automate create tables and structure all SQL database for you. So don't need to create tables manually. Check the database is created with
 ```bash
 $ docker exec -it soai_mysql mysql -usoai_user -psoai_password;
 $ use soai_db;
 $ show tables;
 ```
-4. Recruitment API Endpoint Summary
+3. Recruitment API Endpoint Summary
 
 | Endpoint                  | Method | Description                                | Request Parameters / Body                                                                 | Auth Required | Role Access        |
 |---------------------------|--------|--------------------------------------------|--------------------------------------------------------------------------------------------|---------------|---------------------|
@@ -81,10 +70,36 @@ $ show tables;
 | `/jd-list`                | GET    | Get list of job descriptions               | Query: `position` (optional)                                                               | Yes             | ADMIN only          |
 | `/jd/update/{jd_id}`      | PUT    | Update a job description                   | JSON Body: fields to update                                                                | Yes             | ADMIN only          |
 | `/jd/delete/{jd_id}`      | DELETE | Delete a job description                   | Path: `jd_id`                                                                              | Yes             | ADMIN only          |
-5. If you want to test APIs, run the test files in [Test Recruitment]("https://gitlab.endava.com/cuong.quang.nguyen/soai/-/tree/main/backend/services/recruitment_agent/tests?ref_type=heads") (Updating)
+4. If you want to test APIs, run the test files in [Test Recruitment]("https://gitlab.endava.com/cuong.quang.nguyen/soai/-/tree/main/backend/services/recruitment_agent/tests?ref_type=heads") (Updating)
 ```
-$ ./backend/services/recruitment_agent/tests/test_api_recruitment.py
+$ make test-recruitment
 ```
 
+## Pushing the docker image to registry and release helm chart (Updating)
+### Prepare
+1. To release the docker images and helm chart. Check out `vas.sh` and `Makefile` script.
+Set the `RELEASE` variable to true
+```bash
+$ export RELEASE=true
+```
+2. Create release version. This can be done via `Makefile`.
+To check the version release. The version will change based on commit hash and number of commit pushed.
+```bash
+$ ./vas.sh get_version
+```
+3. Change the docker registry properly via env variable `DOCKER_REGISTRY`.
+```bash
+$ export DOCKER_REGISTRY=<your-docker-registry>
+```
+4. Create drop version.
+```bash
+$ make clean init image push
+```
+This will sent and push the drop version to docker registry. Helm will manage to push to registry also.
+5. Create tag version after release the drop tag version of docker images and helm chart.
+```bash
+$ make git-tag
+```
+This will create the git tag and push to git.
 ### License
 This repository is proprietary and confidential. Usage is subject to internal policies. Contact maintainers for access or usage rights.
