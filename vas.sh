@@ -12,7 +12,7 @@ test -n "$DOCKER_DIR" || export DOCKER_DIR="$VAS_GIT/docker"
 # HELM Chart set up
 test -n "$HELM_DIR" || export HELM_DIR="$BUILD_DIR/helm-build/soai-application"
 test -n "$HELM_CHART_DIR" || export HELM_CHART_DIR="$VAS_GIT/helm/soai-application"
-test -n "$DOCKER_REGISTRY" || export DOCKER_REGISTRY="192.168.122.65:30443/soai-application"
+test -n "$DOCKER_REGISTRY" || export DOCKER_REGISTRY="anhdung12399/soai-application"
 
 prg=$(basename $0) # vas.sh filename
 dir=$(dirname $0); dir=$(cd $dir; pwd) #Get root dir
@@ -255,7 +255,7 @@ build_helm() {
     create_helm_md5sum
 }
 
-## Push image
+## push_image
 ## Push docker image to Docker Registry
 ##
 ## --name=<module name>
@@ -271,6 +271,168 @@ push_image() {
    docker push $DOCKER_REGISTRY/$image_name:$version \
 	   || die "Failed to push docker registry: $DOCKER_REGISTRY"
 }
+
+# Ensure Docker network exists
+ensure_network() {
+    local network_name="soai-net"
+    if ! docker network ls --format '{{.Name}}' | grep -wq "$network_name"; then
+        echo "Creating Docker network: $network_name"
+        docker network create "$network_name"
+    else
+        echo "Docker network $network_name already exists"
+    fi
+}
+
+## run_image
+## Run a docker container from the built image
+## Matches image: $DOCKER_REGISTRY/soai-<module>:<version>
+## Sets container name: soai_<module>
+##
+## --name=<module name>
+## --port=<host:container>       (optional)
+## --env="KEY=VALUE ... KEY2=VAL" (optional)
+## --cmd="<command to run inside container>" (optional)
+##
+run_image() {
+    test -n "$__name" || die "Module name required"
+    image_name="soai-$__name"
+    container_name="soai_$__name"
+    version=$(get_version)
+    full_image="$DOCKER_REGISTRY/$image_name:$version"
+
+    echo "Running container: $container_name from image: $full_image"
+    ensure_network
+
+    # Stop & remove existing container if exists
+    if docker ps -a --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
+        echo "Container already exists. Removing..."
+        docker rm -f "$container_name"
+    fi
+
+    # Prepare port mapping
+    port_arg=""
+    if [ -n "$__port" ]; then
+        port_arg="-p $__port"
+    fi
+
+    # Prepare environment variables
+    env_args=""
+    if [ -n "$__env" ]; then
+        for env_pair in $__env; do
+            env_args="$env_args -e $env_pair"
+        done
+    fi
+
+    # Prepare custom command
+    cmd_arg=""
+    if [ -n "$__cmd" ]; then
+        cmd_arg="$__cmd"
+    fi
+
+    docker_cmd="docker run --init -d 
+                --name $container_name
+                --network soai-net
+                $port_arg
+                $env_args
+                $full_image
+                $cmd_arg"
+
+    echo ">> $docker_cmd"
+    eval $docker_cmd || die "Failed to run container $container_name"
+}
+
+## run_public_image
+## Run a docker container from public image
+## Sets container name: soai_<module>
+##
+## --name=<module name>
+## --port=<host:container>  (optional)
+## --env="KEY=VALUE ... KEY2=VAL" (optional)
+## --cmd="<cmd to run inside container>" (optional)
+##
+run_public_image() {
+    test -n "$__name" || die "Module name required"
+    test -n "$__image" || __image="$__name"  # default image name = container name
+    container_name="soai_$__name"
+
+    echo "Running public container: $container_name from image: $__image"
+    ensure_network
+
+    # Stop & remove existing container if exists
+    if docker ps -a --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
+        echo "Container already exists. Removing..."
+        docker rm -f "$container_name"
+    fi
+
+    # Prepare port mapping
+    port_args=""
+    if [ -n "$__port" ]; then
+        port_args="-p $__port"
+    fi
+
+    # Prepare environment variables
+    env_args=""
+    if [ -n "$__env" ]; then
+        for env_pair in $__env; do
+            env_args="$env_args -e $env_pair"
+        done
+    fi
+
+    # Prepare custom command
+    cmd_args=""
+    if [ -n "$__cmd" ]; then
+        cmd_args="$__cmd"
+    fi
+
+    # Compose final docker run command
+    docker_cmd="docker run --init -d \
+        --name $container_name \
+        --network soai-net \
+        $port_args \
+        $env_args \
+        $__image \
+        $cmd_args"
+
+    echo ">> $docker_cmd"
+    eval $docker_cmd || die "Failed to run public container $container_name"
+}
+
+## remove_image
+## Remove docker containers and images by name if they exist
+## Matches container name soai_<module>
+## Matches image: $DOCKER_REGISTRY/soai-<module>:<version>
+##
+## --name=<module name>
+##
+remove_image() {
+    test -n "$__name" || die "Module name required"
+    image_name="soai-$__name"
+    container_name="soai_$__name"
+    version=$(get_version)
+
+    full_image="$DOCKER_REGISTRY/$image_name:$version"
+
+    echo "Removing container and image for module: $__name"
+    echo "Target container: $container_name"
+    echo "Target image: $full_image"
+
+    # Remove container if exists
+    if docker ps -a --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
+        echo "Removing container: $container_name"
+        docker rm -f "$container_name" || echo "Failed to remove container: $container_name"
+    else
+        echo "Container $container_name does not exist."
+    fi
+
+    # Remove image if exists
+    if docker images -q "$full_image" | grep -q .; then
+        echo "Removing image: $full_image"
+        docker rmi -f "$full_image" || echo "Failed to remove image: $full_image"
+    else
+        echo "Image $full_image does not exist."
+    fi
+}
+
 
 ## Push helm
 ## Push helm package to Docker Registry

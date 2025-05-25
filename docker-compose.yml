@@ -1,23 +1,26 @@
+version: '3.8'
+
 services:
   genai:
-    image: soai_genai:latest
-    container_name: soai_genai
+    image: soai-gen_ai_provider:latest
+    container_name: soai_gen_ai_provider
     build:
       context: ./backend/services/gen_ai_provider
       dockerfile: ./Dockerfile
     environment:
-      - CONSUL_HOST=consul
-      - SERVICE_NAME=gen-ai-service
+      - CONSUL_HOST=consul:8500
+      - SERVICE_NAME=soai_gen_ai_provider
       - SERVICE_PORT=8004
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     volumes:
-      - ./backend/services/gen_ai_provider/app:/app
+      - ./backend/services/gen_ai_provider:/app
     restart: always
     ports:
       - "8004:8004"
     networks:
       - soai-net
+
   mysql:
     image: mysql:latest
     container_name: soai_mysql
@@ -30,51 +33,48 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     networks:
       - soai-net
-  
+
   authentication:
-    image: soai_authentication:latest
+    image: soai-authentication:latest
     container_name: soai_authentication
     build:
       context: ./backend/services/authentication
       dockerfile: ./Dockerfile
     ports:
-      - 9090:9090
+      - "9090:9090"
     environment:
       - DB_HOST=soai_mysql
       - DB_PORT=3306
       - DB_NAME=soai_db
       - DB_USERNAME=soai_user
       - DB_PASSWORD=soai_password
-    command: "java -jar app.jar"
     restart: always
     networks:
       - soai-net
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   consul:
-    image: soai_consul:latest
+    image: hashicorp/consul:latest
     container_name: soai_consul
-    build:
-      context: ./backend/services/consul
-      dockerfile: ./Dockerfile
     ports:
-      - "8500:8500" # Consul Web UI
+      - "8500:8500"
       - "8600:8600/udp"
     command: "agent -server -bootstrap -ui -client=0.0.0.0"
     restart: always
     networks:
       - soai-net
 
-  nginx:
-    container_name: soai_nginx
-    image: soai_nginx:latest
+  webserver:
+    container_name: soai_webserver
+    image: soai-webserver:latest
     build:
       context: ./backend/services/webserver
       dockerfile: ./Dockerfile
@@ -83,9 +83,10 @@ services:
       - soai-net
     ports:
       - "80:80"
-  frontend:
-    container_name: soai_frontend
-    image: soai_frontend:latest
+
+  web:
+    container_name: soai_web
+    image: soai-web:latest
     build:
       context: ./web
       dockerfile: ./Dockerfile
@@ -97,15 +98,17 @@ services:
     volumes:
       - ./web:/frontend
     command: sh -c "/frontend/loader.sh"
+
   recruitment:
-    container_name: soai_recruitment
-    image: soai_recruitment:latest
+    container_name: soai_recruitment_agent
+    image: soai-recruitment_agent:latest
     build:
       context: ./backend/services/recruitment_agent
       dockerfile: ./Dockerfile
     environment:
-      - CONSUL_HOST=consul
-      - SERVICE_NAME=recruitment-service
+      - CONSUL_HOST=consul:8500
+      - GENAI_HOST=genai:8004
+      - SERVICE_NAME=soai_recruitment_agent
       - SERVICE_PORT=8003
       - DB_HOST=soai_mysql
       - DB_PORT=3306
@@ -117,11 +120,17 @@ services:
     networks:
       - soai-net
     volumes:
-      - ./backend/services/recruitment_agent/app:/app
+      - ./backend/services/recruitment_agent:/app
     depends_on:
-      - genai # Model retrival
-      - authentication # JWT depends
-      - consul # Health check (Optional for register health)
+      mysql:
+        condition: service_healthy
+      authentication:
+        condition: service_started
+      genai:
+        condition: service_started
+      consul:
+        condition: service_started
+
 networks:
   soai-net:
     driver: bridge

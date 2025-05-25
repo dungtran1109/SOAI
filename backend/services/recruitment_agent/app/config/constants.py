@@ -4,7 +4,8 @@ from enum import Enum
 
 load_dotenv()
 # Configurations
-CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost")
+GENAI_HOST = os.getenv("GENAI_HOST", "localhost:8004")
+CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost:8500")
 SERVICE_NAME = os.getenv("SERVICE_NAME", "recruitment_agent-service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8003))
 API_PREFIX = "/api/v1/recruitment"

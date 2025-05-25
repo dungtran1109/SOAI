@@ -1,9 +1,27 @@
 #!/usr/bin/env python3
 import unittest
 import inspect
+import time
 from datetime import datetime
 from constants import *
 from basiclib import *
+
+
+def wait_until_available(url, timeout=60):
+    """Wait until the given URL is reachable before proceeding."""
+    start = time.time()
+    log_info(f"Waiting for service at {url} to be available...")
+    while True:
+        try:
+            response = httpx.get(url, timeout=3)
+            if response.status_code < 500:
+                log_info(f"Service at {url} is available.")
+                break
+        except Exception:
+            pass
+        if time.time() - start > timeout:
+            raise RuntimeError(f"Timeout waiting for service at {url}")
+        time.sleep(1)
 
 
 class TestRecruitmentAPI(unittest.TestCase):
@@ -13,6 +31,10 @@ class TestRecruitmentAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Setup tokens for ADMIN and USER before tests run."""
+        log_debug("Waiting for backend services to become available")
+        wait_until_available(AUTH_URL)
+        wait_until_available(BASE_URL)
+
         log_debug("Setting up tokens for ADMIN and USER")
         cls.admin_token = extract_token("admin", "Admin@123", role="ADMIN")
         cls.user_token = extract_token("user1", "User@123", role="USER")

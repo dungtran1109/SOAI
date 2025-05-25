@@ -15,7 +15,7 @@ COPY --chmod=0755 --chown=${USER_ID}:0 requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Copy the application code to the container
-COPY . .
+COPY --chmod=0755 --chown=${USER_ID}:0 app/ ./app/
 
 RUN echo "${USER_ID}:x:${USER_ID}:${USER_ID}:An Identity for soai-genai:/nonexistent:/bin/false" > /etc/passwd & \
     echo "${USER_ID}:!::0:::::" >> /etc/shadow
@@ -32,6 +32,8 @@ LABEL \
 
 # Expose the port on which the FastAPI app runs
 EXPOSE 8004
+
+WORKDIR /app/app
 
 USER ${USER_ID}
 

@@ -5,7 +5,7 @@ from config.constants import *
 logger = AppLogger(__name__)
 
 class ServiceRegistration:
-    CONSUL_URL = f"http://{CONSUL_HOST}:8500/v1/agent/service/register"
+    CONSUL_URL = f"http://{CONSUL_HOST}/v1/agent/service/register"
 
     @staticmethod
     def register_service():
@@ -15,7 +15,7 @@ class ServiceRegistration:
             "Address": "genai",
             "Port": SERVICE_PORT,
             "Check": {
-                "HTTP": f"http://{SERVICE_HOST}:{SERVICE_PORT}/api/v1/gen-ai/health",
+                "HTTP": f"http://{SERVICE_NAME}:{SERVICE_PORT}/api/v1/gen-ai/health",
                 "Interval": "10s",
             },
         }

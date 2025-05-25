@@ -1,6 +1,6 @@
 import requests
 from config.log_config import AppLogger
-from config.constants import DEFAULT_MODEL
+from config.constants import *
 
 logger = AppLogger(__name__)
 
@@ -16,7 +16,7 @@ class GenAI:
         """
         messages = [{"role": "user", "content": message}]
         response = requests.post(
-            url="http://genai:8004/api/v1/gen-ai/chat",
+            url=f"http://{GENAI_HOST}/api/v1/gen-ai/chat",
             json={
                 "messages": messages,
                 "model": self.model,
