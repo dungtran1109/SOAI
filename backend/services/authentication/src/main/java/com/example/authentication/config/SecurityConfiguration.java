@@ -36,8 +36,7 @@ public class SecurityConfiguration {
         "/api/v1/authentications/signup",
         "/api/v1/authentications/docs/**",
         "/api/v1/authentications/swagger-ui/**",
-        "/api/v1/authentications/swagger-ui.html",
-        "/api/v1/authentications/actuator/**"
+        "/actuator/**"
     };
 
     @Bean

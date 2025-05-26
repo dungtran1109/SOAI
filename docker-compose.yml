@@ -16,6 +16,11 @@ services:
     volumes:
       - ./backend/services/gen_ai_provider:/app
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api/v1/gen-ai/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "8004:8004"
     networks:
@@ -115,6 +120,11 @@ services:
       - DB_NAME=soai_db
       - DB_USERNAME=soai_user
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/api/v1/recruitment/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "8003:8003"
     networks:
@@ -124,12 +134,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      authentication:
-        condition: service_started
       genai:
-        condition: service_started
-      consul:
-        condition: service_started
+        condition: service_healthy
 
 networks:
   soai-net:
