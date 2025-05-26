@@ -4,12 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.constants import API_PREFIX
 from config.database import DeclarativeBase, engine
 from config.service_registration import ServiceRegistration
-import uvicorn
+from config.log_config import LoggingConfig
 from config.constants import *
 # This is required because we need to include model for sqlachemy identify and create tables automatically 
 import models.job_description
 import models.cv_application
 import models.interview_schedule
+
+LoggingConfig.setup_logging(json_format=True)
 
 # Create tables automatically
 DeclarativeBase.metadata.create_all(bind=engine)

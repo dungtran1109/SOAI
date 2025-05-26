@@ -22,7 +22,7 @@ house-keeping:
     stage: .pre
     variables:
         GIT_CLEAN_FLAGS: -ffdx
-        GIT_SUBMODULE_STRATEY: none
+        GIT_SUBMODULE_STRATEGY: none
     dependencies: []
     script:
         - export CACHE_PATH=/home/$USER/cache/$CI_PROJECT_NAMESPACE
@@ -76,7 +76,13 @@ functional-test:
     - chmod +x ./vas.sh Makefile
   script:
     - make run # Need to run docker container first
+    - make check-health # Check docker container healthy
     - make test # This for test when docker container is up
+  artifacts:
+    when: always 
+    expire_in: 1 day
+    paths:
+      - "build/**/*"
 
 remove:
   stage: Remove

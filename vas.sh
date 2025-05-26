@@ -329,12 +329,21 @@ run_image() {
         cmd_arg="$__cmd"
     fi
 
-    docker_cmd="docker run --init -d 
-                --name $container_name
-                --network soai-net
-                $port_arg
-                $env_args
-                $full_image
+    # Prepare mount host volume
+    mount_args=""
+    if [ -n "$__mount" ]; then
+        for mount_pair in $__mount; do
+            mount_args="$mount_args -v $mount_pair"
+        done
+    fi
+
+    docker_cmd="docker run --init -d \
+                --name $container_name \
+                --network soai-net \
+                $port_arg \
+                $env_args \
+                $mount_args \
+                $full_image \
                 $cmd_arg"
 
     echo ">> $docker_cmd"
@@ -352,7 +361,7 @@ run_image() {
 ##
 run_public_image() {
     test -n "$__name" || die "Module name required"
-    test -n "$__image" || __image="$__name"  # default image name = container name
+    test -n "$__image" || __image="$__name"
     container_name="soai_$__name"
 
     echo "Running public container: $container_name from image: $__image"
@@ -384,12 +393,21 @@ run_public_image() {
         cmd_args="$__cmd"
     fi
 
+    # Prepare mount host volume
+    mount_args=""
+    if [ -n "$__mount" ]; then
+        for mount_pair in $__mount; do
+            mount_args="$mount_args -v $mount_pair"
+        done
+    fi
+
     # Compose final docker run command
     docker_cmd="docker run --init -d \
         --name $container_name \
         --network soai-net \
         $port_args \
         $env_args \
+        $mount_args \
         $__image \
         $cmd_args"
 
@@ -430,6 +448,38 @@ remove_image() {
         docker rmi -f "$full_image" || echo "Failed to remove image: $full_image"
     else
         echo "Image $full_image does not exist."
+    fi
+}
+
+## remove_public_image
+## Remove docker public containers and images by name if they exist
+## Matches container name soai_<module>
+##
+## --name=<module_name>
+##
+remove_public_image() {
+    test -n "$__name" || die "Module name required"
+    test -n "$__image" || __image="$__name"
+    container_name="soai_$__name"
+
+    echo "Removing container and image for module: $__name"
+    echo "Target container: $container_name"
+    echo "Target image: $__image"
+
+    # Remove container if exists
+    if docker ps -a --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
+        echo "Removing container: $container_name"
+        docker rm -f "$container_name" || echo "Failed to remove container: $container_name"
+    else
+        echo "Container $container_name does not exist."
+    fi
+
+    # Remove image if exists
+    if docker images -q "$__image" | grep -q .; then
+        echo "Removing image: $__image"
+        docker rmi -f "$__image" || echo "Failed to remove image: $__image"
+    else
+        echo "Image $__image does not exist."
     fi
 }
 

@@ -7,6 +7,11 @@ version := $(shell $(TOP_DIR)/vas.sh get_version)
 DOCKER_CONFIG_DIR ?= build/docker
 RECRUITMENT_DIR := $(TOP_DIR)/backend/services/recruitment_agent
 
+# Health check
+RETRIES ?= 10
+INTERVAL ?= 15
+TIMEOUT ?= 10
+
 # Clean the repository
 clean:
 	@echo "Clean Repository"
@@ -24,8 +29,10 @@ prepare:
 
 # Init the repository
 init:
-	@echo "Create build dataset and model directory"
+	@echo "Create build folder"
 	$(TOP_DIR)/vas.sh dir_est
+	@echo "Create logs dir"
+	mkdir -p $(TOP_DIR)/build/soai_logs
 	@echo "mkdir variables folder"
 	mkdir -p $(TOP_DIR)/build/var
 	@if [ "$(RELEASE)" = "true" ]; then \
@@ -123,7 +130,8 @@ run-genai:
 			SERVICE_NAME=soai_gen_ai_provider \
 			SERVICE_PORT=8004 \
 			OPENAI_API_KEY=$(OPENAI_API_KEY) \
-			GOOGLE_API_KEY=$(GOOGLE_API_KEY)"
+			GOOGLE_API_KEY=$(GOOGLE_API_KEY) \
+			LOG_LEVEL=INFO"
 
 wait-genai:
 	@echo "Waiting for GenAI container to start..."
@@ -142,7 +150,8 @@ run-recruitment: wait-mysql wait-authentication wait-genai
 			DB_HOST=soai_mysql \
 			DB_PORT=3306 \
 			DB_NAME=soai_db \
-			DB_USERNAME=soai_user"
+			DB_USERNAME=soai_user \
+			LOG_LEVEL=INFO"
 
 run-web:
 	@echo "Run Frontend Web Container"
@@ -152,6 +161,37 @@ run-web:
 		--env="WDS_SOCKET_PORT=0" \
 		--cmd="sh -c '/frontend/loader.sh'"
 
+check-health: \
+	check-authentication-health \
+	check-genai-health \
+	check-recruitment-health
+
+check-authentication-health:
+	@echo "Checking Authentication health..."
+	@$(MAKE) check-url-health URL=http://localhost:9090/actuator/health NAME=Authentication
+
+check-genai-health:
+	@echo "Checking GenAI Provider health..."
+	@$(MAKE) check-url-health URL=http://localhost:8004/api/v1/gen-ai/health NAME=GenAI
+
+check-recruitment-health:
+	@echo "Checking Recruitment Agent health..."
+	@$(MAKE) check-url-health URL=http://localhost:8003/api/v1/recruitment/health NAME=Recruitment
+
+# common function
+check-url-health:
+	@i=0; \
+	while [ $$i -lt $(RETRIES) ]; do \
+		if curl -fs --max-time $(TIMEOUT) "$$URL" > /dev/null; then \
+			echo "$$NAME is healthy"; exit 0; \
+		else \
+			echo "Waiting for $$NAME to be healthy (attempt $$((i+1)) of $(RETRIES))..."; \
+			sleep $(INTERVAL); \
+		fi; \
+		i=$$((i+1)); \
+	done; \
+	echo "$$NAME health check failed after $(RETRIES) attempts"; exit 1
+
 test:	test-recruitment
 
 test-recruitment:
@@ -159,7 +199,11 @@ test-recruitment:
 	pip install httpx
 	@echo "Automation test for Recruitment Agent"
 	$(RECRUITMENT_DIR)/tests/test_api_recruitment.py 2>&1 | \
-		tee "$(TOP_DIR)/build/test_api_recruitment.log"
+		tee "$(TOP_DIR)/build/soai_logs/test_api_recruitment.log"
+	docker logs soai_gen_ai_provider 2>&1 | \
+		tee "$(TOP_DIR)/build/soai_logs/gen-ai_agent.log"
+	docker logs soai_recruitment_agent 2>&1 | \
+		tee "$(TOP_DIR)/build/soai_logs/recruitment_agent.log"
 
 push: 	push-recruitment \
 		push-authentication \
@@ -185,7 +229,9 @@ push-helm:
 remove:		remove-recruitment \
 			remove-authentication \
 			remove-genai \
-			remove-web
+			remove-web \
+			remove-consul \
+			remove-mysql
 
 remove-recruitment:
 	@echo "Remove the Recruitment agent docker image"
@@ -199,6 +245,12 @@ remove-genai:
 remove-web:
 	@echo "Remove the Web frontend docker image"
 	$(TOP_DIR)/vas.sh remove_image --name=web
+remove-consul:
+	@echo "Remove the Consul docker image"
+	$(TOP_DIR)/vas.sh remove_public_image --name=consul
+remove-mysql:
+	@echo "Remove the MySQL docker image"
+	$(TOP_DIR)/vas.sh remove_public_image --name=mysql
 
 generate-ca:
 	@echo "Generate CA files"

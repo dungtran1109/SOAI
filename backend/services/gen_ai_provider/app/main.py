@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.service_registration import ServiceRegistration
 from config.log_config import LoggingConfig
 
-LoggingConfig.setup_logging()
+LoggingConfig.setup_logging(json_format=True)
 
 app = FastAPI(
     title="Endava GenAI Provider API",
