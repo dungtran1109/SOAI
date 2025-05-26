@@ -76,6 +76,7 @@ functional-test:
     - chmod +x ./vas.sh Makefile
   script:
     - make run # Need to run docker container first
+    - make check-health
     - make test # This for test when docker container is up
   artifacts:
     when: always 

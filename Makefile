@@ -7,6 +7,11 @@ version := $(shell $(TOP_DIR)/vas.sh get_version)
 DOCKER_CONFIG_DIR ?= build/docker
 RECRUITMENT_DIR := $(TOP_DIR)/backend/services/recruitment_agent
 
+# Health check
+RETRIES ?= 5
+INTERVAL ?= 5
+TIMEOUT ?= 3
+
 # Clean the repository
 clean:
 	@echo "Clean Repository"
@@ -155,6 +160,37 @@ run-web:
 		--port=3000:3000 \
 		--env="WDS_SOCKET_PORT=0" \
 		--cmd="sh -c '/frontend/loader.sh'"
+
+check-health: \
+	check-authentication-health \
+	check-genai-health \
+	check-recruitment-health
+
+check-authentication-health:
+	@echo "Checking Authentication health..."
+	@$(MAKE) check-url-health URL=http://localhost:9090/actuator/health NAME=Authentication
+
+check-genai-health:
+	@echo "Checking GenAI Provider health..."
+	@$(MAKE) check-url-health URL=http://localhost:8004/api/v1/gen-ai/health NAME=GenAI
+
+check-recruitment-health:
+	@echo "Checking Recruitment Agent health..."
+	@$(MAKE) check-url-health URL=http://localhost:8003/api/v1/recruitment/health NAME=Recruitment
+
+# common function
+check-url-health:
+	@i=0; \
+	while [ $$i -lt $(RETRIES) ]; do \
+		if curl -fs --max-time $(TIMEOUT) "$$URL" > /dev/null; then \
+			echo "$$NAME is healthy"; exit 0; \
+		else \
+			echo "Waiting for $$NAME to be healthy (attempt $$((i+1)) of $(RETRIES))..."; \
+			sleep $(INTERVAL); \
+		fi; \
+		i=$$((i+1)); \
+	done; \
+	echo "$$NAME health check failed after $(RETRIES) attempts"; exit 1
 
 test:	test-recruitment
 
