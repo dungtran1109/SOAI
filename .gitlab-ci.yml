@@ -77,6 +77,11 @@ functional-test:
   script:
     - make run # Need to run docker container first
     - make test # This for test when docker container is up
+  artifacts:
+    when: always 
+    expire_in: 1 day
+    paths:
+      - "build/**/*"
 
 remove:
   stage: Remove
@@ -88,3 +93,4 @@ remove:
     - job: image-push-combined
   script:
     - make remove
+    - docker images
