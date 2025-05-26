@@ -73,8 +73,6 @@ class LoggingConfig:
         logging.getLogger("uvicorn").setLevel(logging.INFO)
         logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
         logging.getLogger("uvicorn.access").setLevel(logging.INFO)
-        logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
 
 class AppLogger:
     def __init__(self, name: str):

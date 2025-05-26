@@ -126,7 +126,6 @@ run-genai:
 	$(TOP_DIR)/vas.sh run_image \
 		--name=gen_ai_provider \
 		--port=8004:8004 \
-		--mount="$(TOP_DIR)/build/soai_logs:/app/app/logs" \
 		--env="CONSUL_HOST=soai_consul:8500 \
 			SERVICE_NAME=soai_gen_ai_provider \
 			SERVICE_PORT=8004 \
@@ -144,7 +143,6 @@ run-recruitment: wait-mysql wait-authentication wait-genai
 	$(TOP_DIR)/vas.sh run_image \
 		--name=recruitment_agent \
 		--port=8003:8003 \
-		--mount="$(TOP_DIR)/build/soai_logs:/app/app/logs" \
 		--env="CONSUL_HOST=soai_consul:8500 \
 			GENAI_HOST=soai_gen_ai_provider:8004 \
 			SERVICE_NAME=soai_recruitment_agent \
@@ -202,6 +200,10 @@ test-recruitment:
 	@echo "Automation test for Recruitment Agent"
 	$(RECRUITMENT_DIR)/tests/test_api_recruitment.py 2>&1 | \
 		tee "$(TOP_DIR)/build/soai_logs/test_api_recruitment.log"
+	docker logs soai_gen_ai_provider 2>&1 | \
+		tee "$(TOP_DIR)/build/soai_logs/gen-ai_agent.log"
+	docker logs soai_recruitment_agent 2>&1 | \
+		tee "$(TOP_DIR)/build/soai_logs/recruitment_agent.log"
 
 push: 	push-recruitment \
 		push-authentication \
