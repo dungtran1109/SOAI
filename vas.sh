@@ -23,6 +23,8 @@ git_commit=$(git --git-dir="$VAS_GIT/.git" rev-parse --short=7 HEAD)
 change_id=$(git show $git_commit | grep '^\ *Change-Id' | awk '{print $2}')
 release=$git_commit
 
+VERSION_PREFIX_OVERRIDE_OFFSET=0
+
 clean() {
     echo "Remove build directory..."
     rm -rf "$VAS_GIT/build"
@@ -70,36 +72,25 @@ get_version() {
 
     # Read version prefix from file
     test -f "$VAS_GIT/VERSION_PREFIX" || die "Missing VERSION_PREFIX file"
-    version_prefix=$(cat "$VAS_GIT/VERSION_PREFIX")
-
-    # Get commit count in current branch
-    commit_count=$(git rev-list --count HEAD)
-
-    # Compose base version
-    base_version="${version_prefix}-${commit_count}"
-
-    if [[ "$RELEASE" = true ]]; then
-        # Priority to get the version in file first. Avoiding to get new version released
-        if [[ -s $BUILD_DIR/var/.release_version ]]; then
-                cat $BUILD_DIR/var/.release_version
-                exit 0
+    # If set by "make init", use this versiom
+    if [[ -f $BUILD_DIR/var/.version ]]; then
+        version=$(cat $BUILD_DIR/var/.version)
+        if [[ -n "$version" ]]; then
+            echo $version
+            return
         fi
-        echo "$base_version" > "$BUILD_DIR/var/.release_version"
-        echo "$base_version"
-    else
-        # Priority to get the version in file first. Avoid to get new version when new commit comes.
-        if [[ -s $BUILD_DIR/var/.version ]]; then
-            cat $BUILD_DIR/var/.version
-            exit 0
-        fi
-        # Generate suffix if working directory is dirty
-        suffix=$(git rev-parse HEAD | sed 's/^0*//g' | cut -c1-7 | tr 'a-f' '1-6')
-        suffix+=$(git diff --quiet && git diff --cached --quiet || echo '9999')
-
-        version="${base_version}${suffix}"
-        echo "$version" > "$BUILD_DIR/var/.version"
-        echo "$version"
     fi
+
+    if [[ "$RELEASE" = "true" ]]; then
+        last_version_change_hash=$(git blame -l $VAS_GIT/VERSION_PREFIX 2>/dev/null | awk '{ if (NR==1) print $1 }' 2>/dev/null)
+        current_head_hash=$(git rev-parse HEAD 2>/dev/null)
+        number_of_commits=$(git rev-list --ancestry-path "${last_version_change_hash}..${current_head_hash}" 2>/dev/null | wc -l)
+        ((suffix = number_of_commits + VERSION_PREFIX_OVERRIDE_OFFSET)) || true
+    else
+        suffix=$(git rev-parse HEAD | sed 's/^0*//g' | cut -c1-7 | tr 'a-f' '1-6')
+        suffix+=$(git diff --quite && git diff --cached --quiet || echo '9999')
+    fi
+    echo "$(<$VAS_GIT/VERSION_PREFIX)-${suffix}"
 }
 
 ## create_git_tag
