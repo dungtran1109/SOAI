@@ -18,6 +18,7 @@ const Auth = ({ isSignIn = true }) => {
 
     useEffect(() => {
         if (hasCheckedCookie.current) return;
+        hasCheckedCookie.current = true // Prevent reloading overtime
         const profile = Cookies.get('profile');
 
         if (profile) {

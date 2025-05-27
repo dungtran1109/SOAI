@@ -1,0 +1,67 @@
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  padding: 0 40px;
+  background-color: #fff;
+  border-bottom: 2px solid #bfbfbf;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  height: 24px;
+  object-fit: contain;
+}
+
+.header-center {
+  display: flex;
+  gap: 32px;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-center a {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #5a5a5a;
+  padding: 4px 0;
+  letter-spacing: 0.5px;
+  transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+.header-center a:hover {
+  color: #000000;
+  font-weight: 700;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  background-color: #c69c3d;
+  color: white;
+  font-weight: 600;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}

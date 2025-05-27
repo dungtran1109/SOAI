@@ -1,3 +1,32 @@
+/* GLOBAL TYPOGRAPHY SETUP */
+body,
+input,
+select,
+button,
+a,
+span,
+p,
+label,
+textarea {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+  line-height: 1.5;
+}
+h1, h2, h3 {
+  font-weight: 600;
+}
+
+a {
+  text-decoration: none;
+  color: #0072ce;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 .model-selector {
   margin-bottom: 10px;
   display: flex;
