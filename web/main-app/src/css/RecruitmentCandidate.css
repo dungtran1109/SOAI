@@ -15,6 +15,41 @@ label {
 }
 
 /* --- TITLES / LABELS --- */
+.filter-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.filter-title-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.clear-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 500;
+  border-radius: 4px;
+  margin-top: 16px;
+}
+
+.clear-filter-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .page-title,
 .filter-sidebar h3 {
   font-size: 20px;
@@ -55,12 +90,13 @@ label {
 }
 
 .referral-badge {
-  font-size: 13px;
-  font-weight: 600;
-  background-color: #4caf50;
-  color: white;
+  background-color: #c8e6c9;
+  color: #2e7d32;
   padding: 4px 10px;
-  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-align: center;
 }
 
 /* --- INPUTS & SELECTS --- */
@@ -89,16 +125,6 @@ label {
 .referral-link:hover,
 .ref-code-link:hover {
   text-decoration: underline;
-}
-
-/* --- SWITCH CONTAINER --- */
-.internal-switch-container {
-  font-size: 14px;
-  color: #444;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
 }
 
 /* --- CHECKBOX STYLE --- */
@@ -160,9 +186,51 @@ label {
 .search-left {
   display: flex;
   align-items: center;
+  gap: 16px;
   flex-wrap: wrap;
-  gap: 12px;
-  min-width: 0;
+}
+
+.search-input {
+  font-size: 14px;
+  height: 36px;
+  width: 200px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.ref-code-link {
+  background: none;
+  border: none;
+  color: #0072ce;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ref-code-link:hover {
+  text-decoration: underline;
+}
+
+.internal-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #333;
+}
+
+.switch-label {
+  font-size: 14px;
+}
+
+.help-icon {
+  margin-left: 2px;
 }
 
 .search-right {
@@ -175,17 +243,19 @@ label {
 .alert-section {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #333;
+  gap: 8px;
 }
 
 .bell-icon {
-  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .alert-label {
   font-size: 14px;
   font-weight: 500;
+  color: #333;
 }
 
 .divider {
@@ -197,7 +267,11 @@ label {
   align-items: center;
   gap: 6px;
   font-size: 14px;
+}
+
+.sort-label {
   font-weight: 500;
+  color: #333;
 }
 
 /* --- JOB LIST --- */
@@ -206,7 +280,7 @@ label {
 }
 
 .job-card {
-  background: white;
+  background: #fff;
   border: 1px solid #e1e1e1;
   border-radius: 8px;
   padding: 20px 24px;
@@ -222,13 +296,15 @@ label {
 .job-header {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .job-logo {
-  width: 60px;
+  width: 100px;
   height: auto;
-  margin-right: 20px;
+  margin-right: 16px;
+  align-self: center;
 }
 
 .job-info {
@@ -236,10 +312,16 @@ label {
 }
 
 .job-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #222;
-  margin: 0;
+  margin: 0 0 6px;
+}
+
+.job-subtitle {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 10px;
 }
 
 .job-details {
@@ -253,18 +335,40 @@ label {
   padding-top: 12px;
 }
 
+
+.job-subtitle .dot {
+  margin: 0 6px;
+  color: #999;
+}
+
+.job-ref {
+  color: #0066cc;
+  font-weight: 500;
+}
+
 .job-location {
   display: flex;
   align-items: center;
+  font-size: 14px;
+  color: #333;
   gap: 6px;
+}
+
+.job-side-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 160px;
 }
 
 .job-date {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 14px;
-  color: #666;
+  color: #555;
 }
 
 .job-meta {
@@ -398,4 +502,19 @@ label {
   color: #999;
   padding: 12px;
   font-style: italic;
+}
+
+.bell-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: middle;
+  object-fit: contain;
 }

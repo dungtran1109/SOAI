@@ -5,8 +5,13 @@
   height: 64px;
   padding: 0 40px;
   background-color: #fff;
-  border-bottom: 1px solid #dcdcdc;
+  border-bottom: 2px solid #bfbfbf;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
 }
 
 .header-left {
@@ -28,16 +33,19 @@
 }
 
 .header-center a {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   text-transform: uppercase;
   text-decoration: none;
-  color: #2f2f2f;
+  color: #5a5a5a;
   padding: 4px 0;
+  letter-spacing: 0.5px;
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
 .header-center a:hover {
-  text-decoration: underline;
+  color: #000000;
+  font-weight: 700;
 }
 
 .header-right {

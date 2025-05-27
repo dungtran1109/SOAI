@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "../../css/RecruitmentCandidate.css";
 import EndavaLogo from "../../assets/images/endava-logo.png";
+import NotificationIcon from "../../assets/icons/notification.png";
+import FilterIcon from "../../assets/icons/filter.png";
 import JobCard from "./JobCard";
 import TopHeader from "./TopHeader";
 
@@ -118,9 +120,12 @@ const Candidate = () => {
     setShowRefModal(false);
   };
 
-  const handleClearRefSearch = () => {
+  const handleFilterClearSearch = () => {
+    setSearchText("");
+    setReferralOnly(false);
+    setLocation("All");
+    setExperience("All");
     setFilteredByRef(null);
-    setRefCodeInput("");
   };
 
   return (
@@ -139,15 +144,19 @@ const Candidate = () => {
               setFilteredByRef(null);
             }}
           />
-          <a href="#" className="ref-code-link" onClick={() => setShowRefModal(true)}>
+          <button className="ref-code-link" onClick={() => setShowRefModal(true)}>
             Use a REF code
-          </a>
+          </button>
           <div className="internal-switch-container">
             <label className="switch">
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                checked={referralOnly}
+                onChange={(e) => setReferralOnly(e.target.checked)}
+              />
               <span className="slider" />
             </label>
-            <span>Internal jobs only</span>
+            <span className="switch-label">Internal jobs only</span>
           </div>
           <p className="job-count">
             Showing {visibleJobs.length} of {allJobs.length} jobs
@@ -156,7 +165,7 @@ const Candidate = () => {
 
         <div className="search-right">
           <div className="alert-section">
-            <span className="bell-icon">🔔</span>
+            <img src={NotificationIcon} alt="Job alert" className="bell-icon" />
             <span className="alert-label">Job alert</span>
             <span className="divider">|</span>
             <a href="#" className="referral-link">
@@ -164,7 +173,7 @@ const Candidate = () => {
             </a>
           </div>
           <div className="sort-select">
-            <span>Sort:</span>
+            <span className="sort-label">Sort:</span>
             <select defaultValue="Posted Date">
               <option value="Posted Date">Posted Date</option>
               <option value="Title">Title</option>
@@ -199,7 +208,10 @@ const Candidate = () => {
 
       <div className="recruitment-layout">
         <div className="filter-sidebar">
-          <h3>Filters</h3>
+          <h3 className="filter-title">
+            <img src={FilterIcon} alt="Filter" className="filter-title-icon" />
+            Filters
+          </h3>
 
           <div className="filter-group">
             <label>Location</label>
@@ -242,6 +254,13 @@ const Candidate = () => {
               />
               <label htmlFor="referral">Referral only</label>
             </div>
+          </div>
+
+          <div className="filter-group">
+            <button className="clear-filter-btn" onClick={handleFilterClearSearch}>
+              <img src={FilterIcon} alt="Clear Filters" className="filter-icon" />
+              Clear Filters
+            </button>
           </div>
         </div>
 
