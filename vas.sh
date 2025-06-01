@@ -91,7 +91,7 @@ get_version() {
         ((suffix = number_of_commits + VERSION_PREFIX_OVERRIDE_OFFSET)) || true
     else
         suffix=$(git rev-parse HEAD | sed 's/^0*//g' | cut -c1-7 | tr 'a-f' '1-6')
-        suffix+=$(git diff --quite && git diff --cached --quiet || echo '9999')
+        suffix+=$(git diff --quiet && git diff --cached --quiet || echo '9999')
     fi
     echo "$(<$VAS_GIT/VERSION_PREFIX)-${suffix}"
 }
