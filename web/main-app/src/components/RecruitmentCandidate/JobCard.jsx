@@ -1,9 +1,9 @@
 import CalendarIcon from "../../assets/icons/calendar.png";
 import LocationIcon from "../../assets/icons/location.png";
 
-const JobCard = ({ job, logo }) => {
+const JobCard = ({ job, logo, onClick }) => {
   return (
-    <div className="job-card">
+    <div className="job-card" onClick={() => onClick(job)}>
       <div className="job-header">
         <img src={logo} alt="Endava Logo" className="job-logo" />
         <div className="job-info">

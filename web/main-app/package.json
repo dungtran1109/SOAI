@@ -43,6 +43,7 @@
     ]
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.20"
+    "autoprefixer": "^10.4.20",
+    "webpack-dev-server": "^5.2.1"
   }
 }

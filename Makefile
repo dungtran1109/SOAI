@@ -74,8 +74,7 @@ run: run-mysql \
 	run-consul \
 	run-authentication \
 	run-genai \
-	run-recruitment \
-	run-web
+	run-recruitment
 
 run-mysql:
 	@echo "Run MySQL Container"
@@ -199,8 +198,7 @@ test-recruitment:
 	chmod +x $(RECRUITMENT_DIR)/tests/test_api_recruitment.py
 	pip install httpx
 	@echo "Automation test for Recruitment Agent"
-	$(RECRUITMENT_DIR)/tests/test_api_recruitment.py 2>&1 | \
-		tee "$(TOP_DIR)/build/soai_logs/test_api_recruitment.log"
+	$(RECRUITMENT_DIR)/tests/test_api_recruitment.py
 collect-authentication-log:
 	@echo "Collect SOAI_AUTHENTICATION logs"
 	$(TOP_DIR)/vas.sh collect_docker_logs --name=authentication

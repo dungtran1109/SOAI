@@ -97,7 +97,7 @@ async def get_interviews(
         return {"error": str(e)}
 
 
-# Only administrator can get JD list
+# Candidate can get job descriptions list -> But it need to verify JWT
 @router.get("/jds")
 async def get_jds(
     position: Optional[str] = Query(None, description="Optional position filter"),

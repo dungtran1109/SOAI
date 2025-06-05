@@ -45,7 +45,7 @@ class TestRecruitmentAPI(unittest.TestCase):
         log_info("Running post-test cleanup...")
         tester = cls()
         tester.admin_token = cls.admin_token
-        tester.postclean_candidate_and_jd("Bui Thanh Tra", "Frontend Developer")
+        tester.postclean_candidate_and_jd("Bui Thanh Tra", "Junior Frontend Developer")
 
     def preclean_candidate_and_jd(self, candidate_name, position):
         """Clean up test data before each test."""
@@ -115,7 +115,7 @@ class TestRecruitmentAPI(unittest.TestCase):
 
         name = "Bui Thanh Tra"
         email = "kudung053@gmail.com"
-        position = "Frontend Developer"
+        position = "Junior Frontend Developer"
 
         try:
             self.preclean_candidate_and_jd(name, position)
@@ -271,7 +271,8 @@ class TestRecruitmentAPI(unittest.TestCase):
 
         name = "Bui Thanh Tra"
         email = "kudung053@gmail.com"
-        position = "Frontend Developer"
+        position = "Junior Frontend Developer"
+        unmatch_position = "Senior Fullstack Developer (Java+React)"
 
         self.preclean_candidate_and_jd(name, position)
 
@@ -294,6 +295,22 @@ class TestRecruitmentAPI(unittest.TestCase):
                 files={"file": ("jd_sample.json", f, "application/json")},
                 headers=get_headers(self.admin_token),
             )
+            
+        log_info("Trying to upload CV with unmatch position")
+        with open(CV_FILE_PATH, "rb") as f:
+            files = {
+                "file": ("sampleCV.pdf", f, "application/pdf"),
+                "override_email": (None, email),
+                "position_applied_for": (None, unmatch_position),
+            }
+            response = api_request(
+                "POST",
+                f"{BASE_URL}/cvs/upload",
+                files=files,
+                headers=get_headers(self.user_token),
+            )
+        self.assertEqual(response.status_code, 200)
+        log_info("Unmatch position CV response: " + str(response.json().get("message")))
 
         log_info("Uploading CV with USER role")
         with open(CV_FILE_PATH, "rb") as f:
