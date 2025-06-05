@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import "../../css/RecruitmentCandidate.css";
 import EndavaLogo from "../../assets/images/endava-logo.png";
 import NotificationIcon from "../../assets/icons/notification.png";
@@ -6,283 +6,10 @@ import FilterIcon from "../../assets/icons/filter.png";
 import JobCard from "./JobCard";
 import TopHeader from "./TopHeader";
 import JobDetailDrawer from "./JobDetailDrawer";
-
-const allJobs = [
-  {
-    title: "Senior Technical Business Analyst",
-    location: "Ho Chi Minh City, Vietnam",
-    date: "May 26, 2025",
-    referral: true,
-    ref: "REF479E",
-    experience: "5+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ],
-    additionalInformation: [
-      "Discover some of the global benefits that empower our people to become the best version of themselves:",
-      "Finance: Competitive salary package, share plan, value-based recognition awards, referral bonus;",
-      "Career Development: Career coaching, global career opportunities, non-linear career paths, internal development programmes for management and technical leadership;",
-      "Learning Opportunities: Complex projects, rotations, internal tech communities, training, certifications, coaching, online learning platforms subscriptions, pass-it-on sessions, workshops, conferences;",
-      "Work-Life Balance: Hybrid work and flexible working hours, employee assistance programme;",
-      "Health: Global internal wellbeing programme, access to wellbeing apps;",
-      "Community: Global internal tech communities, hobby clubs and interest groups, inclusion and diversity programmes, events and celebrations.",
-      "Annual leave encashment;",
-      "13th month salary;",
-      "Premium annual health check & Extra health & accident insurance;",
-      "Welcome kit and gift-giving frequency;",
-      "Attractive benefits of Trade Union;",
-      "Exciting English programme.",
-      "Discover some of the global benefits that empower our people to become the best version of themselves:"
-    ],
-    hiringManager: "Co Le",
-    recruiter: "Thuy Ho"
-  },
-  {
-    title: "Senior Fullstack Developer (.NET + React)",
-    location: "Bangkok, Thailand",
-    date: "May 21, 2025",
-    referral: true,
-    ref: "REF1239O",
-    experience: "4+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ],
-    additionalInformation: [
-      "Discover some of the global benefits that empower our people to become the best version of themselves:",
-      "Finance: Competitive salary package, share plan, value-based recognition awards, referral bonus;",
-      "Career Development: Career coaching, global career opportunities, non-linear career paths, internal development programmes for management and technical leadership;",
-      "Learning Opportunities: Complex projects, rotations, internal tech communities, training, certifications, coaching, online learning platforms subscriptions, pass-it-on sessions, workshops, conferences;",
-      "Work-Life Balance: Hybrid work and flexible working hours, employee assistance programme;",
-      "Health: Global internal wellbeing programme, access to wellbeing apps;",
-      "Community: Global internal tech communities, hobby clubs and interest groups, inclusion and diversity programmes, events and celebrations.",
-      "Annual leave encashment;",
-      "13th month salary;",
-      "Premium annual health check & Extra health & accident insurance;",
-      "Welcome kit and gift-giving frequency;",
-      "Attractive benefits of Trade Union;",
-      "Exciting English programme.",
-      "Discover some of the global benefits that empower our people to become the best version of themselves:"
-    ],
-    hiringManager: "Co Le",
-    recruiter: "Thuy Ho"
-  },
-  {
-    title: "C Developers (Network, Linux)",
-    location: "Kuala Lumpur, Malaysia",
-    date: "May 12, 2025",
-    referral: false,
-    ref: "REF1553T",
-    experience: "3+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ],
-    additionalInformation: [
-      "Discover some of the global benefits that empower our people to become the best version of themselves:",
-      "Finance: Competitive salary package, share plan, value-based recognition awards, referral bonus;",
-      "Career Development: Career coaching, global career opportunities, non-linear career paths, internal development programmes for management and technical leadership;",
-      "Learning Opportunities: Complex projects, rotations, internal tech communities, training, certifications, coaching, online learning platforms subscriptions, pass-it-on sessions, workshops, conferences;",
-      "Work-Life Balance: Hybrid work and flexible working hours, employee assistance programme;",
-      "Health: Global internal wellbeing programme, access to wellbeing apps;",
-      "Community: Global internal tech communities, hobby clubs and interest groups, inclusion and diversity programmes, events and celebrations.",
-      "Annual leave encashment;",
-      "13th month salary;",
-      "Premium annual health check & Extra health & accident insurance;",
-      "Welcome kit and gift-giving frequency;",
-      "Attractive benefits of Trade Union;",
-      "Exciting English programme.",
-      "Discover some of the global benefits that empower our people to become the best version of themselves:"
-    ],
-    hiringManager: "Co Le",
-    recruiter: "Thuy Ho"
-  },
-  {
-    title: "Senior Developer (Java)",
-    location: "Singapore",
-    date: "May 6, 2025",
-    referral: true,
-    ref: "REF212X",
-    experience: "5+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ],
-    additionalInformation: [
-      "Discover some of the global benefits that empower our people to become the best version of themselves:",
-      "Finance: Competitive salary package, share plan, value-based recognition awards, referral bonus;",
-      "Career Development: Career coaching, global career opportunities, non-linear career paths, internal development programmes for management and technical leadership;",
-      "Learning Opportunities: Complex projects, rotations, internal tech communities, training, certifications, coaching, online learning platforms subscriptions, pass-it-on sessions, workshops, conferences;",
-      "Work-Life Balance: Hybrid work and flexible working hours, employee assistance programme;",
-      "Health: Global internal wellbeing programme, access to wellbeing apps;",
-      "Community: Global internal tech communities, hobby clubs and interest groups, inclusion and diversity programmes, events and celebrations.",
-      "Annual leave encashment;",
-      "13th month salary;",
-      "Premium annual health check & Extra health & accident insurance;",
-      "Welcome kit and gift-giving frequency;",
-      "Attractive benefits of Trade Union;",
-      "Exciting English programme.",
-      "Discover some of the global benefits that empower our people to become the best version of themselves:"
-    ],
-    hiringManager: "Co Le",
-    recruiter: "Thuy Ho"
-  },
-  {
-    title: "Development Lead (Java)",
-    location: "Sydney, Australia",
-    date: "May 6, 2025",
-    referral: false,
-    ref: "REF206G",
-    experience: "7+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ]
-  },
-  {
-    title: "Automation Tester",
-    location: "Tokyo, Japan",
-    date: "Apr 2, 2025",
-    referral: true,
-    ref: "REF142T",
-    experience: "3+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ]
-  },
-  {
-    title: "UI/UX Designer",
-    location: "Toronto, Canada",
-    date: "Apr 1, 2025",
-    referral: false,
-    ref: "REF891Z",
-    experience: "4+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ]
-  },
-  {
-    title: "Backend Developer (Node.js)",
-    location: "Berlin, Germany",
-    date: "Mar 28, 2025",
-    referral: true,
-    ref: "REF302D",
-    experience: "4+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ]
-  },
-  {
-    title: "Frontend Developer (React)",
-    location: "New York, USA",
-    date: "Mar 20, 2025",
-    referral: true,
-    ref: "REF883Y",
-    experience: "3+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ]
-  },
-  {
-    title: "DevOps Engineer",
-    location: "London, UK",
-    date: "Mar 15, 2025",
-    referral: false,
-    ref: "REF604B",
-    experience: "5+ years",
-    companyDescription: "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.By combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses. From prototype to real-world impact - be part of a global shift by doing work that matters.",
-    jobDescription: "Analysis teams identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, they also mediate between clients and engineering teams to ensure project clarity. As a Senior Technical Business Analyst at Endava, you will be challenged to work alongside passionate individuals, who always strive to continuously improve and who share the same vision on what \"done\" work signifies. You will be a member of a team that interacts frequently with the client and the team members. You will work in an agile environment, close to the business and to the development team(s) and help them focus on delivering value to the customers.",
-    responsibilities: [
-      "Analyze and document business requirements",
-      "Collaborate with development team",
-      "Facilitate workshops"
-    ],
-    qualifications: [
-      "5+ years experience in business analysis",
-      "Strong communication skills",
-      "Fluent English"
-    ]
-  }
-];
+import { getAllJD } from "../../api/jdApi";
 
 const Candidate = () => {
+  const [allJobs, setAllJobs] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [referralOnly, setReferralOnly] = useState(false);
   const [location, setLocation] = useState("All");
@@ -292,24 +19,102 @@ const Candidate = () => {
   const [filteredByRef, setFilteredByRef] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
 
-  const locations = [...new Set(allJobs.map((job) => job.location))];
-  const experiences = [...new Set(allJobs.map((job) => job.experience))];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const jobs = await getAllJD();
+        console.log("[DEBUG] Raw jobs from API:", jobs);
 
-  const filteredJobs = allJobs.filter((job) => {
-    return (
-      job.title.toLowerCase().includes(searchText.toLowerCase()) &&
-      (referralOnly ? job.referral : true) &&
-      (location === "All" || job.location === location) &&
-      (experience === "All" || job.experience === experience)
-    );
-  });
+        const formattedJobs = jobs.map((job) => ({
+          id: job.id,
+          title: job.position || "Untitled Position",
+          location: job.location || "Unknown location",
+          date: job.datetime
+            ? new Date(job.datetime).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+              })
+            : "N/A",
+          datetime: job.datetime || null,
+          referral: job.referral || false,
+          ref: typeof job.referral_code === "string" ? job.referral_code : null,
+          experience_required: String(job.experience_required || ""),
+          level: job.level || "N/A",
+          companyDescription: job.company_description || "",
+          jobDescription: job.job_description || "",
+          responsibilities: Array.isArray(job.responsibilities)
+            ? job.responsibilities
+            : [],
+          qualifications: Array.isArray(job.qualifications)
+            ? job.qualifications
+            : [],
+          additionalInformation: job.additional_information || {},
+          hiringManager: job.hiring_manager || "N/A",
+          recruiter: job.recruiter || "N/A",
+          skills_required: (() => {
+            try {
+              return Array.isArray(job.skills_required)
+                ? job.skills_required
+                : JSON.parse(job.skills_required || "[]");
+            } catch {
+              return [];
+            }
+          })(),
+        }));
 
-  const visibleJobs = filteredByRef ?? filteredJobs;
+        console.log("[DEBUG] Formatted jobs:", formattedJobs);
+        setAllJobs(formattedJobs);
+      } catch (error) {
+        console.error("Error loading job data:", error);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  const locations = useMemo(
+    () => [...new Set(allJobs.map((job) => job.location))],
+    [allJobs]
+  );
+
+  const experiences = useMemo(
+    () => [...new Set(allJobs.map((job) => job.experience_required))],
+    [allJobs]
+  );
+
+  const filteredJobs = useMemo(() => {
+    const filtered = allJobs.filter((job) => {
+      const matchesTitle = job.title?.toLowerCase().includes(searchText.toLowerCase());
+      const matchesReferral = referralOnly ? job.referral : true;
+      const matchesLocation = location === "All" || job.location === location;
+      const matchesExperience = experience === "All" || job.experience_required === experience;
+
+      return matchesTitle && matchesReferral && matchesLocation && matchesExperience;
+    });
+
+    console.log("[DEBUG] Filter logic:", {
+      searchText,
+      referralOnly,
+      location,
+      experience,
+      resultCount: filtered.length,
+    });
+
+    return filtered;
+  }, [allJobs, searchText, referralOnly, location, experience]);
+
+  const visibleJobs = filteredByRef !== null ? filteredByRef : filteredJobs;
+
+  console.log("[DEBUG] visibleJobs:", visibleJobs);
 
   const handleRefSearch = () => {
     const match = allJobs.find(
-      (job) => job.ref.toLowerCase() === refCodeInput.toLowerCase()
+      (job) =>
+        job.ref &&
+        job.ref.toLowerCase() === refCodeInput.trim().toLowerCase()
     );
+    console.log("[DEBUG] REF search input:", refCodeInput, "→ match:", match);
     setFilteredByRef(match ? [match] : []);
     setShowRefModal(false);
   };

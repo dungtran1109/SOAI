@@ -145,3 +145,14 @@ section ul {
 .meta-row div {
   flex: 1;
 }
+
+.additional-info-group {
+  margin-bottom: 1rem;
+}
+
+.additional-info-group ul {
+  margin-top: 0.25rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  list-style: disc;
+}
