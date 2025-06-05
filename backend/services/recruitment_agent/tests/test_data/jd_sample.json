@@ -1,50 +1,533 @@
 [
   {
-    "position": "Senior Data Analyst (PowerBI)",
-    "skills_required": ["PowerBI", "SQL", "Python", "DAX"],
+    "position": "Senior Data Analyst (Power BI)",
+    "skills_required": ["Power BI", "SQL", "Python", "DAX"],
+    "location": "Rosario, Santa Fe Province, Argentina",
+    "date": "2025-05-09",
     "experience_required": 5,
-    "level": "Senior"
+    "level": "Senior",
+    "referral": true,
+    "referral_code": "REF1469Z",
+    "company_description": "Endava combines world-class engineering, industry expertise, and a people-centric mindset to create intelligent digital experiences and drive business transformation for leading global brands.",
+    "job_description": "As a Senior Data Analyst, you'll transform raw data into actionable insights, develop robust dashboards in Power BI, and contribute to impactful data-driven decisions across global projects.",
+    "responsibilities": [
+      "Drive business solutions through data interpretation and analysis.",
+      "Mentor or manage a team of analysts.",
+      "Collaborate with cross-functional teams to understand data needs and provide solutions.",
+      "Create detailed reports and dashboards for various stakeholders.",
+      "Deliver impactful analyses that lead to business improvements.",
+      "Maintain data integrity and ensure security across databases."
+    ],
+    "qualifications": [
+      "Proven experience with Power BI, SQL, Python, and DAX.",
+      "Strong knowledge of statistical analysis methods.",
+      "Ability to turn complex data into clear business strategies.",
+      "Experience with Azure SQL, Databricks, Event Grid, Event Hub, Service Bus, CosmosDB, Voltage, Azure KeyVault, and Azure Monitor is a plus."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global opportunities",
+        "Internal development programmes"
+      ],
+      "learning": [
+        "Training",
+        "Certifications",
+        "Workshops",
+        "Conferences",
+        "Internal tech communities"
+      ],
+      "work_life_balance": [
+        "Hybrid work and flexible hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Tech communities",
+        "Hobby clubs",
+        "Inclusion and diversity programmes"
+      ]
+    },
+    "hiring_manager": "Matias Salmeri",
+    "recruiter": "Ximena Ramos"
   },
   {
     "position": "Senior Data Engineer (Azure)",
-    "skills_required": ["Azure Data Factory", "Databricks", "SQL", "Python"],
+    "skills_required": [
+      "Azure Data Factory",
+      "Databricks",
+      "SQL",
+      "Python",
+      "Azure Synapse Analytics",
+      "Azure Cosmos DB",
+      "Apache Spark",
+      "Apache Kafka",
+      "Azure Storage (ADLS2)",
+      "Scala",
+      "Azure Functions",
+      "Snowflake",
+      "Voltage"
+    ],
+    "location": "Rosario, Santa Fe Province, Argentina",
+    "date": "2025-05-09",
     "experience_required": 5,
-    "level": "Senior"
+    "level": "Senior",
+    "referral": true,
+    "referral_code": "REF1468X",
+    "company_description": "Endava combines world-class engineering, industry expertise, and a people-centric mindset to create intelligent digital experiences and drive business transformation for leading global brands.",
+    "job_description": "As a Senior Data Engineer (Azure), you'll design, build, and optimize scalable data pipelines and infrastructure using Azure services. You'll collaborate with data teams and stakeholders to deliver robust solutions that enable data-driven innovation.",
+    "responsibilities": [
+      "Build and maintain robust data pipelines to ensure efficient data flow.",
+      "Develop ETL processes using Azure Data Factory or Talend.",
+      "Leverage big data technologies like Apache Spark and Apache Kafka with Databricks.",
+      "Manage cloud data services including Azure Storage (ADLS2), Azure SQL, Cosmos DB, and Azure Synapse.",
+      "Develop solutions using Python, Java, or Scala within Databricks.",
+      "Implement data warehousing solutions like Redshift or Snowflake.",
+      "Collaborate with data scientists, analysts, and stakeholders to deliver efficient data solutions."
+    ],
+    "qualifications": [
+      "Hands-on experience with Azure Databricks and Python.",
+      "Experience implementing ETL/ELT processes and scalable data pipelines.",
+      "Proficiency in Azure SQL, Azure Synapse Analytics, and Cosmos DB.",
+      "Strong SQL scripting skills and knowledge of data warehouse tools.",
+      "Familiarity with Spark, Scala, Voltage, and Azure Functions.",
+      "Experience with Snowflake and other cloud-based data technologies."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global opportunities",
+        "Non-linear career paths",
+        "Internal development programmes"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Training and certifications",
+        "Workshops and conferences",
+        "Internal tech communities"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Tech communities",
+        "Hobby clubs",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Matias Salmeri",
+    "recruiter": "Ximena Ramos"
   },
   {
     "position": "Senior Automation Tester",
     "skills_required": ["Selenium", "Cypress", "Java", "TestNG"],
     "experience_required": 4,
-    "level": "Mid-Senior"
-  },
-  {
-    "position": "Data Scientist Consultant",
-    "skills_required": ["Machine Learning", "Python", "Deep Learning", "TensorFlow"],
-    "experience_required": 5,
-    "level": "Senior"
+    "level": "Mid-Senior",
+    "location": "Cali, Valle del Cauca, Colombia",
+    "date": null,
+    "company_description": "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.\n\nBy combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses.\n\nFrom prototype to real-world impact - be part of a global shift by doing work that matters.",
+    "job_description": "Our Testers work with project teams to ensure software quality through systematic test planning, execution, and defect tracking, ensuring functionality, performance, and reliability of applications before deployment. With deep knowledge of various types of applications, databases, and operating systems, they maintain high standards of product excellence and user satisfaction.",
+    "responsibilities": [
+      "Test software systems, review and analyze documentation, specifications and understand the business requirements.",
+      "Involved in investigating, analyzing and writing tests for reported defects.",
+      "Implement best practices for test automation to optimize test execution efficiency.",
+      "Contribute to test planning and strategy, collaborating with QA and development teams to define test objectives, scope, and schedules.",
+      "Provide input on risk assessment and mitigation strategies related to automated testing."
+    ],
+    "qualifications": [
+      "+4 years of experience",
+      "Knowledge of automated testing methods & frameworks",
+      "Strong knowledge and experience in Web Services/API testing (REST API).",
+      "Knowledge in scripting and programming languages based on OOP. Java",
+      "Proficiency in understanding software development life cycle (SDLC) and testing methodologies (e.g., black-box testing, white-box testing, regression testing).",
+      "Strong analytical and organizational skills and attention to details",
+      "Proficiency in executing automated and manual test cases and accurately documenting test results.",
+      "Familiarity with bug tracking systems and experience in defect identification, reporting, and tracking.",
+      "Desirable:  ISTQB Certification or other relevant certifications and Playwright Experience"
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global opportunities",
+        "Non-linear career paths",
+        "Internal development programmes"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Training and certifications",
+        "Workshops and conferences",
+        "Internal tech communities"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Tech communities",
+        "Hobby clubs",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Freddy Jimenez",
+    "recruiter": "Nuria Tambasco",
+    "referral": true,
+    "referral_code": "REF1026Z"
   },
   {
     "position": "Business Analyst",
     "skills_required": ["Business Analysis", "Stakeholder Management", "Agile", "Scrum"],
+    "location": "Cluj-Napoca, Romania",
     "experience_required": 3,
-    "level": "Mid"
+    "level": "Mid",
+    "referral": false,
+    "referral_code": null,
+    "company_description": "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.\n\nBy combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses.\n\nFrom prototype to real-world impact - be part of a global shift by doing work that matters.",
+    "job_description": "As a Business Analyst at Endava you will identify client needs, analyze processes, and propose solutions to align with strategic goals. While fostering efficiency and ensuring organizational success through systematic approaches, Business Analyst also mediate between clients and engineering teams to ensure project clarity.",
+    "responsibilities": [
+      "Establishing and building relationship with the client's stakeholder through deep understanding business domain and consultancy.",
+      "Gathering and analyzing business requirements.",
+      "Providing solution directions and recommendations based on the client's needs, environment specifics and industry trends.",
+      "Creating and keeping up to date product backlog (creating user stories and acceptance criteria from the product vision and epics).",
+      "Working closely with engineering team and ensuring that user stories are implemented in line with the product vision and timelines.",
+      "Understanding the market reasoning behind given requirement and ensuring that development team deliver it according to global business goals and feature specifics",
+      "Closely observing industry trends in the area of application design and proposing new solutions to the client processes and the product"
+    ],
+    "qualifications": [
+      "3+ years of experience",
+      "Experience as product owner and/or business analyst in the Agile environment, defining business requirements and creating user stories",
+      "Demonstrated Leadership skills and team management.",
+      "Demonstrable ability to translate business needs into solution requirements and define those in a written format that allows engineering teams to align behind the product vision",
+      "Knowledge and experience of software development planning techniques, including Agile Scrum.",
+      "Understand all standard tools and methodologies concerning Business Analysis including processes, artifacts, and tools.",
+      "Strong analytical skills, systematic approach and self-reliant.",
+      "Ability to measure and report on the effectiveness of product iterations.",
+      "Excellent analytical and problem-solving skills, with a keen eye for detail and the ability to identify process inefficiencies and areas for improvement in diverse markets.",
+      "Strong project management skills, capable of handling multiple tasks simultaneously while meeting deadlines in various time zones.",
+      "Collaborative mindset with excellent interpersonal skills, promoting effective teamwork and relationship-building across cultures.",
+      "Adaptable and proactive, with a willingness to embrace new technologies and approaches to drive innovation and efficiency."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global career opportunities",
+        "Non-linear career paths",
+        "Internal development programmes for management and technical leadership"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Internal tech communities",
+        "Training",
+        "Certifications",
+        "Coaching",
+        "Online learning platforms subscriptions",
+        "Pass-it-on sessions",
+        "Workshops",
+        "Conferences"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global internal wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Global internal tech communities",
+        "Hobby clubs and interest groups",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Daniela Paun",
+    "recruiter": "Livia Marti"
   },
   {
-    "position": "DevOps Engineer",
-    "skills_required": ["AWS", "Docker", "Kubernetes", "Terraform"],
+    "position": "Senior DevOps Engineer",
+    "skills_required": ["AWS", "Docker", "Kubernetes", "Terraform", "Azure DevOps", "Python", "Bash"],
+    "location": "Buenos Aires, Argentina",
     "experience_required": 5,
-    "level": "Mid-Senior"
+    "level": "Mid-Senior",
+    "referral": false,
+    "referral_code": null,
+    "company_description": "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.\n\nBy combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses.\n\nFrom prototype to real-world impact - be part of a global shift by doing work that matters.",
+    "job_description": "Application Management focuses on the end-to-end support of software applications throughout their lifecycle, from deployment and monitoring to ongoing maintenance and performance optimization, ensuring alignment with business goals and consistent value delivery. Within this space, DevOps practices add automation of routine operational tasks, CI/CD pipeline management, infrastructure as code, observability through logs and metrics, and the adoption of scalable and reliable system patterns. DevOps engineers in this domain serve as a key link between development and operations teams, enabling faster delivery cycles while upholding stability, performance, and security compliance.",
+    "responsibilities": [
+      "Design and manage CI/CD pipelines for ADF, Databricks notebooks, Spark jobs, and Power BI (via Azure Pipelines).",
+      "Automate provisioning and orchestration of data workflows (Databricks, ADF, Event Hubs, Spark).",
+      "Implement monitoring (Azure Monitor, Log Analytics) and cost tracking across pipelines.",
+      "Apply security controls: RBAC, Key Vaults, data encryption (Voltage), and secure deployment practices.",
+      "Partner with QA and engineering to support test environments and rollout readiness."
+    ],
+    "qualifications": [
+      "5+ years in DevOps roles, ideally within data & analytics environments.",
+      "Hands-on experience with Azure DevOps, Terraform, and scripting (Python).",
+      "Prior involvement in deploying large-scale ETL/data pipelines.",
+      "Familiarity with infrastructure-as-code and Databricks environments.",
+      "Strong problem-solving and troubleshooting abilities.",
+      "Excellent communication and teamwork skills."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global career opportunities",
+        "Non-linear career paths",
+        "Internal development programmes for management and technical leadership"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Internal tech communities",
+        "Training",
+        "Certifications",
+        "Coaching",
+        "Online learning platforms subscriptions",
+        "Pass-it-on sessions",
+        "Workshops",
+        "Conferences"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global internal wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Global internal tech communities",
+        "Hobby clubs and interest groups",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Ernesto Szini",
+    "recruiter": "Eric Braidi"
   },
   {
-    "position": "Fullstack Developer",
-    "skills_required": ["ReactJS", "NodeJS", "MongoDB"],
-    "experience_required": 2,
-    "level": "Mid"
+    "position": "Senior Fullstack Developer (Java+React)",
+    "skills_required": [
+      "ReactJS",
+      "NodeJS",
+      "MongoDB",
+      "Java",
+      "Spring",
+      "Hibernate",
+      "Maven",
+      "Gradle",
+      "Git",
+      "Agile",
+      "CI/CD"
+    ],
+    "experience_required": 5,
+    "level": "Senior",
+    "location": "Cali, Valle del Cauca, Colombia",
+    "company_description": "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.\n\nBy combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses.\n\nFrom prototype to real-world impact - be part of a global shift by doing work that matters.",
+    "job_description": "Development is the largest discipline at Endava. Our developers design, build, and release software products in multiple programming languages, frameworks, and libraries. Always collaborating with cross-functional project teams, our developers are adaptable problem-solvers with a client-oriented mindset.",
+    "responsibilities": [
+      "Designs, estimates, and implements technical solutions for medium/high complexity applications.",
+      "Participates actively in all phases of the application development lifecycle.",
+      "Collaborates with various project stakeholders to provide support for clarifying requirements, processes, architecture, and priorities.",
+      "Recommends and promotes IT industry standards, tools, and practices (DevOps, etc.) to achieve well-engineered software products.",
+      "Proposes improvements and escalates risks/issues related to development activities.",
+      "Participates in the review of the work done by development team members.",
+      "Learns and applies new technologies, practices, and tools as appropriate to the project.",
+      "Participates in internal and external tech communities, events, etc.",
+      "Shares experience and knowledge gained from projects."
+    ],
+    "qualifications": [
+      "5+ years of experience in software development.",
+      "2+ years working as a full-stack developer using React.",
+      "Strong understanding of different common programming paradigms (OOP, Functional, etc.).",
+      "Strong familiarity with design/architectural patterns and clean code principles (e.g., SOLID, GoF, MVVM).",
+      "Proficient in relevant programming languages, frameworks, and tools such as Java, Javascript, Spring, Hibernate, React, Maven, Gradle.",
+      "Practical experience in platform-specific database systems and SQL.",
+      "Good understanding of version control systems like Git or similar.",
+      "Solid experience with testing and mocking frameworks.",
+      "Familiar with common communication protocols and standards such as HTTP, REST, JSON, TCP/IP, and others.",
+      "Experience with Agile methodologies (e.g., SCRUM, KANBAN).",
+      "Knowledge of CI/CD tools and practices.",
+      "Good problem-solving skills and analytical thinking.",
+      "Excellent communication and teamwork abilities.",
+      "Upper English proficiency."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global career opportunities",
+        "Non-linear career paths",
+        "Internal development programmes for management and technical leadership"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Internal tech communities",
+        "Training",
+        "Certifications",
+        "Coaching",
+        "Online learning platforms subscriptions",
+        "Pass-it-on sessions",
+        "Workshops",
+        "Conferences"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global internal wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Global internal tech communities",
+        "Hobby clubs and interest groups",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Sebastian Petrina",
+    "recruiter": "Agustina Chichizola"
   },
   {
-    "position": "Frontend Developer",
-    "skills_required": ["ReactJS", "Redux Toolkit", "NextJS"],
+    "position": "Junior Frontend Developer",
+    "skills_required": [
+      "ReactJS",
+      "Redux Toolkit",
+      "NextJS",
+      "JavaScript",
+      "HTML",
+      "CSS"
+    ],
     "experience_required": 1,
-    "level": "Junior"
+    "level": "Junior",
+    "location": "Ho Chi Minh City, Vietnam",
+    "company_description": "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.\n\nBy combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses.\n\nFrom prototype to real-world impact - be part of a global shift by doing work that matters.",
+    "job_description": "Development is the largest discipline at Endava. Our developers design, build, and release software products in multiple programming languages, frameworks, and libraries. Always collaborating with cross-functional project teams, our developers are adaptable problem-solvers with a client-oriented mindset.",
+    "responsibilities": [
+      "Assist in the development and maintenance of user-facing features using ReactJS and modern front-end technologies.",
+      "Collaborate with designers, backend developers, and other stakeholders to implement responsive and accessible interfaces.",
+      "Learn and apply clean coding practices and participate in code reviews.",
+      "Write reusable components and maintain consistency across applications using Redux Toolkit and NextJS.",
+      "Support testing and debugging of frontend features.",
+      "Stay updated on emerging trends in front-end development and suggest improvements where applicable."
+    ],
+    "qualifications": [
+      "1+ year of experience in frontend development.",
+      "Basic understanding of JavaScript and modern frameworks, particularly ReactJS.",
+      "Experience with Redux Toolkit and/or state management tools.",
+      "Familiarity with NextJS, routing, and server-side rendering concepts.",
+      "Understanding of HTML5, CSS3, and responsive design principles.",
+      "Good communication and collaboration skills.",
+      "Willingness to learn and grow in a fast-paced development environment.",
+      "Experience working in Agile teams is a plus."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global career opportunities",
+        "Non-linear career paths",
+        "Internal development programmes for management and technical leadership"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Internal tech communities",
+        "Training",
+        "Certifications",
+        "Coaching",
+        "Online learning platforms subscriptions",
+        "Pass-it-on sessions",
+        "Workshops",
+        "Conferences"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global internal wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Global internal tech communities",
+        "Hobby clubs and interest groups",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Nhat Pham",
+    "recruiter": "Han Nguyen"
   }
 ]

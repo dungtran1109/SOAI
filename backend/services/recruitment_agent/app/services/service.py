@@ -222,8 +222,22 @@ class RecruitmentService:
         logger.info("Uploading JD list.")
         for jd_data in jd_data_list:
             jd_validated = JobDescriptionUploadSchema(**jd_data)
+            logger.debug(f"Validating JD data: {jd_validated}")
             normalized_skills = json.dumps(sorted(jd_validated.skills_required))
-
+            logger.debug(f"Normalized skills: {normalized_skills}")
+            # Check for existing JD with same position and skills
+            if not jd_validated.position:
+                logger.warn("JD position is empty. Skipping this JD.")
+                continue
+            if not jd_validated.skills_required:
+                logger.warn("JD skills_required is empty. Skipping this JD.")
+                continue
+            if not jd_validated.experience_required:
+                logger.warn("JD experience_required is not set. Skipping this JD.")
+                continue
+            if not jd_validated.level:
+                logger.warn("JD level is not set. Defaulting to 'Mid'.")
+                jd_validated.level = "Mid"
             existing = (
                 db.query(JobDescription)
                 .filter_by(
@@ -234,16 +248,34 @@ class RecruitmentService:
                 )
                 .first()
             )
-
-            if existing:
+            logger.debug(f"Checking for existing JD: {existing}")
+            if not existing:
+                logger.debug("No existing JD found. Proceeding to insert new JD.")
+            else:
+                logger.warn(
+                    f"JD with position '{jd_validated.position}' and skills '{normalized_skills}' already exists. Skipping this JD."
+                )
+                # If JD already exists, skip insertion
                 continue
 
             jd = JobDescription(
                 position=jd_validated.position,
                 skills_required=normalized_skills,
+                location=jd_validated.location,
+                datetime=jd_validated.datetime,
                 experience_required=jd_validated.experience_required,
                 level=jd_validated.level,
+                referral=jd_validated.referral,
+                referral_code=jd_validated.referral_code,
+                company_description=jd_validated.company_description,
+                job_description=jd_validated.job_description,
+                responsibilities=jd_validated.responsibilities,
+                qualifications=jd_validated.qualifications,
+                additional_information=jd_validated.additional_information,
+                hiring_manager=jd_validated.hiring_manager,
+                recruiter=jd_validated.recruiter,
             )
+            logger.debug(f"Inserting new JD: {jd}")
             db.add(jd)
 
         db.commit()

@@ -484,24 +484,28 @@ remove_public_image() {
 ##
 collect_docker_logs() {
     test -n "$__name" || die "Module name required"
-    test -n "$SOAI_LOGS_DIR" || mkdir -p $SOAI_LOGS_DIR
+
+    if [ -d "$SOAI_LOGS_DIR" ]; then
+        echo "SOAI_LOGS_DIR exists. Skipping creation..."
+    else
+        echo "SOAI_LOGS_DIR does not exist. Creating..."
+        mkdir -p "$SOAI_LOGS_DIR"
+    fi
 
     container_name="soai_$__name"
     log_path="$SOAI_LOGS_DIR/$container_name.log"
-    if [[ -f $log_path ]]; then
-        echo "Remove the logs dir if it exists"
-        chmod +x $log_path
-        rm -f $log_path
+
+    if [ -f "$log_path" ]; then
+        echo "Removing existing log file: $log_path"
+        rm -f "$log_path"
     fi
-    
-    # Check if the container is exists
-    if docker ps -a --format '{{.Names}}' | grep -Eq "^${container_name}$"; then
-        echo "Collecting docker logs: $container_name to $log_path"
-        docker logs $container_name 2>&1 | \
-            tee "$log_path" \
-            || die "Failed to collect docker logs with container name: $container_name"
+
+    if docker ps -a --format '{{.Names}}' | grep -Fxq "$container_name"; then
+        echo "Collecting docker logs from $container_name into $log_path"
+        docker logs "$container_name" 2>&1 | tee "$log_path" || \
+            die "Failed to collect docker logs from container: $container_name"
     else
-        echo "Container $container_name did not run yet. Need to run container $container_name first."
+        echo "⚠️ Container $container_name does not exist or is not running."
     fi
 }
 

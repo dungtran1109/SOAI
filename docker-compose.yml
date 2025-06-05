@@ -13,6 +13,7 @@ services:
       - SERVICE_PORT=8004
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - LOG_LEVEL=DEBUG
     volumes:
       - ./backend/services/gen_ai_provider:/app
     restart: always
@@ -119,6 +120,7 @@ services:
       - DB_PORT=3306
       - DB_NAME=soai_db
       - DB_USERNAME=soai_user
+      - LOG_LEVEL=DEBUG
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/api/v1/recruitment/health"]
