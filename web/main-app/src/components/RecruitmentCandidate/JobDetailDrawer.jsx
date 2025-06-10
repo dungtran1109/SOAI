@@ -1,7 +1,14 @@
+import { useRef, useState } from "react";
 import "../../css/JobDetailDrawer.css";
 import EndavaLogo from "../../assets/images/endava-logo.png";
+import { uploadCV } from "../../api/cvApi";
+import { toast } from "react-toastify";
 
 const JobDetailDrawer = ({ job, onClose }) => {
+  const fileInputRef = useRef();
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
   if (!job) return null;
 
   const handleOutsideClick = (e) => {
@@ -44,6 +51,33 @@ const JobDetailDrawer = ({ job, onClose }) => {
         ))}
       </section>
     );
+  };
+
+  // Handle CV upload when Apply is clicked
+  const handleApplyClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSelectedFile(file.name);
+    setIsUploading(true);
+    try {
+      const MAX_SIZE =5 * 1024 * 1024; // 5 MB
+      if (file.size > MAX_SIZE) {
+        throw new Error("File size exceeds 5 MB limit.");
+      }
+      if (!["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.type)) {
+        throw new Error("Invalid file type. Only PDF and Word documents are allowed.");
+      }
+      const response = await uploadCV(file, job.position || job.title || "Unknown Position");
+      toast.success(response?.message || `CV uploaded successfully!`);
+    } catch (err) {
+      toast.error(err?.message || "Failed to upload CV.");
+    }
+    setIsUploading(false);
+    e.target.value = ""; // Reset input so same file can be selected again
   };
 
   return (
@@ -153,9 +187,32 @@ const JobDetailDrawer = ({ job, onClose }) => {
 
         {/* Footer */}
         <div className="drawer-footer">
-          <button className="btn-primary">Apply</button>
-          <button className="btn-outline">Refer a Friend</button>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            style={{ display: "none" }}
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
+          <button
+            className="btn-primary"
+            onClick={handleApplyClick}
+            disabled={isUploading}
+            aria-label="Apply for this job"
+          >
+            {isUploading ? (
+              <span className="spinner" aria-label="Uploading"></span>
+            ) : (
+              "Apply"
+            )}
+          </button>
+          <button className="btn-outline" aria-label="Refer a Friend">Refer a Friend</button>
           <div className="referral-note">🔗 Referral link</div>
+          {selectedFile && (
+            <div className="selected-file" style={{ marginTop: 8, fontSize: 13 }}>
+              Selected file: <strong>{selectedFile}</strong>
+            </div>
+          )}
         </div>
       </div>
     </div>

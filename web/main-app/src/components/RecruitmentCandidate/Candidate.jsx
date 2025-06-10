@@ -23,8 +23,6 @@ const Candidate = () => {
     const fetchJobs = async () => {
       try {
         const jobs = await getAllJD();
-        console.log("[DEBUG] Raw jobs from API:", jobs);
-
         const formattedJobs = jobs.map((job) => ({
           id: job.id,
           title: job.position || "Untitled Position",

@@ -45,19 +45,17 @@ class TestRecruitmentAPI(unittest.TestCase):
         log_info("Running post-test cleanup...")
         tester = cls()
         tester.admin_token = cls.admin_token
-        tester.postclean_candidate_and_jd("Bui Thanh Tra", "Junior Frontend Developer")
+        tester.postclean_candidate("Bui Thanh Tra", "Junior Frontend Developer")
 
-    def preclean_candidate_and_jd(self, candidate_name, position):
+    def preclean_candidate(self, candidate_name, position):
         """Clean up test data before each test."""
         log_info("Pre-cleaning old test data...")
         self.clean_cv(candidate_name, position)
-        self.clean_jd(position)
 
-    def postclean_candidate_and_jd(self, candidate_name, position):
+    def postclean_candidate(self, candidate_name, position):
         """Clean up test data after each test if needed."""
         log_info("Post-cleaning test data...")
         self.clean_cv(candidate_name, position)
-        self.clean_jd(position)
 
     def clean_cv(self, candidate_name, position):
         """Delete CVs that match test candidate name and position."""
@@ -65,25 +63,14 @@ class TestRecruitmentAPI(unittest.TestCase):
             f"Cleaning CVs for candidate '{candidate_name}' and position '{position}'"
         )
         try:
-            response = api_request(
-                "GET",
-                f"{BASE_URL}/cvs",
-                params={"position": position},
-                headers=get_headers(self.admin_token),
-            )
-            if response.status_code == 200:
-                for cv in response.json():
-                    if (
-                        isinstance(cv, dict)
-                        and cv.get("candidate_name", "").lower()
-                        == candidate_name.lower()
-                    ):
-                        log_info(f"Deleting CV ID={cv['id']}")
-                        api_request(
-                            "DELETE",
-                            f"{BASE_URL}/cvs/{cv['id']}",
-                            headers=get_headers(self.admin_token),
-                        )
+            cvs = self.get_items("cvs", {"position": position}, self.admin_token)
+            for cv in cvs:
+                if (
+                    isinstance(cv, dict)
+                    and cv.get("candidate_name", "").lower() == candidate_name.lower()
+                ):
+                    log_info(f"Deleting CV ID={cv['id']}")
+                    self.delete_item("cvs", cv["id"], self.admin_token)
         except Exception as e:
             log_error(f"Error while cleaning CVs: {e}")
 
@@ -91,23 +78,65 @@ class TestRecruitmentAPI(unittest.TestCase):
         """Delete JDs that match test position."""
         log_debug(f"Cleaning JDs for position '{position}'")
         try:
-            response = api_request(
-                "GET",
-                f"{BASE_URL}/jds",
-                params={"position": position},
-                headers=get_headers(self.admin_token),
-            )
-            if response.status_code == 200:
-                for jd in response.json():
-                    if isinstance(jd, dict) and jd.get("position") == position:
-                        log_info(f"Deleting JD ID={jd['id']}")
-                        api_request(
-                            "DELETE",
-                            f"{BASE_URL}/jds/{jd['id']}",
-                            headers=get_headers(self.admin_token),
-                        )
+            jds = self.get_items("jds", {"position": position}, self.admin_token)
+            for jd in jds:
+                if isinstance(jd, dict) and jd.get("position") == position:
+                    log_info(f"Deleting JD ID={jd['id']}")
+                    self.delete_item("jds", jd["id"], self.admin_token)
         except Exception as e:
             log_error(f"Error while cleaning JDs: {e}")
+
+    def get_items(self, resource, params, token):
+        """Generic GET for resource list."""
+        response = api_request(
+            "GET",
+            f"{BASE_URL}/{resource}",
+            params=params,
+            headers=get_headers(token),
+        )
+        if response.status_code == 200:
+            return response.json()
+        return []
+
+    def delete_item(self, resource, item_id, token):
+        """Generic DELETE for resource item."""
+        api_request(
+            "DELETE",
+            f"{BASE_URL}/{resource}/{item_id}",
+            headers=get_headers(token),
+        )
+
+    def upload_jd(self, token):
+        with open(JD_FILE_PATH, "rb") as f:
+            return api_request(
+                "POST",
+                f"{BASE_URL}/jds/upload",
+                files={"file": ("jd_sample.json", f, "application/json")},
+                headers=get_headers(token),
+            )
+
+    def upload_cv(self, token, email, position):
+        with open(CV_FILE_PATH, "rb") as f:
+            files = {
+                "file": ("sampleCV.pdf", f, "application/pdf"),
+                "override_email": (None, email),
+                "position_applied_for": (None, position),
+            }
+            return api_request(
+                "POST",
+                f"{BASE_URL}/cvs/upload",
+                files=files,
+                headers=get_headers(token),
+            )
+
+    def get_pending_cv(self, candidate_name, token):
+        response = api_request(
+            "GET",
+            f"{BASE_URL}/cvs/pending",
+            params={"candidate_name": candidate_name},
+            headers=get_headers(token),
+        )
+        return response.json() if response.status_code == 200 else []
 
     def test_full_flow_and_all_routes(self):
         """Main working-path test: upload JD, upload CV, approve, schedule and complete interview."""
@@ -118,7 +147,7 @@ class TestRecruitmentAPI(unittest.TestCase):
         position = "Junior Frontend Developer"
 
         try:
-            self.preclean_candidate_and_jd(name, position)
+            self.preclean_candidate(name, position)
             log_debug("Test data preclean complete")
         except Exception as e:
             log_error(f"Error during preclean: {e}")
@@ -126,38 +155,15 @@ class TestRecruitmentAPI(unittest.TestCase):
 
         try:
             log_info("[Step 1] Upload JD")
-            with open(JD_FILE_PATH, "rb") as f:
-                response = api_request(
-                    "POST",
-                    f"{BASE_URL}/jds/upload",
-                    files={"file": ("jd_sample.json", f, "application/json")},
-                    headers=get_headers(self.admin_token),
-                )
+            response = self.upload_jd(self.admin_token)
             self.assertEqual(response.status_code, 200)
 
             log_info("[Step 2] Upload CV")
-            with open(CV_FILE_PATH, "rb") as f:
-                files = {
-                    "file": ("sampleCV.pdf", f, "application/pdf"),
-                    "override_email": (None, email),
-                    "position_applied_for": (None, position),
-                }
-                response = api_request(
-                    "POST",
-                    f"{BASE_URL}/cvs/upload",
-                    files=files,
-                    headers=get_headers(self.admin_token),
-                )
+            response = self.upload_cv(self.admin_token, email, position)
             self.assertEqual(response.status_code, 200)
 
             log_info("[Step 3] Get pending CV")
-            response = api_request(
-                "GET",
-                f"{BASE_URL}/cvs/pending",
-                params={"candidate_name": name},
-                headers=get_headers(self.admin_token),
-            )
-            pending_cv = response.json()
+            pending_cv = self.get_pending_cv(name, self.admin_token)
             self.assertGreater(len(pending_cv), 0)
             cv_id = pending_cv[0]["id"]
 
@@ -258,6 +264,9 @@ class TestRecruitmentAPI(unittest.TestCase):
                 headers=get_headers(self.admin_token),
             )
             self.assertEqual(response.status_code, 200)
+            
+            log_info("[Step 15] Delete JD")
+            self.clean_jd("Senior DevOps Engineer")
 
         except Exception as e:
             log_error(f"Test failed with error: {e}")
@@ -274,57 +283,23 @@ class TestRecruitmentAPI(unittest.TestCase):
         position = "Junior Frontend Developer"
         unmatch_position = "Senior Fullstack Developer (Java+React)"
 
-        self.preclean_candidate_and_jd(name, position)
+        self.preclean_candidate(name, position)
 
         log_info("Trying to Upload JD with USER role")
-        with open(JD_FILE_PATH, "rb") as f:
-            response = api_request(
-                "POST",
-                f"{BASE_URL}/jds/upload",
-                files={"file": ("jd_sample.json", f, "application/json")},
-                headers=get_headers(self.user_token),
-            )
+        response = self.upload_jd(self.user_token)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json().get("detail"), "Insufficient permission")
 
         log_info("Uploading JD as ADMIN for CV testing")
-        with open(JD_FILE_PATH, "rb") as f:
-            api_request(
-                "POST",
-                f"{BASE_URL}/jds/upload",
-                files={"file": ("jd_sample.json", f, "application/json")},
-                headers=get_headers(self.admin_token),
-            )
+        self.upload_jd(self.admin_token)
             
         log_info("Trying to upload CV with unmatch position")
-        with open(CV_FILE_PATH, "rb") as f:
-            files = {
-                "file": ("sampleCV.pdf", f, "application/pdf"),
-                "override_email": (None, email),
-                "position_applied_for": (None, unmatch_position),
-            }
-            response = api_request(
-                "POST",
-                f"{BASE_URL}/cvs/upload",
-                files=files,
-                headers=get_headers(self.user_token),
-            )
+        response = self.upload_cv(self.user_token, email, unmatch_position)
         self.assertEqual(response.status_code, 200)
         log_info("Unmatch position CV response: " + str(response.json().get("message")))
 
         log_info("Uploading CV with USER role")
-        with open(CV_FILE_PATH, "rb") as f:
-            files = {
-                "file": ("sampleCV.pdf", f, "application/pdf"),
-                "override_email": (None, email),
-                "position_applied_for": (None, position),
-            }
-            response = api_request(
-                "POST",
-                f"{BASE_URL}/cvs/upload",
-                files=files,
-                headers=get_headers(self.user_token),
-            )
+        response = self.upload_cv(self.user_token, email, position)
         self.assertEqual(response.status_code, 200)
 
         log_info("Trying to get pending CV with USER role")
@@ -338,13 +313,7 @@ class TestRecruitmentAPI(unittest.TestCase):
         self.assertEqual(response.json().get("detail"), "Insufficient permission")
 
         log_info("Getting pending CVs as ADMIN")
-        response = api_request(
-            "GET",
-            f"{BASE_URL}/cvs/pending",
-            params={"candidate_name": name},
-            headers=get_headers(self.admin_token),
-        )
-        pending_cv = response.json()
+        pending_cv = self.get_pending_cv(name, self.admin_token)
         if not pending_cv:
             log_info("No pending CV found, skipping test.")
             self.skipTest("No pending CV found for permission test.")

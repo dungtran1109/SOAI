@@ -29,6 +29,9 @@ backend/services/gen_ai_provider/app/logs/gen-ai_agent.log
 backend/services/recruitment_agent/app/logs/recruitment_agent.log
 build/
 venv/
+
+# package-lock.json
+web/main-app/package-lock.json
 # Compiled Dynamic libraries
 *.so
 *.dylib

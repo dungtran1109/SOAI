@@ -3,6 +3,8 @@ import AuthPage from "./pages/AuthPage";
 import { isAuthenticated } from "./components/authUtils";
 import RecruitmentCandidatePage from "./pages/RecruitmentCandidatePage";
 import { useEffect, useState } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -35,6 +37,7 @@ const App = () => {
   return (
     <Router>
       <AppRoutes />
+      <ToastContainer position="top-center" autoClose={3000} />
     </Router>
   );
 };

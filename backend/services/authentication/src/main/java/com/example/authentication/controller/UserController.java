@@ -32,9 +32,9 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // Admin Only: Search Users by Name
+    // Admin & User: Search Users by Name
     @GetMapping("/search")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
     public ResponseEntity<List<Users>> getUserByName(@RequestParam String userName) {
         return ResponseEntity.ok(userService.getUserByName(userName));
     }
