@@ -7,9 +7,9 @@ from logging.handlers import RotatingFileHandler
 from config.constants import *
 
 # Set default environment variables
-CONTAINER_NAME = os.getenv("CONTAINER_NAME", "")
-POD_NAME = os.getenv("POD_NAME", "")
-NAMESPACE = os.getenv("NAMESPACE", "")
+CONTAINER_NAME = os.getenv("CONTAINER_NAME", "recruitment")
+POD_NAME = os.getenv("POD_NAME", "recruitment-pod")
+NAMESPACE = os.getenv("NAMESPACE", "default")
 
 class JSONFormatter(logging.Formatter):
     def format(self, record: LogRecord) -> str:
@@ -68,11 +68,6 @@ class LoggingConfig:
 
         root_logger.addHandler(stream_handler)
         root_logger.addHandler(file_handler)
-
-        # 3rd-party logger levels
-        logging.getLogger("uvicorn").setLevel(logging.INFO)
-        logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
-        logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 
 class AppLogger:
     def __init__(self, name: str):

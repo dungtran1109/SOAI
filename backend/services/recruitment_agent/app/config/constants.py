@@ -12,7 +12,7 @@ API_PREFIX = "/api/v1/recruitment"
 MATCHING_SCORE_PERCENTAGE = 70
 # LOGGING Configurations
 LOG_DIR = "./logs"
-LOG_LEVEL = "INFO"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 SERVICE_ID = "recruitment-agent"
 LOG_VERSION = "1.0.0"
 # DB Setting - MySQL
