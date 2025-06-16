@@ -27,5 +27,3 @@ COPY --chmod=0755 --chown=${USER_ID}:0 --from=builder /app/target/*.jar app.jar
 EXPOSE 9090
 
 USER ${USER_ID}
-
-CMD ["java", "-jar", "app.jar"]

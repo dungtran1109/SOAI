@@ -61,6 +61,7 @@ services:
       - DB_USERNAME=soai_user
       - DB_PASSWORD=soai_password
     restart: always
+    command: "java -jar app.jar"
     networks:
       - soai-net
     depends_on:

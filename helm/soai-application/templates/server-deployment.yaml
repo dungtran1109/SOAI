@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "soai-recruitment.name" . }}
+  labels: {{- include "soai-recruitment.labels" . | nindent 4 }}
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.recruitment.replicaCount }}
+  strategy:
+{{ toYaml .Values.updateStrategy | indent 4 }}
+  selector:
+    matchLabels: {{- include "soai-recruitment.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations: 
+        {{- $appArmorAnn := include "soai-application.appArmorProfileAnnotation" . | fromYaml -}}
+        {{- $defaultAnn := include "soai-application.annotations" . | fromYaml -}}
+        {{- $annotations := list $appArmorAnn $defaultAnn -}}
+        {{- include "soai-application.mergeAnnotations" (dict "location" (.Template.Name) "sources" $annotations) | trim | nindent 8 }}
+      labels: {{- include "soai-recruitment.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- include "soai-application.appArmorProfile.securityContext" (list .) | indent 8 }}
+        fsGroup: {{ template "soai-application.fsGroup.coordinated" . }}
+        {{- include "soai-application.podSeccompProfile" . | indent 8 }}
+        {{- include "soai-application.supplementalGroups" . }}
+      containers:
+      {{- include "soai-recruitment-containers" (list .) | nindent 6 }}
+    {{- if include "soai-application.pullSecrets" . }}
+      imagePullSecrets:
+        - name: {{ template "soai-application.pullSecrets" . }}
+    {{- end }}

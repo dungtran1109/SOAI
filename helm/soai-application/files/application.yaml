@@ -1,0 +1,54 @@
+{{- $g := fromJson (include "soai-application.global" .) -}}
+{{- $schema := "http" -}}
+{{- if $g.security.tls.enabled -}}
+  {{- $schema = "https" -}}
+{{- end -}}
+logging:
+  level:
+    org:
+      springframework:
+        web: info
+#Get the ENV from k8s, docker env
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:soai_db}
+    username: ${DB_USERNAME:soai_user}
+    password: ${DB_PASSWORD:soai_password}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+springdoc:
+  swagger-ui:
+    path: /api/v1/authentications/swagger-ui/index.html
+  api-docs:
+    path: /api/v1/authentications/docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: "always"
+  health:
+    db:
+      enabled: true
+
+server:
+  {{- if $g.security.tls.enabled }}
+  port: {{ .Values.server.authentication.httpsPort }}
+  ssl:
+    enabled: true
+    key-store: ${KEYSTORE_PATH}
+    key-store-password: ${KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: ssl-cert
+  {{- else }}
+  port: {{ .Values.server.authentication.httpPort }}
+  {{- end }}

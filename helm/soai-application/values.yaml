@@ -1,0 +1,231 @@
+#global:
+# security:
+#   tls:
+#     enabled: true
+#     duration: 2160h
+#     renewBefore: 360h
+#   issuer:
+#     name: ca-issuer
+#     kind: Issuer
+#     group: cert-manager.io
+# registry:
+#   url: anhdung12399
+#   repoPath:
+# timezone: UTC
+# nodeSelector: {}
+# annotations: {}
+# labels: {}
+# networkPolicy:
+#   enabled:z
+# topologySpreadConstraints:
+# podSecurityContext:
+#   supplementalGroups: []
+# fsGroup:
+#   # 'manual' to enforce a specific value (highest precedence)
+#   manual:
+#   # 'namespace' to use the value defined for the namespace set by cluster admin (second highest precedence)
+#   namespace:
+
+updateStrategy:
+  type: RollingUpdate
+
+server:
+  secretsPath:
+    certPath: /run/secrets/tls
+    keyStorePath: /run/secrets/keystore
+  mysqlServer:
+    name: mysql-server
+    replicaCount: 1
+    port: "3306"
+
+  probes:
+    readiness:
+      initialDelaySeconds: 60
+      periodSeconds: 60
+      timeoutSeconds: 15
+      successThreshold: 1
+      failureThreshold: 5
+    liveness:
+      initialDelaySeconds: 60
+      periodSeconds: 60
+      timeoutSeconds: 15
+      successThreshold: 1
+      failureThreshold: 5
+
+  #serviceAccountName: ""
+  authentication:
+    name: authentication
+    replicaCount: 1
+    serviceType: ClusterIP
+    httpPort: "9090"
+    httpsPort: "9443"
+    httpNodePort: "309003"
+    httpsNodePort: "309043"
+
+  recruitment:
+    name: recruitment
+    replicaCount: 1
+    logLevel: INFO
+    serviceType: ClusterIP
+    httpPort: "8003"
+    httpsPort: "8443"
+    httpNodePort: "30803"
+    httpsNodePort: "30843"
+
+  genai:
+    name: genai
+    replicaCount: 1
+    logLevel: INFO
+    serviceType: ClusterIP
+    httpPort: "8004"
+    httpsPort: "8444"
+    httpNodePort: "30804"
+    httpsNodePort: "30844"
+
+  web:
+    name: web
+    replicaCount: 1
+    serviceType: ClusterIP
+    httpPort: "3000"
+    httpsPort: "3443"
+    httpNodePort: "30003"
+    httpsNodePort: "30043"
+
+  webserver:
+    name: webserver
+    replicaCount: 1
+    serviceType: NodePort
+    httpPort: "80"
+    httpsPort: "443"
+    httpNodePort: "30080"
+    httpsNodePort: "30443"
+
+resources:
+  initcontainer:
+    limits:
+      cpu: "1"
+      memory: "200Mi"
+    requests:
+      cpu: "50m"
+      memory: "50Mi"
+  mysql:
+    limits:
+      cpu: "2"
+      memory: "2048Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  authentication:
+    limits:
+      cpu: "2"
+      memory: "2048Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  recruitment:
+    limits:
+      cpu: "2"
+      memory: "4096Mi"
+    requests:
+      cpu: "1"
+      memory: "1024Mi"
+  genai:
+    limits:
+      cpu: "1"
+      memory: "2048Mi"
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+  web:
+    limits:
+      cpu: "200m"
+      memory: "100Mi"
+    requests:
+      cpu: "100m"
+      memory: "50Mi"
+  webserver:
+    limits:
+      cpu: "100m"
+      memory: "50Mi"
+    requests:
+      cpu: "50m"
+      memory: "25Mi"
+
+annotations: {}
+
+seccompProfile:
+  type:
+  # initcontainer:
+  #   type:
+  #   localhostProfile:
+  # mysql:
+  #   type:
+  #   localhostProfile:
+  # authentication:
+  #   type:
+  #   localhostProfile:
+  # recruitment:
+  #   type:
+  #   localhostProfile:
+  # genai:
+  #   type:
+  #   localhostProfile:
+  # web:
+  #   type:
+  #   localhostProfile:
+  # webserver:
+  #   type:
+  #   localhostProfile:
+imageCredentials:
+  pullPolicy: IfNotPresent
+# pullSecret:
+
+appArmorProfile:
+  type: ""
+  localhostProfile:
+  authentication:
+    type: ""
+    localhostProfile:
+  recruitment:
+    type: ""
+    localhostProfile:
+  genai:
+    type: ""
+    localhostProfile:
+  web:
+    type: ""
+    localhostProfile:
+  webserver:
+    type: ""
+    localhostProfile:
+
+storage:
+  # Storage enabled => PV and PVC will be used
+  enabled: false
+  # Storage enabled & PV disabled => only PVC used
+  # Storage enabled & PV enabled => Both PV and PVC are used
+  persistentVolume:
+    enabled: true
+    hostPath:
+      recruitment: /mnt/soai/data-recruitment
+      mysql: /mnt/soai/data-mysql
+      authentication: /mnt/soai/data-authentication
+    storageCapacity:
+      mysql: 2Gi
+      recruitment: 1Gi
+      authentication: 1Gi
+  storageClass:
+    enabled: true
+    name: local-storage
+    provisioner: kubernetes.io/no-provisioner
+
+password:
+  dbUser: "soai_user"
+  dbPass: "soai_password"
+  keystorePass: "soai_keystore_password"
+
+openai:
+  apiKey: ""
+
+issuer:
+  ipAddress: []

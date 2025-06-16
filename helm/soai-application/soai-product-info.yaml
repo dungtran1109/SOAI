@@ -1,0 +1,22 @@
+productName: SOAI AI Agent System
+images:
+  soai-authentication:
+    productName: SOAI Authentication API server
+    registry: '%%REGISTRY%%'
+    name: soai-authentication
+    tag: '%%VERSION%%'
+  soai-recruitment:
+    productName: SOAI Recruitment API server
+    registry: '%%REGISTRY%%'
+    name: soai-recruitment
+    tag: '%%VERSION%%'
+  soai-genai:
+    productName: SOAI GenAI API server
+    registry: '%%REGISTRY%%'
+    name: soai-genai
+    tag: '%%VERSION%%'
+  soai-web:
+    productName: SOAI Web
+    registry: '%%REGISTRY%%'
+    name: soai-web
+    tag: '%%VERSION%%'

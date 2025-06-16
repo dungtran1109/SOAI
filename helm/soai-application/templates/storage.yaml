@@ -1,0 +1,125 @@
+{{- if .Values.storage.enabled }}
+{{- $namespace := include "soai-application.namespace" . -}}
+{{- $storageClassName := printf "%s-%s" $namespace .Values.storage.storageClass.name -}}
+{{- $mysqlName := include "soai-mysql.name" . -}}
+{{- $serverName := include "soai-recruitment.name" . -}}
+{{- $authenticationName := include "soai-authentication.name" . -}}
+
+# StorageClass Definition
+{{- if .Values.storage.storageClass.enabled }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ $storageClassName }}
+provisioner: {{ .Values.storage.storageClass.provisioner }}
+volumeBindingMode: WaitForFirstConsumer
+{{- end }}
+---
+{{- if .Values.storage.persistentVolume.enabled }}
+# PersistentVolume for MySQL
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $mysqlName }}-pv-volume-ck
+  labels:
+    app: {{ $mysqlName }}
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  capacity:
+    storage: {{ .Values.storage.persistentVolume.storageCapacity.mysql }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.storage.persistentVolume.hostPath.mysql }}
+---
+# PersistentVolume for face-model Server
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $serverName }}-pv-volume-ck
+  labels:
+    app: {{ $serverName }}
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  capacity:
+    storage: {{ .Values.storage.persistentVolume.storageCapacity.recruitment }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.storage.persistentVolume.hostPath.recruitment }}
+---
+# PersistentVolume for authentication APIs
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $authenticationName }}-pv-volume-ck
+  labels:
+    app: {{ $authenticationName }}
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  capacity:
+    storage: {{ .Values.storage.persistentVolume.storageCapacity.authentication }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.storage.persistentVolume.hostPath.authentication }}
+{{- end }}
+---
+# PersistentVolumeClaim for MySQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $mysqlName }}-pv-claim
+  labels:
+    app: {{ $mysqlName }}
+    tier: database
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.persistentVolume.storageCapacity.mysql }}
+---
+# PersistentVolumeClaim for face-model server
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $serverName }}-pv-claim
+  labels:
+    app: {{ $serverName }}
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.persistentVolume.storageCapacity.recruitment }}
+---
+# PersistentVolumeClaim for authentication APIs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $authenticationName }}-pv-claim
+  labels:
+    app: {{ $authenticationName }}
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.persistentVolume.storageCapacity.authentication }}
+{{- end }}

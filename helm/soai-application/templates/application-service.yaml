@@ -1,0 +1,81 @@
+{{- $g := fromJson (include "soai-application.global" . ) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "soai-authentication.name" . }}
+spec:
+  selector:
+    app: {{ template "soai-authentication.name" . }}
+  ports:
+    {{- if $g.security.tls.enabled }}
+    - name: {{ template "soai-authentication.name" . }}-https
+      protocol: "TCP"
+      port: {{ .Values.server.authentication.httpsPort }}
+      {{- if not (eq .Values.server.authentication.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.authentication.httpsNodePort }}
+      {{- end }}
+      targetPort: tls-auth-svc
+    {{- else }}
+    - name: {{ template "soai-authentication.name" . }}-http
+      protocol: "TCP"
+      port: {{ .Values.server.authentication.httpPort }}
+      {{- if not (eq .Values.server.authentication.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.authentication.httpNodePort }}
+      {{- end }}
+      targetPort: http-auth-svc
+    {{- end }}
+  type: {{ .Values.server.authentication.serviceType }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "soai-recruitment.name" . }}
+spec:
+  selector:
+    app: {{ template "soai-recruitment.name" . }}
+  ports:
+    {{- if $g.security.tls.enabled }}
+    - name: {{ template "soai-recruitment.name" . }}-https
+      protocol: "TCP"
+      port: {{ .Values.server.recruitment.httpsPort }}
+      {{- if not (eq .Values.server.recruitment.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.recruitment.httpsNodePort }}
+      {{- end }}
+      targetPort: tls-server-svc
+    {{- else }}
+    - name: {{ template "soai-recruitment.name" . }}-http
+      protocol: "TCP"
+      port: {{ .Values.server.recruitment.httpPort }}
+      {{- if not (eq .Values.server.recruitment.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.recruitment.httpNodePort }}
+      {{- end }}
+      targetPort: http-server-svc
+    {{- end }}
+  type: {{ .Values.server.recruitment.serviceType }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "soai-webserver.name" . }}
+spec:
+  selector:
+    app: {{ template "soai-webserver.name" . }}
+  ports:
+    {{- if $g.security.tls.enabled }}
+    - name: {{ template "soai-webserver.name" . }}-https
+      protocol: "TCP"
+      port: {{ .Values.server.webserver.httpsPort }}
+      {{- if not (eq .Values.server.webserver.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.webserver.httpsNodePort }}
+      {{- end }}
+      targetPort: tls-webserver-svc
+    {{- else }}
+    - name: {{ template "soai-webserver.name" . }}-http
+      protocol: "TCP"
+      port: {{ .Values.server.webserver.httpPort }}
+      {{- if not (eq .Values.server.webserver.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.webserver.httpNodePort }}
+      {{- end }}
+      targetPort: http-webserver-svc
+    {{- end }}
+  type: {{ .Values.server.webserver.serviceType }}

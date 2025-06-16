@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "soai-application.name" . }}-auth-configmap
+  labels: 
+    {{- include "soai-authentication.labels" . | nindent 4 }}
+  annotations: 
+    {{- include "soai-application.annotations" . | nindent 4 }}
+data:
+  application.yaml: |
+{{ tpl (.Files.Get "files/application.yaml") . | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "soai-application.name" . }}-mysql-configmap
+  labels:
+    {{- include "soai-mysql.labels" . | nindent 4 }}
+  annotations:
+    {{- include "soai-application.annotations" . | nindent 4 }}
+data:
+  primary.cnf: |
+    [mysqld]
+    log-bin
+  replica.cnf: |
+    [mysqld]
+    super-read-only
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "soai-application.name" . }}-nginx-configmap
+  labels: 
+    {{- include "soai-webserver.labels" . | nindent 4 }}
+  annotations: 
+    {{- include "soai-application.annotations" . | nindent 4 }}
+data:
+  nginx.conf: |
+{{ tpl (.Files.Get "files/nginx.conf") . | indent 4 }}
