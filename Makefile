@@ -19,8 +19,8 @@ clean:
 
 # Step 1: Login into private docker registry
 # Step 2: Run this job to copy docker config to build/docker/config.json
-# Step 3: Create docker secret harbordocker
-#	kubectl -n <namespace> create secret generic harbordocker \
+# Step 3: Create docker secret pullsecret
+#	kubectl -n <namespace> create secret generic pullsecret \
 	--from-file=.dockerconfigjson=build/docker/config.json \
 	--type=kubernetes.io/dockerconfigjson
 prepare:
