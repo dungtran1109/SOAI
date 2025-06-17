@@ -95,8 +95,8 @@ server:
     name: webserver
     replicaCount: 1
     serviceType: NodePort
-    httpPort: "80"
-    httpsPort: "443"
+    httpPort: "8080"
+    httpsPort: "8443"
     httpNodePort: "30080"
     httpsNodePort: "30443"
 
