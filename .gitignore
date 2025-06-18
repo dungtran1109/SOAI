@@ -34,6 +34,9 @@ venv/
 helm/soai-application/files/ca.crt
 helm/soai-application/files/ca.key
 
+# Ignore athena charts after helm dep update
+test/athena_chart/charts/
+
 # package-lock.json
 web/main-app/package-lock.json
 # Compiled Dynamic libraries
