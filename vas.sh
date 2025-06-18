@@ -13,7 +13,7 @@ test -n "$SOAI_LOGS_DIR" || export SOAI_LOGS_DIR="$BUILD_DIR/soai_logs"
 # HELM Chart set up
 test -n "$HELM_DIR" || export HELM_DIR="$BUILD_DIR/helm-build/soai-application"
 test -n "$HELM_CHART_DIR" || export HELM_CHART_DIR="$VAS_GIT/helm/soai-application"
-test -n "$DOCKER_REGISTRY" || export DOCKER_REGISTRY="anhdung12399/soai-application"
+test -n "$DOCKER_REGISTRY" || export DOCKER_REGISTRY="anhdung12399"
 
 prg=$(basename $0) # vas.sh filename
 dir=$(dirname $0); dir=$(cd $dir; pwd) #Get root dir
