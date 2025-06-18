@@ -122,9 +122,10 @@ create_git_tag() {
 ## This will mount UID/GID in Dockerfile in order to run as non-root user
 ##
 get_user_id() {
-    local_container=$1
-    local hash=$(sha256sum <<< "${container}" | cut -f1 -d ' ')
-    bc -q <<< "scale=0;obase=10;ibase=16;(${hash^^}%30D41)+186A0"
+    local container="$1"
+    local hash=$(sha256sum <<< "$container" | cut -f1 -d ' ')
+    local hash_upper=$(echo "$hash" | tr '[:lower:]' '[:upper:]')
+    bc -q <<< "scale=0;obase=10;ibase=16;(${hash_upper}%30D41)+186A0"
 }
 
 ## Copy CA file to helm charts
