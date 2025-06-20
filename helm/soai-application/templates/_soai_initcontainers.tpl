@@ -55,7 +55,6 @@
     capabilities:
       drop:
         - ALL
-    fsGroup: {{ template "soai-application.fsGroup.coordinated" $top }}
     {{- with (index $top.Values "seccompProfile" "initcontainer") }}
     seccompProfile:
     {{- toYaml . | nindent 6 }}

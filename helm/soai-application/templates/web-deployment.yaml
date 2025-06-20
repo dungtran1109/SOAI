@@ -33,6 +33,12 @@ spec:
       - name: tls-cert
         secret:
           secretName: {{ template "soai-application.name" . }}-cert
+      - name: tmp-volume
+        emptyDir: {}
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-logs
+        emptyDir: {}
       {{- end }}
       {{- if include "soai-application.pullSecrets" . }}
         imagePullSecrets:

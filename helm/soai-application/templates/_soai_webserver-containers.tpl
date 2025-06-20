@@ -33,6 +33,10 @@
     mountPath: /etc/nginx/conf.d/
   - name: tmp-volume
     mountPath: /tmp
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-logs
+    mountPath: /var/log/nginx
   {{- if $g.security.tls.enabled }}
   - name: tls-cert
     mountPath: {{ $top.Values.server.secretsPath.certPath }}

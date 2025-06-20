@@ -33,4 +33,10 @@
     mountPath: {{ $top.Values.server.secretsPath.certPath }}
     readOnly: true
   {{- end }}
+  - name: tmp-volume
+    mountPath: /tmp
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-logs
+    mountPath: /var/log/nginx
 {{- end -}}

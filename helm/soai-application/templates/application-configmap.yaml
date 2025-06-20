@@ -36,4 +36,4 @@ metadata:
     {{- include "soai-application.annotations" . | nindent 4 }}
 data:
   default.conf: |
-{{ tpl (.Files.Get "files/default.conf") . | indent 4 }}
+{{ tpl (.Files.Get "files/soai-upstream.conf") . | indent 4 }}
