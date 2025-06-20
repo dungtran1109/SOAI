@@ -13,7 +13,7 @@ import models.job_description
 import models.cv_application
 import models.interview_schedule
 
-logger = AppLogger.get_logger(__name__)
+logger = AppLogger(__name__)
 
 LoggingConfig.setup_logging(json_format=True)
 

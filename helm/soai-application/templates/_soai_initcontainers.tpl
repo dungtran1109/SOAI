@@ -55,6 +55,7 @@
     capabilities:
       drop:
         - ALL
+    fsGroup: {{ template "soai-application.fsGroup.coordinated" $top }}
     {{- with (index $top.Values "seccompProfile" "initcontainer") }}
     seccompProfile:
     {{- toYaml . | nindent 6 }}
@@ -98,6 +99,9 @@
         sleep 5;
       fi
     done;
+
+    echo "Give permission tp to keystore.p12";
+    chmod 644 {{ $top.Values.server.secretsPath.keyStorePath }}/keystore.p12;
   env:
   - name: KEYSTORE_PASSWORD
     valueFrom:

@@ -8,7 +8,7 @@ metadata:
 spec:
   replicas: {{ .Values.server.web.replicaCount }}
   strategy:
-    {{ toYaml .Values.updateStrategy | indent 4 }}
+{{ toYaml .Values.updateStrategy | indent 4 }}
   selector:
     matchLabels: 
       {{- include "soai-web.selectorLabels" . | nindent 6 }}

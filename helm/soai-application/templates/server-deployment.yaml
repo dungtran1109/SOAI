@@ -44,6 +44,8 @@ spec:
         secret:
           secretName: {{ template "soai-application.name" . }}-cert
       {{- end }}
+      - name: tmp-volume
+        emptyDir: {}
     {{- if include "soai-application.pullSecrets" . }}
       imagePullSecrets:
         - name: {{ template "soai-application.pullSecrets" . }}

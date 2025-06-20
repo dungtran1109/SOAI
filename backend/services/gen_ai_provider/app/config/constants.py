@@ -8,7 +8,7 @@ TLS_ENABLED = os.getenv("TLS_ENABLED", "false").lower() == "true"
 CERT_PATH = os.getenv("CERT_PATH", "")
 KEY_PATH = os.getenv("KEY_PATH", "")
 # LOGGING Configurations
-LOG_DIR = "./logs"
+LOG_DIR = "/tmp/logs"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 SERVICE_ID = "genai-agent"
 LOG_VERSION = "1.0.0"

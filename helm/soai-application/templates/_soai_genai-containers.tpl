@@ -59,6 +59,8 @@
     mountPath: {{ $top.Values.server.secretsPath.certPath }}
     readOnly: true
   {{- end }}
+  - name: tmp-volume
+    mountPath: /tmp
 {{ include "soai-application.readinessProbe" (list $top "/api/v1/gen-ai/health" "genai") | indent 2 }}
 {{ include "soai-application.livenessProbe" (list $top "/api/v1/gen-ai/health" "genai") | indent 2 }}
 {{- end -}}

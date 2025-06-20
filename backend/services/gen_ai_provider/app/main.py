@@ -6,7 +6,7 @@ from config.log_config import LoggingConfig, AppLogger
 import uvicorn
 from config.constants import *
 
-logger = AppLogger.get_logger(__name__)
+logger = AppLogger(__name__)
 
 LoggingConfig.setup_logging(json_format=True)
 

@@ -71,6 +71,8 @@
   volumeMounts:
   - name: config-properties
     mountPath: /etc/config
+  - name: tmp-volume
+    mountPath: /tmp
   {{- if $g.security.tls.enabled }}
   - name: keystore-cert
     mountPath: {{ $top.Values.server.secretsPath.keyStorePath }}
