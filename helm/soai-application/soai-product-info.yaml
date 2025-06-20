@@ -8,12 +8,12 @@ images:
   soai-recruitment:
     productName: SOAI Recruitment API server
     registry: '%%REGISTRY%%'
-    name: soai-recruitment
+    name: soai-recruitment_agent
     tag: '%%VERSION%%'
   soai-genai:
     productName: SOAI GenAI API server
     registry: '%%REGISTRY%%'
-    name: soai-genai
+    name: soai-gen_ai_provider
     tag: '%%VERSION%%'
   soai-web:
     productName: SOAI Web

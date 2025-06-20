@@ -28,9 +28,9 @@ RUN groupadd -g ${USER_ID} soai_authentication && \
     useradd -u ${USER_ID} -g soai_authentication -s /bin/false -m soai_authentication
 
 WORKDIR /app
-COPY --chmod=0755 --chown=soai_authentication:soai_authentication --from=builder /app/target/*.jar app.jar
+COPY --chmod=0755 --chown=${USER_ID}:${USER_ID} --from=builder /app/target/*.jar app.jar
 EXPOSE 9090
 
-USER soai_authentication
+USER ${USER_ID}
 
 CMD ["java", "-jar", "app.jar"]
