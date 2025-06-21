@@ -1,10 +1,10 @@
-import { API_BASE_URL } from "../constants/constants";
+import { AUTH_BASE_URL } from "../constants/constants";
 import Cookies from 'js-cookie';
 import { handleResponse } from "./responseHandler";
 
 export const signin = async(formData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/authentications/signin`, {
+        const response = await fetch(`${AUTH_BASE_URL}/authentications/signin`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -26,7 +26,7 @@ export const signin = async(formData) => {
 
 export const signup = async(formData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/authentications/signup`, {
+        const response = await fetch(`${AUTH_BASE_URL}/authentications/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -100,7 +100,7 @@ export const getUserName = () => {
 
 export const getUserByUserId = async (userId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/authentications/users/${userId}`, {
+        const response = await fetch(`${AUTH_BASE_URL}/authentications/users/${userId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ export const getUserByUserId = async (userId) => {
 export const getUserByUserName = async (username) => {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/v1/authentications/users/search?userName=${encodeURIComponent(username)}`,
+            `${AUTH_BASE_URL}/authentications/users/search?userName=${encodeURIComponent(username)}`,
             {
                 method: 'GET',
                 headers: {

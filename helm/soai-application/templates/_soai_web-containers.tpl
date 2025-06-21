@@ -39,4 +39,7 @@
     mountPath: /var/cache/nginx
   - name: nginx-logs
     mountPath: /var/log/nginx
+  - name: web-config
+    mountPath: /etc/nginx/nginx.conf
+    subPath: nginx.conf
 {{- end -}}

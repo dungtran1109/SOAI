@@ -28,10 +28,22 @@
   resources:
 {{- include "soai-application.resources" (index $top.Values "resources" "recruitment") | indent 2 }}
   env:
+  - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: CONTAINER_NAME
+    value: {{ $top.Values.server.recruitment.name }}
   - name: LOG_LEVEL
     value: {{ $top.Values.server.recruitment.logLevel | default "INFO" | quote }}
   - name: GENAI_HOST
     value: {{ printf "%s:%s" $top.Values.server.genai.name (ternary $top.Values.server.genai.httpsPort $top.Values.server.genai.httpPort $g.security.tls.enabled) | quote }}
+  - name: CONSUL_HOST
+    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ $top.Values.server.recruitment.name | quote }}
   - name: SERVICE_PORT

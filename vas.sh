@@ -270,6 +270,7 @@ push_image() {
 # Ensure Docker network exists
 ensure_network() {
     local network_name="soai-net"
+    echo "Creating Docker network if it does not exist: $network_name"
     if ! docker network ls --format '{{.Name}}' | grep -wq "$network_name"; then
         echo "Creating Docker network: $network_name"
         docker network create "$network_name"

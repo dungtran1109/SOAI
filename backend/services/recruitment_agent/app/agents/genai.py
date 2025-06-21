@@ -16,7 +16,7 @@ class GenAI:
         """
         messages = [{"role": "user", "content": message}]
         response = requests.post(
-            url=f"http://{GENAI_HOST}/api/v1/gen-ai/chat",
+            url=f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/chat",
             json={
                 "messages": messages,
                 "model": self.model,

@@ -39,6 +39,12 @@ spec:
         emptyDir: {}
       - name: nginx-logs
         emptyDir: {}
+      - name: web-config
+        configMap:
+          name: {{ template "soai-application.name" . }}-nginx-configmap
+          items:
+            - key: nginx.conf
+              path: nginx.conf
       {{- end }}
       {{- if include "soai-application.pullSecrets" . }}
         imagePullSecrets:

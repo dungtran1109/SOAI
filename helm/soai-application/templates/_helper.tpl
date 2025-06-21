@@ -4,7 +4,7 @@
 Create a map from ".Values.global" with defaults if missing in values file.
 */}}
 {{ define "soai-application.global" }}
-    {{- $globalDefaults := dict "security" (dict "tls" (dict "enabled" true)) -}}
+    {{- $globalDefaults := dict "security" (dict "tls" (dict "enabled" true "duration" "2160h" "renewBefore" "360h")) -}}
     {{- $globalDefaults := merge $globalDefaults (dict "security" (dict "issuer" (dict "name" "ca-issuer" "kind" "Issuer" "group" "cert-manager.io"))) -}}
     {{- $globalDefaults := merge $globalDefaults (dict "registry" (dict "url" "anhdung12399")) -}}
     {{- $globalDefaults := merge $globalDefaults (dict "timezone" "UTC") -}}
@@ -62,19 +62,19 @@ Expand the name of the genai chart
 {{- end -}}
 
 {{/*
-Expand the name of the webserver chart
-*/}}
-{{- define "soai-webserver.name" -}}
-{{- $name := (include "soai-application.name" .) -}}
-{{- printf "%s-webserver" $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
 Expand the name of the web chart
 */}}
 {{- define "soai-web.name" -}}
 {{- $name := (include "soai-application.name" .) -}}
 {{- printf "%s-web" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Expand the name of the consul chart
+*/}}
+{{- define "soai-consul.name" -}}
+{{- $name := (include "soai-application.name" .) -}}
+{{- printf "%s-consul" $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -118,21 +118,21 @@ app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
 
 {{/*
-Selector labels for webserver.
+Selector labels for web.
 */}}
-{{- define "soai-webserver.selectorLabels" -}}
-component: {{ .Values.server.webserver.name | quote }}
-app: {{ template "soai-webserver.name" . }}
+{{- define "soai-web.selectorLabels" -}}
+component: {{ .Values.server.web.name | quote }}
+app: {{ template "soai-web.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
 
 {{/*
-Selector labels for server.
+Selector labels for consul.
 */}}
-{{- define "soai-web.selectorLabels" -}}
-component: {{ .Values.server.web.name | quote }}
-app: {{ template "soai-web.name" . }}
+{{- define "soai-consul.selectorLabels" -}}
+component: {{ .Values.server.consul.name | quote }}
+app: {{ template "soai-consul.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
@@ -275,15 +275,6 @@ Merged labels for common genai
     {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
 {{- end -}}
 
-{{- define "soai-webserver.labels" -}}
-    {{- $g := fromJson (include "soai-application.global" .) -}}
-    {{- $selector := include "soai-webserver.selectorLabels" . | fromYaml -}}
-    {{- $name := (include "soai-webserver.name" .) }}
-    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
-    {{- $global := $g.label -}}
-    {{- $service := .Values.labels -}}
-    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
-{{- end -}}
 {{/*
 Merged labels for common web
 */}}
@@ -291,6 +282,19 @@ Merged labels for common web
     {{- $g := fromJson (include "soai-application.global" .) -}}
     {{- $selector := include "soai-web.selectorLabels" . | fromYaml -}}
     {{- $name := (include "soai-web.name" .) }}
+    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
+    {{- $global := $g.label -}}
+    {{- $service := .Values.labels -}}
+    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
+{{- end -}}
+
+{{/*
+Merged labels for common consul
+*/}}
+{{- define "soai-consul.labels" -}}
+    {{- $g := fromJson (include "soai-application.global" .) -}}
+    {{- $selector := include "soai-consul.selectorLabels" . | fromYaml -}}
+    {{- $name := (include "soai-consul.name" .) }}
     {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
     {{- $global := $g.label -}}
     {{- $service := .Values.labels -}}
@@ -516,7 +520,7 @@ Define soai-application.appArmorProfileAnnotation
   {{- end -}}
   {{- $profiles := dict -}}
   {{- $profileType := "" -}}
-  {{- $containers := list "authentication" "recruitment" "genai" "web" "webserver" -}}
+  {{- $containers := list "authentication" "recruitment" "genai" "web" -}}
   {{- range $container := $containers -}}
     {{- $_ := set $profiles $container $commonProfile -}}
     {{- if (hasKey $.Values.appArmorProfile $container) -}}
@@ -608,7 +612,7 @@ Define FQDN for Cert-Manager certificates
 */}}
 {{- define "soai-application.FQDN" -}}
 {{- $root := index . 0 -}}
-{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-webserver.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) -}}
+{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) -}}
 {{- $namespace := (include "soai-application.namespace" $root) -}}
 {{- range $service := $services }}
   - {{ $service }}

@@ -1,5 +1,7 @@
-// This for nginx routing
-export const API_BASE_URL = "http://127.0.0.1";
-// For testing locally I suggest you should export individually
-// export const AUTH_BASE_URL = "http://localhost:9090"
-// export const API_BASE_URL = "http://localhost:8003";
+// This exports used for calling the nginx proxy after docker built
+export const AUTH_BASE_URL = "/api/v1";
+export const API_BASE_URL = "/api/v1";
+// If you want to run in the local environment without Docker,
+// you can uncomment the lines below and comment the above lines.
+// export const AUTH_BASE_URL = "http://localhost:9090/api/v1";
+// export const API_BASE_URL = "http://localhost:8003/api/v1";

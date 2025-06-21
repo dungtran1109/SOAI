@@ -56,7 +56,7 @@ server:
   authentication:
     name: authentication
     replicaCount: 1
-    serviceType: ClusterIP
+    serviceType: LoadBalancer
     httpPort: "9090"
     httpsPort: "9443"
     httpNodePort: "30903"
@@ -66,39 +66,37 @@ server:
     name: recruitment
     replicaCount: 1
     logLevel: INFO
-    serviceType: ClusterIP
+    serviceType: LoadBalancer
     httpPort: "8003"
-    httpsPort: "8443"
+    httpsPort: "8433"
     httpNodePort: "30803"
-    httpsNodePort: "30843"
+    httpsNodePort: "30833"
 
   genai:
     name: genai
     replicaCount: 1
     logLevel: INFO
-    serviceType: ClusterIP
+    serviceType: LoadBalancer
     httpPort: "8004"
-    httpsPort: "8444"
+    httpsPort: "8434"
     httpNodePort: "30804"
-    httpsNodePort: "30844"
+    httpsNodePort: "30834"
 
   web:
     name: web
     replicaCount: 1
-    serviceType: ClusterIP
-    httpPort: "3000"
-    httpsPort: "3443"
-    httpNodePort: "30003"
-    httpsNodePort: "30043"
-
-  webserver:
-    name: webserver
-    replicaCount: 1
-    serviceType: NodePort
+    serviceType: LoadBalancer
     httpPort: "8080"
     httpsPort: "8443"
-    httpNodePort: "30080"
-    httpsNodePort: "30443"
+    httpNodePort: "30800"
+    httpsNodePort: "30844"
+
+  consul:
+    name: consul
+    replicaCount: 1
+    serviceType: LoadBalancer
+    httpPort: "8500"
+    httpNodePort: "30500"
 
 resources:
   initcontainer:
@@ -143,13 +141,13 @@ resources:
     requests:
       cpu: "100m"
       memory: "50Mi"
-  webserver:
+  consul:
     limits:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "200m"
+      memory: "512Mi"
     requests:
-      cpu: "50m"
-      memory: "25Mi"
+      cpu: "100m"
+      memory: "256Mi"
 
 annotations: {}
 
@@ -173,7 +171,7 @@ seccompProfile:
   # web:
   #   type:
   #   localhostProfile:
-  # webserver:
+  # consul:
   #   type:
   #   localhostProfile:
 imageCredentials:
@@ -193,9 +191,6 @@ appArmorProfile:
     type: ""
     localhostProfile:
   web:
-    type: ""
-    localhostProfile:
-  webserver:
     type: ""
     localhostProfile:
 

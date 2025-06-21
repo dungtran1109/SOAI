@@ -26,7 +26,7 @@ export const uploadCV = async (file, position_applied_for, override_email = null
   formData.append("position_applied_for", position_applied_for);
   if (override_email) formData.append("override_email", override_email);
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/cvs/upload`, {
+  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/upload`, {
     method: "POST",
     headers: authHeaders(),
     body: formData,
@@ -40,7 +40,7 @@ export const uploadCV = async (file, position_applied_for, override_email = null
  * @returns {Promise<Object>} The approval result.
  */
 export const approveCV = async (candidateId) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/cvs/${candidateId}/approve`, {
+  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/${candidateId}/approve`, {
     method: "POST",
     headers: authHeaders()
   });
@@ -52,7 +52,7 @@ export const approveCV = async (candidateId) => {
  * @returns {Promise<Array>} List of pending CVs.
  */
 export const getPendingCVs = async () => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/cvs/pending`, {
+  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/pending`, {
     headers: authHeaders()
   });
   return await handleResponse(response);
@@ -65,7 +65,7 @@ export const getPendingCVs = async () => {
  * @returns {Promise<Object>} The updated CV info.
  */
 export const updateCV = async (cvId, updateData) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/cvs/${cvId}`, {
+  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/${cvId}`, {
     method: "PUT",
     headers: {
       ...authHeaders(),
@@ -82,7 +82,7 @@ export const updateCV = async (cvId, updateData) => {
  * @returns {Promise<Object>} The server's response.
  */
 export const deleteCV = async (cvId) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/cvs/${cvId}`, {
+  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/${cvId}`, {
     method: "DELETE",
     headers: authHeaders()
   });
@@ -95,7 +95,7 @@ export const deleteCV = async (cvId) => {
  * @returns {Promise<Array>} List of CVs.
  */
 export const listCVsByPosition = async (position = "") => {
-  const url = new URL(`${API_BASE_URL}/api/v1/recruitment/cvs/position`);
+  const url = new URL(`${API_BASE_URL}/recruitment/cvs/position`);
   if (position) url.searchParams.append("position", position);
 
   const response = await fetch(url, {
@@ -110,7 +110,7 @@ export const listCVsByPosition = async (position = "") => {
  * @returns {Promise<Object>} The CV info.
  */
 export const getCVById = async (cvId) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/cvs/${cvId}`, {
+  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/${cvId}`, {
     headers: authHeaders()
   });
   return await handleResponse(response);

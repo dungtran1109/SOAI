@@ -119,35 +119,25 @@ spec:
     {{- end }}
   type: {{ .Values.server.web.serviceType }}
 ---
-# SOAI Webserver Service
+# SOAI Consul Service
 apiVersion: v1
 kind: Service
 metadata:
   annotations: {{- include "soai-application.annotations" . | nindent 4 }}
-  labels: {{- include "soai-webserver.labels" . | nindent 4 }}
-  name: {{ template "soai-webserver.name" . }}
+  labels: {{- include "soai-consul.labels" . | nindent 4 }}
+  name: {{ template "soai-consul.name" . }}
 spec:
   selector:
-    app: {{ template "soai-webserver.name" . }}
+    app: {{ template "soai-consul.name" . }}
   ports:
-    {{- if $g.security.tls.enabled }}
-    - name: {{ template "soai-webserver.name" . }}-https
+    - name: {{ template "soai-consul.name" . }}-http
       protocol: "TCP"
-      port: {{ .Values.server.webserver.httpsPort }}
-      {{- if not (eq .Values.server.webserver.serviceType "ClusterIP" ) }}
-      nodePort: {{ .Values.server.webserver.httpsNodePort }}
+      port: {{ .Values.server.consul.httpPort }}
+      {{- if not (eq .Values.server.consul.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.consul.httpNodePort }}
       {{- end }}
-      targetPort: tls-wsv-svc
-    {{- else }}
-    - name: {{ template "soai-webserver.name" . }}-http
-      protocol: "TCP"
-      port: {{ .Values.server.webserver.httpPort }}
-      {{- if not (eq .Values.server.webserver.serviceType "ClusterIP" ) }}
-      nodePort: {{ .Values.server.webserver.httpNodePort }}
-      {{- end }}
-      targetPort: http-webserver-svc
-    {{- end }}
-  type: {{ .Values.server.webserver.serviceType }}
+      targetPort: http-consul-svc
+  type: {{ .Values.server.consul.serviceType }}
 ---
 # MySQL Service
 # This service is used for internal communication between MySQL pods in a StatefulSet.

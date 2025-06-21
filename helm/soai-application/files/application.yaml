@@ -3,6 +3,8 @@
 {{- if $g.security.tls.enabled -}}
   {{- $schema = "https" -}}
 {{- end -}}
+{{- $webHost := include "soai-web.name" . }}
+
 logging:
   level:
     org:
@@ -52,3 +54,14 @@ server:
   {{- else }}
   port: {{ .Values.server.authentication.httpPort }}
   {{- end }}
+
+  cors:
+    allowed-origins: {{ printf "%s" (join "," (list
+      "http://localhost"
+      "http://127.0.0.1"
+      "http://localhost:8080"
+      "http://127.0.0.1:8080"
+      "http://localhost:3000"
+      "http://127.0.0.1:3000"
+      (printf "%s://%s:%s" $schema $webHost (ternary .Values.server.web.httpsPort .Values.server.web.httpPort $g.security.tls.enabled))
+    )) | quote }}

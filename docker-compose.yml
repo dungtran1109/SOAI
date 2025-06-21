@@ -78,31 +78,21 @@ services:
     networks:
       - soai-net
 
-  webserver:
-    container_name: soai_webserver
-    image: soai-webserver:latest
-    build:
-      context: ./backend/services/webserver
-      dockerfile: ./Dockerfile
-    restart: always
-    networks:
-      - soai-net
-    ports:
-      - "8080:80"
-
   web:
     container_name: soai_web
     image: soai-web:latest
     build:
       context: ./web
       dockerfile: ./Dockerfile
-    environment:
-      - WDS_SOCKET_PORT=0
     stdin_open: true
+    ports:
+      - "8080:8080"
+    restart: always
     networks:
       - soai-net
-    volumes:
-      - ./web:/frontend
+    depends_on:
+      recruitment:
+        condition: service_healthy
 
   recruitment:
     container_name: soai_recruitment_agent

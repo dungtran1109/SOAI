@@ -28,6 +28,16 @@
   resources:
 {{- include "soai-application.resources" (index $top.Values "resources" "genai") | indent 2 }}
   env:
+  - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: CONTAINER_NAME
+    value: {{ $top.Values.server.genai.name }}
   - name: LOG_LEVEL
     value: {{ $top.Values.server.genai.logLevel | default "INFO" | quote }}
   - name: OPENAI_API_KEY
@@ -35,6 +45,8 @@
       secretKeyRef:
         name: openai-secret
         key: openai-key
+  - name: CONSUL_HOST
+    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ $top.Values.server.genai.name | quote }}
   - name: SERVICE_PORT

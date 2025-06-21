@@ -4,7 +4,7 @@ import httpx
 from typing import Optional, List, Generator
 
 from services.base_ai_service import BaseAIService
-from config.constants import MAPPING_AI_PROVIDER_TO_MODEL
+from config.constants import MAPPING_AI_PROVIDER_TO_MODEL, SCHEMA
 from config.log_config import AppLogger
 
 logger = AppLogger(__name__)
@@ -16,7 +16,7 @@ class OllamaService(BaseAIService):
         Initializes the Ollama AI service with the provided model.
         """
         super().__init__(model)
-        self.OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+        self.OLLAMA_URL = os.environ.get("OLLAMA_URL", f"{SCHEMA}://ollama:11434")
 
     async def chat_stream(
         self,

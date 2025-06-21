@@ -25,8 +25,8 @@ images:
     registry: 'bitnami'
     name: mysql
     tag: 8.0.32
-  soai-webserver:
-    productName: SOAI Web Server
-    registry: 'nginxinc'
-    name: nginx-unprivileged
+  soai-consul:
+    productName: SOAI Consul
+    registry: 'hashicorp'
+    name: consul
     tag: latest

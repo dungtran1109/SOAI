@@ -9,16 +9,22 @@ class ServiceRegistration:
 
     @staticmethod
     def register_service():
+        check = {
+            "HTTP": f"{SCHEMA}://{SERVICE_NAME}:{SERVICE_PORT}/api/v1/recruitment/health",
+            "Interval": "10s",
+        }
+        if TLS_ENABLED:
+            check["TLSSkipVerify"] = True
+
         service_definition = {
             "ID": SERVICE_NAME,
             "Name": SERVICE_NAME,
             "Address": "recruitment",
             "Port": SERVICE_PORT,
-            "Check": {
-                "HTTP": f"http://{SERVICE_NAME}:{SERVICE_PORT}/api/v1/recruitment/health",
-                "Interval": "10s",
-            },
+            "Check": check,
         }
+
+        logger.info(f"Registering service with Consul: {service_definition}")
 
         try:
             response = requests.put(

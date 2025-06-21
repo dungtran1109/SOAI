@@ -22,7 +22,7 @@ const authHeaders = (isJson = true) => ({
  */
 export const getAllJD = async (position = "") => {
   const query = position ? `?position=${encodeURIComponent(position)}` : "";
-  const url = `${API_BASE_URL}/api/v1/recruitment/jds${query}`;
+  const url = `${API_BASE_URL}/recruitment/jds${query}`;
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -46,7 +46,7 @@ export const uploadJDFile = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/jds/upload`, {
+    const response = await fetch(`${API_BASE_URL}/recruitment/jds/upload`, {
       method: "POST",
       headers: { "Authorization": `Bearer ${getToken()}` }, // Don't set Content-Type for FormData
       body: formData,
@@ -66,7 +66,7 @@ export const uploadJDFile = async (file) => {
  */
 export const editJD = async (jdId, updateData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/jds/${jdId}`, {
+    const response = await fetch(`${API_BASE_URL}/recruitment/jds/${jdId}`, {
       method: "PUT",
       headers: authHeaders(),
       body: JSON.stringify(updateData),
@@ -85,7 +85,7 @@ export const editJD = async (jdId, updateData) => {
  */
 export const deleteJD = async (jdId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/recruitment/jds/${jdId}`, {
+    const response = await fetch(`${API_BASE_URL}/recruitment/jds/${jdId}`, {
       method: "DELETE",
       headers: authHeaders(false), // Don't set Content-Type for DELETE
     });

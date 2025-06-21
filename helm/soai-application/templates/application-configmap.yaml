@@ -31,9 +31,9 @@ kind: ConfigMap
 metadata:
   name: {{ template "soai-application.name" . }}-nginx-configmap
   labels: 
-    {{- include "soai-webserver.labels" . | nindent 4 }}
+    {{- include "soai-web.labels" . | nindent 4 }}
   annotations: 
     {{- include "soai-application.annotations" . | nindent 4 }}
 data:
-  default.conf: |
-{{ tpl (.Files.Get "files/soai-upstream.conf") . | indent 4 }}
+  nginx.conf: |
+{{ tpl (.Files.Get "files/nginx.conf") . | indent 4 }}
