@@ -192,10 +192,14 @@ test:	test-recruitment \
 	collect-gen-ai-log \
 	collect-recruitment-log
 
+# Avoid to generate __pycache__ when running test because it will generate as root user.
+# Permission issue can not delete the __pycache__.
 test-recruitment:
 	@echo "Automation test for Recruitment Agent using Docker"
 	docker run --rm \
-		-e HOST_NAME="host.docker.internal" \
+		--network=host \
+		-e PYTHONDONTWRITEBYTECODE=1 \
+		-e HOST_NAME="localhost" \
 		-v $(RECRUITMENT_DIR):/app -w /app/tests python:3.11-slim bash -c "\
 		apt-get update && apt-get install -y curl && \
 		pip install httpx && \
