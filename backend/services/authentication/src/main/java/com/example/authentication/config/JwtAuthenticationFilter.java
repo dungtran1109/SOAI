@@ -23,56 +23,74 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter{
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     @Autowired
     private final JwtService jwtService;
     @Autowired
     private final UserDetailsService userDetailsService;
-    
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        //Parsing token string auth header
+
         String authHeader = request.getHeader("Authorization");
-        if(authHeader == null){
+
+        // Support token from cookie if Authorization header is missing
+        if (authHeader == null) {
             Cookie[] cookies = request.getCookies();
-            if(cookies != null) {
-                for(Cookie cookie : cookies){
-                    if(cookie.getName().equals("Authorization")){
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("Authorization")) {
                         authHeader = "Bearer " + cookie.getValue();
                         break;
                     }
                 }
             }
         }
+
         final String jwt;
         final String userName;
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
-        // Count Bearer start the string after index 7
-        // Bearer 
-        jwt = authHeader.substring(7); // Get the jwt string
-        userName = jwtService.extractUsername(jwt); // Extract the jwt to get the username
+
+        jwt = authHeader.substring(7);
+        userName = jwtService.extractUsername(jwt);
         String role = jwtService.extractRole(jwt);
 
-        //Perform our validation process
-        if(userName != null && SecurityContextHolder.getContext().getAuthentication() == null){
+        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
-            if(jwtService.isTokenValid(jwt, userDetails)){
-                // Asign role to authorities
+            if (jwtService.isTokenValid(jwt, userDetails)) {
                 List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                authorities
-            );
+                        userDetails,
+                        null,
+                        authorities
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * This method ensures that the filter will be skipped for public endpoints like signin/signup.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return List.of(
+                "/api/v1/authentications/signin",
+                "/api/v1/authentications/signup",
+                "/api/v1/authentications/docs",
+                "/api/v1/authentications/swagger-ui",
+                "/actuator"
+        ).stream().anyMatch(path::startsWith);
     }
 }

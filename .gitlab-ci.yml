@@ -19,18 +19,18 @@ before_script:
   - chmod -R +wx test/ || exit_code=$?
 
 house-keeping:
-    stage: .pre
-    variables:
-        GIT_CLEAN_FLAGS: -ffdx
-        GIT_SUBMODULE_STRATEGY: none
-    dependencies: []
-    script:
-        - export CACHE_PATH=/home/$USER/cache/$CI_PROJECT_NAMESPACE
-        - export PROJECT_PATH=$CI_BUILDS_DIR/$CI_RUNNER_SHORT_TOKEN/$CI_CONCURRENT_ID/$CI_PROJECT_PATH
-        - echo $PROJECT_PATH
-        - chmod -R +x $PROJECT_PATH
-        - rm -rfv $CACHE_PATH/*
-        - rm -rfv $PROJECT_PATH/*
+  stage: .pre
+  variables:
+    GIT_CLEAN_FLAGS: -ffdx
+    GIT_SUBMODULE_STRATEGY: none
+  dependencies: []
+  script:
+    - export CACHE_PATH=/home/$USER/cache/$CI_PROJECT_NAMESPACE
+    - export PROJECT_PATH=$CI_BUILDS_DIR/$CI_RUNNER_SHORT_TOKEN/$CI_CONCURRENT_ID/$CI_PROJECT_PATH
+    - echo $PROJECT_PATH
+    - chmod -R +x $PROJECT_PATH
+    - rm -rfv $CACHE_PATH/*
+    - rm -rfv $PROJECT_PATH/*
 
 debug:
     stage: Debug

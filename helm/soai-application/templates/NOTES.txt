@@ -1,9 +1,36 @@
-The SOAI Application can be accessed via nodePort {{ .Values.server.web.httpNodePort }} if TLS is enabled, else {{ .Values.server.web.httpsNodePort }}
+{{- $g := fromJson (include "soai-application.global" . ) -}}
 
-    export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}')
-    kubectl --namespace {{ .Release.Namespace }} get svc -l app=soai-application-web -o jsonpath='{.items[*].spec.ports[*].nodePort}'
+{{- if eq .Values.server.web.serviceType "LoadBalancer" }}
+The SOAI Application is exposed via a LoadBalancer service.
 
-{{- if (not .Values.storage.enabled) }}
+To access the application, run:
+
+    export LB_IP=$(kubectl get svc soai-application-web -n {{ .Release.Namespace }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+{{- if $g.security.tls.enabled }}
+    echo "Open in browser: https://${LB_IP}:{{ .Values.server.web.httpsPort }}"
+{{- else }}
+    echo "Open in browser: http://${LB_IP}:{{ .Values.server.web.httpPort }}"
+{{- end }}
+
+If the external IP is not available immediately, wait a few moments and re-run the command.
+
+{{- else if eq .Values.server.web.serviceType "NodePort" }}
+The SOAI Application is exposed via a NodePort service.
+
+To access the application, run:
+
+    export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+{{- if $g.security.tls.enabled }}
+    export NODE_PORT={{ .Values.server.web.httpsNodePort }}
+    echo "Open in browser: https://${NODE_IP}:${NODE_PORT}"
+{{- else }}
+    export NODE_PORT={{ .Values.server.web.httpNodePort }}
+    echo "Open in browser: http://${NODE_IP}:${NODE_PORT}"
+{{- end }}
+
+{{- end }}
+
+{{- if not .Values.storage.enabled }}
 ###############################################################################
 ######  WARNING: Persistence is disabled!!! You will lose your data when ######
 ######           the Server pod is terminated                            ######
