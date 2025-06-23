@@ -217,7 +217,8 @@ collect-recruitment-log:
 push: 	push-recruitment \
 		push-authentication \
 		push-genai \
-		push-web
+		push-web \
+		push-helm
 
 push-authentication:
 	@echo "push authentication Image"

@@ -19,7 +19,7 @@ class ServiceRegistration:
         service_definition = {
             "ID": SERVICE_NAME,
             "Name": SERVICE_NAME,
-            "Address": "genai",
+            "Address": SERVICE_NAME,
             "Port": SERVICE_PORT,
             "Check": check,
         }

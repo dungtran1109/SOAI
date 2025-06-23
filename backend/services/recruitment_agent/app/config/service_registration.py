@@ -19,7 +19,7 @@ class ServiceRegistration:
         service_definition = {
             "ID": SERVICE_NAME,
             "Name": SERVICE_NAME,
-            "Address": "recruitment",
+            "Address": SERVICE_NAME,
             "Port": SERVICE_PORT,
             "Check": check,
         }
