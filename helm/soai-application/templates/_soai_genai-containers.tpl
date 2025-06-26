@@ -48,7 +48,7 @@
   - name: CONSUL_HOST
     value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
-    value: {{ $top.Values.server.genai.name | quote }}
+    value: {{ include "soai-genai.name" $top }}
   - name: SERVICE_PORT
     {{- if $g.security.tls.enabled }}
     value: {{ $top.Values.server.genai.httpsPort | quote }}

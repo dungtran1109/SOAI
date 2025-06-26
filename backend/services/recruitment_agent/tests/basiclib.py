@@ -20,11 +20,11 @@ def extract_token(username, password, role=None):
     if role:
         payload["role"] = role
 
-    response = httpx.post(url, json=payload, timeout=TIMEOUT)
+    response = httpx.post(url, json=payload, timeout=TIMEOUT, verify=False)
     if response.status_code == 403 and role:
         url = f"{AUTH_URL}/signin"
         payload.pop("role", None)
-        response = httpx.post(url, json=payload, timeout=TIMEOUT)
+        response = httpx.post(url, json=payload, timeout=TIMEOUT, verify=False)
 
     response.raise_for_status()
     token = response.json().get("token")
@@ -36,7 +36,7 @@ def get_headers(token):
 
 def api_request(method, url, **kwargs):
     try:
-        response = httpx.request(method, url, timeout=TIMEOUT, **kwargs)
+        response = httpx.request(method, url, timeout=TIMEOUT, **kwargs, verify=False)
         log_debug(f"{method.upper()} {url} -> {response.status_code}")
         return response
     except Exception as e:

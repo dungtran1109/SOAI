@@ -12,20 +12,33 @@ class GenAI:
 
     def invoke(self, message) -> str:
         """
-        Send a message to the agent and return the response.
+        Send a message to the GenAI agent and return the response.
         """
         messages = [{"role": "user", "content": message}]
-        response = requests.post(
-            url=f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/chat",
-            json={
+
+        request_kwargs = {
+            "url": f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/chat",
+            "json": {
                 "messages": messages,
                 "model": self.model,
                 "temperature": self.temperature,
             },
-            headers={"Content-Type": "application/json"},
-        )
-        logger.debug(response.json())
-        if response.status_code == 200:
+            "headers": {"Content-Type": "application/json"},
+        }
+
+        # Only verify with CA cert if TLS is enabled
+        # Query to genai server => Need to use CA certificate for validation
+        if TLS_ENABLED:
+            request_kwargs["verify"] = CA_PATH
+
+        try:
+            response = requests.post(**request_kwargs)
+            logger.debug(response.json())
+            response.raise_for_status()
             return response
-        else:
-            raise Exception(f"Error: {response.status_code} - {response.text}")
+        except requests.exceptions.SSLError as ssl_err:
+            logger.error(f"SSL Error: {ssl_err}")
+            raise
+        except requests.exceptions.RequestException as req_err:
+            logger.error(f"Request Error: {req_err}")
+            raise

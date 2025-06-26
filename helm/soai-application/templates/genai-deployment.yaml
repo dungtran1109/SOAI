@@ -2,42 +2,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "soai-recruitment.name" . }}
-  labels: {{- include "soai-recruitment.labels" . | nindent 4 }}
+  name: {{ template "soai-genai.name" . }}
+  labels: {{- include "soai-genai.labels" . | nindent 4 }}
   annotations: {{- include "soai-application.annotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.server.recruitment.replicaCount }}
+  replicas: {{ .Values.server.genai.replicaCount }}
   strategy:
 {{ toYaml .Values.updateStrategy | indent 4 }}
   selector:
-    matchLabels: {{- include "soai-recruitment.selectorLabels" . | nindent 6 }}
+    matchLabels: {{- include "soai-genai.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations: 
+      annotations:
         {{- $appArmorAnn := include "soai-application.appArmorProfileAnnotation" . | fromYaml -}}
         {{- $defaultAnn := include "soai-application.annotations" . | fromYaml -}}
         {{- $annotations := list $appArmorAnn $defaultAnn -}}
         {{- include "soai-application.mergeAnnotations" (dict "location" (.Template.Name) "sources" $annotations) | trim | nindent 8 }}
-      labels: {{- include "soai-recruitment.labels" . | nindent 8 }}
+      labels: {{- include "soai-genai.labels" . | nindent 8 }}
     spec:
       securityContext:
         {{- include "soai-application.appArmorProfile.securityContext" (list .) | indent 8 }}
         fsGroup: {{ template "soai-application.fsGroup.coordinated" . }}
         {{- include "soai-application.podSeccompProfile" . | indent 8 }}
         {{- include "soai-application.supplementalGroups" . }}
-      initContainers:
-      {{- include "soai-initContainers" (list . "recruitment") | indent 6 }}
       containers:
-      {{- include "soai-recruitment-containers" (list .) | nindent 6 }}
+      {{- include "soai-genai-containers" (list .) | nindent 6 }}
       volumes:
-      {{- if .Values.storage.enabled }}
-      - name: {{ template "soai-recruitment.name" . }}-persistent-storage
-        persistentVolumeClaim:
-          claimName: {{ template "soai-recruitment.name" . }}-pv-claim
-      {{- else }}
-      - name: {{ template "soai-recruitment.name" . }}-ephemeral-storage
-        emptyDir: {}
-      {{- end }}
       {{- if $g.security.tls.enabled }}
       - name: tls-cert
         secret:

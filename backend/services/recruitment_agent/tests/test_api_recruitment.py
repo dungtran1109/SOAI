@@ -13,7 +13,7 @@ def wait_until_available(url, timeout=60):
     log_info(f"Waiting for service at {url} to be available...")
     while True:
         try:
-            response = httpx.get(url, timeout=3)
+            response = httpx.get(url, timeout=3, verify=False)
             if response.status_code < 500:
                 log_info(f"Service at {url} is available.")
                 break

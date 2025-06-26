@@ -155,7 +155,7 @@ run-web:
 	@echo "Run Frontend Web Container"
 	$(TOP_DIR)/vas.sh run_image \
 		--name=web \
-		--port=3000:3000
+		--port=8080:8080
 
 check-health: \
 	check-authentication-health \
@@ -201,6 +201,7 @@ test-recruitment:
 		--network=host \
 		-e PYTHONDONTWRITEBYTECODE=1 \
 		-e HOST_NAME="localhost" \
+		-e TLS_ENABLED="false" \
 		-v $(RECRUITMENT_DIR):/app -w /app/tests python:3.11-slim bash -c "\
 		apt-get update && apt-get install -y curl && \
 		pip install httpx && \

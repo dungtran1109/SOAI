@@ -12,6 +12,7 @@ API_PREFIX = "/api/v1/recruitment"
 MATCHING_SCORE_PERCENTAGE = 70
 # TLS Configuration
 TLS_ENABLED = os.getenv("TLS_ENABLED", "false").lower() == "true"
+CA_PATH = os.getenv("CA_PATH", "")
 CERT_PATH = os.getenv("CERT_PATH", "")
 KEY_PATH = os.getenv("KEY_PATH", "")
 SCHEMA = "https" if TLS_ENABLED else "http"
