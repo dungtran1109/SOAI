@@ -51,11 +51,13 @@ class TestRecruitmentAPI(unittest.TestCase):
         """Clean up test data before each test."""
         log_info("Pre-cleaning old test data...")
         self.clean_cv(candidate_name, position)
+        self.clean_interviews(candidate_name)
 
     def postclean_candidate(self, candidate_name, position):
         """Clean up test data after each test if needed."""
         log_info("Post-cleaning test data...")
         self.clean_cv(candidate_name, position)
+        self.clean_interviews(candidate_name)
 
     def clean_cv(self, candidate_name, position):
         """Delete CVs that match test candidate name and position."""
@@ -63,7 +65,8 @@ class TestRecruitmentAPI(unittest.TestCase):
             f"Cleaning CVs for candidate '{candidate_name}' and position '{position}'"
         )
         try:
-            cvs = self.get_items("cvs", {"position": position}, self.admin_token)
+            cvs = self.get_items("cvs/position", {"position": position}, self.admin_token)
+            log_info(f"Get list CVs before clean_cv: {cvs}")
             for cv in cvs:
                 if (
                     isinstance(cv, dict)
@@ -85,6 +88,23 @@ class TestRecruitmentAPI(unittest.TestCase):
                     self.delete_item("jds", jd["id"], self.admin_token)
         except Exception as e:
             log_error(f"Error while cleaning JDs: {e}")
+    
+    def clean_interviews(self, candidate_name):
+        """Delete interviews matching the candidate name."""
+        log_debug(f"Cleaning interviews for candidate '{candidate_name}'")
+        try:
+            response = api_request(
+                "DELETE",
+                f"{BASE_URL}/interviews",
+                params={"candidate_name": candidate_name},
+                headers=get_headers(self.admin_token),
+            )
+            if response.status_code != 200:
+                log_error(f"Could not delete interviews for candidate '{candidate_name}'")
+            else:
+                log_info(f"Deleted interviews for candidate '{candidate_name}'")
+        except Exception as e:
+            log_error(f"Error while cleaning interviews: {e}")
 
     def get_items(self, resource, params, token):
         """Generic GET for resource list."""
@@ -159,7 +179,7 @@ class TestRecruitmentAPI(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
             log_info("[Step 2] Upload CV")
-            response = self.upload_cv(self.admin_token, email, position)
+            response = self.upload_cv(self.user_token, email, position)
             self.assertEqual(response.status_code, 200)
 
             log_info("[Step 3] Get pending CV")
@@ -222,7 +242,16 @@ class TestRecruitmentAPI(unittest.TestCase):
                 json={"candidate_id": interview_id},
                 headers=get_headers(self.admin_token),
             )
+            log_info(f"Accept Interview Response: {response.json()}")
             self.assertEqual(response.status_code, 200)
+            
+            log_info("Checking if interview questions were generated")
+            response = api_request(
+                "GET", f"{BASE_URL}/interview-questions/{cv_id}/questions", headers=get_headers(self.admin_token)
+            )
+            self.assertEqual(response.status_code, 200)
+            log_info(f"Get the interview_questions: {response.json()}")
+            self.assertGreater(len(response.json()), 0)
 
             log_info("[Step 10] Update Interview")
             response = api_request(
@@ -237,7 +266,7 @@ class TestRecruitmentAPI(unittest.TestCase):
             response = api_request(
                 "POST",
                 f"{BASE_URL}/interviews/{interview_id}/cancel",
-                headers=get_headers(self.admin_token),
+                headers=get_headers(self.user_token),
             )
             self.assertEqual(response.status_code, 200)
 
@@ -330,7 +359,6 @@ class TestRecruitmentAPI(unittest.TestCase):
         self.assertEqual(response.json().get("detail"), "Insufficient permission")
 
         log_info("TEST: " + inspect.currentframe().f_code.co_name + ": OK")
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,7 @@ from config.constants import *
 import models.job_description
 import models.cv_application
 import models.interview_schedule
+import models.interview_question
 
 logger = AppLogger(__name__)
 
@@ -43,8 +44,8 @@ app.include_router(router, prefix=API_PREFIX, tags=["Recruitment"])
 ServiceRegistration.register_service()
 
 if __name__ == "__main__":
-    logger.info(f"Starting Recruitment with TLS enabled: {TLS_ENABLED}")
     if TLS_ENABLED:
+        logger.info(f"Starting Recruitment API over HTTPS on port {SERVICE_PORT}")
         if not CERT_PATH or not KEY_PATH:
             logger.error("TLS is enabled but CERT_PATH or KEY_PATH is not set.")
             raise RuntimeError("TLS configuration is incomplete.")
@@ -57,6 +58,7 @@ if __name__ == "__main__":
             reload=True
         )
     else:
+        logger.info(f"Starting Recruitment API over HTTP on port {SERVICE_PORT}")
         uvicorn.run(
             "main:app",
             host="0.0.0.0",

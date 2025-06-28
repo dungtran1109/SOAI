@@ -8,7 +8,7 @@ from agents.approver_agent import ApproverAgent
 from agents.final_decision_agent import FinalDecisionAgent
 from config.constants import *
 from config.log_config import AppLogger
-from agents.genai import GenAI
+from services.genai import GenAI
 
 logger = AppLogger(__name__)
 # ======================================
