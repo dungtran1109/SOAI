@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'soai_services'
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - genai:8004
+          - recruitment:8003
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):.*'
+        target_label: instance
+        replacement: '${1}'
+
+      - source_labels: [__address__]
+        target_label: service
+        regex: 'genai:.*'
+        replacement: 'gen_ai_provider'
+      - source_labels: [__address__]
+        target_label: service
+        regex: 'recruitment:.*'
+        replacement: 'recruitment_agent'
+  - job_name: 'authentication_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - authentication:9090
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):.*'
+        target_label: instance
+        replacement: '${1}'
+
+      - source_labels: [__address__]
+        target_label: service
+        regex: 'authentication:.*'
+        replacement: 'authentication_service'

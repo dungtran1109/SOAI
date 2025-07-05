@@ -1,0 +1,12 @@
+<yandex>
+  <users>
+    <otel_user>
+      <password>otel_pass</password>
+      <networks>
+        <ip>::/0</ip> <!-- allow all IPs -->
+      </networks>
+      <profile>default</profile>
+      <quota>default</quota>
+    </otel_user>
+  </users>
+</yandex>

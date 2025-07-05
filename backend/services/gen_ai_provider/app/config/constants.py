@@ -8,6 +8,8 @@ TLS_ENABLED = os.getenv("TLS_ENABLED", "false").lower() == "true"
 CERT_PATH = os.getenv("CERT_PATH", "")
 KEY_PATH = os.getenv("KEY_PATH", "")
 SCHEMA = "https" if TLS_ENABLED else "http"
+# OTEL Configurations
+OTEL_ENDPOINT = os.getenv("OTEL_ENDPOINT", "otel-collector:4317") # gRPC endpoint
 # LOGGING Configurations
 LOG_DIR = "/tmp/logs"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

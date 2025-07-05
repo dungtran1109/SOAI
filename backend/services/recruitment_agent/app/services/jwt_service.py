@@ -3,6 +3,10 @@ import base64
 from fastapi import HTTPException, Security, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from config.log_config import AppLogger
+from metrics.prometheus_metrics import (
+    jwt_verification_total,
+    jwt_verification_failed_total
+)
 
 logger = AppLogger(__name__)
 
@@ -41,16 +45,8 @@ class JWTService:
     def verify_jwt(cls, credentials: HTTPAuthorizationCredentials = Security(security)):
         """Verifies the JWT token and returns the payload if valid."""
         token = credentials.credentials
+        jwt_verification_total.inc()  #  Count every verification attempt
         try:
-            # Already covered checking token expiration
-            # If the token expired, then can not be decoded
-            # Example payload
-            # {
-            # "sub": "admin1",
-            # "role": "ADMIN",
-            # "iat": 1742643508,
-            # "exp": 1742657908
-            # }
             logger.info(f"Decoding token: {token}")
             decoded_key = base64.b64decode(cls.SECRET_KEY_ENCODED)
             payload = jwt.decode(token, decoded_key, algorithms=[cls.ALGORITHM])
@@ -60,6 +56,7 @@ class JWTService:
             logger.info(f"User '{username}' authenticated with role '{role}'")
             return payload
         except JWTError as e:
+            jwt_verification_failed_total.inc()  #  Count verification failures
             logger.error(f"[JWT ERROR] {e}")
             raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -68,6 +65,7 @@ class JWTService:
     # Eg: Parse to @router parameter function: current_user: dict = JWTService.require_role("ADMIN")
     @staticmethod
     def require_role(required_role):
+        """Use when endpoints need to restrict RBAC for a specific user role (e.g., ADMIN)."""
         def role_checker(user: dict = Depends(JWTService.verify_jwt)):
             if user.get("role") != required_role:
                 raise HTTPException(status_code=403, detail="Insufficient permission")

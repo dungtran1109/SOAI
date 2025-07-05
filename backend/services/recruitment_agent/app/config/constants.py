@@ -21,6 +21,9 @@ LOG_DIR = "/tmp/logs"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 SERVICE_ID = "recruitment-agent"
 LOG_VERSION = "1.0.0"
+# OTEL Configurations
+OTEL_ENDPOINT = os.getenv("OTEL_ENDPOINT", "otel-collector:4317") # gRPC endpoint
+
 # DB Setting - MySQL
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")

@@ -6,6 +6,13 @@ from logging import LogRecord
 from logging.handlers import RotatingFileHandler
 from config.constants import *
 
+# OpenTelemetry Logs
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry.sdk.resources import Resource
+
 # Set default environment variables
 CONTAINER_NAME = os.getenv("CONTAINER_NAME", "recruitment")
 POD_NAME = os.getenv("POD_NAME", "recruitment-pod")
@@ -68,6 +75,34 @@ class LoggingConfig:
 
         root_logger.addHandler(stream_handler)
         root_logger.addHandler(file_handler)
+        
+        # Add OpenTelemetry log handler
+        LoggingConfig.setup_otel_log_handler(root_logger)
+        
+    @staticmethod
+    def setup_otel_log_handler(logger: logging.Logger):
+        """
+        Setup OpenTelmetry log handler for the given logger.
+        """
+        resource = Resource(attributes={
+            "service.name": SERVICE_NAME,
+            "service.namespace": NAMESPACE,
+            "service.container.name": CONTAINER_NAME,
+            "service.pod.name": POD_NAME
+        })
+        
+        provider = LoggerProvider(resource=resource)
+        exporter = OTLPLogExporter(endpoint=OTEL_ENDPOINT, insecure=True)
+        processor = BatchLogRecordProcessor(exporter)
+        
+        provider.add_log_record_processor(processor)
+        set_logger_provider(provider)
+        
+        otel_handler = LoggingHandler(level=logging.NOTSET)
+        otel_handler.setFormatter(JSONFormatter())
+
+        logger.addHandler(otel_handler)
+
 
 class AppLogger:
     def __init__(self, name: str):

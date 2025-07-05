@@ -11,6 +11,7 @@ services:
       - CONSUL_HOST=consul:8500
       - SERVICE_NAME=soai_gen_ai_provider
       - SERVICE_PORT=8004
+      - OTEL_ENDPOINT=otel-collector:4317
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - LOG_LEVEL=DEBUG
@@ -105,6 +106,7 @@ services:
       - GENAI_HOST=genai:8004
       - SERVICE_NAME=soai_recruitment_agent
       - SERVICE_PORT=8003
+      - OTEL_ENDPOINT=otel-collector:4317
       - DB_HOST=soai_mysql
       - DB_PORT=3306
       - DB_NAME=soai_db
@@ -131,7 +133,58 @@ services:
         condition: service_healthy
       consul:
         condition: service_started
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./test/observability_config/prometheus.yaml:/etc/prometheus/prometheus.yaml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+    networks:
+      - soai-net
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel_collector
+    restart: always
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    volumes:
+      - ./test/observability_config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - soai-net
 
+  clickhouse:
+    image: clickhouse:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./test/observability_config/otel-user.xml:/etc/clickhouse-server/users.d/otel-user.xml
+      - ./test/observability_config/init-tables.sql:/docker-entrypoint-initdb.d/init-tables.sql
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    restart: always
+    networks:
+      - soai-net
+volumes:
+  clickhouse-data:
 networks:
   soai-net:
     driver: bridge

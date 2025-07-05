@@ -23,6 +23,46 @@ from config.log_config import AppLogger
 from config.constants import *
 from agents.interview_question_agent import InterviewQuestionAgent
 from services.genai import GenAI
+from metrics.prometheus_metrics import (
+    # CV Counter
+    cv_upload_total,
+    cv_approved_total,
+    cv_rejected_total,
+    cv_deleted_total,
+    cv_processing_failed_total,
+    cv_approval_failed_total,
+    # JD Counter
+    jd_upload_total,
+    jd_deleted_total,
+    jd_upload_failed_total,
+    # Interview Counter
+    interview_scheduled_total,
+    interview_accepted_total,
+    interview_rejected_total,
+    interview_deleted_total,
+    interview_bulk_deleted_total,
+    interview_schedule_failed_total,
+    interview_acceptance_failed_total,
+    # Interview Question Counter
+    interview_questions_generated_total,
+    interview_questions_regenerated_total,
+    question_generation_failed_total,
+    regenerate_questions_failed_total,
+    # Histogram CV
+    cv_processing_duration_seconds,
+    cv_approval_duration_seconds,
+    # Histogration JD
+    jd_upload_duration_seconds,
+    # Histogram Interview Schedule/Question
+    interview_scheduling_duration_seconds,
+    interview_acceptance_duration_seconds,
+    interview_question_generation_duration_seconds,
+    # Gauge metricss
+    pending_cv_count,
+    scheduled_interview_count,
+    interview_question_count,
+    jd_count
+)
 
 logger = AppLogger(__name__)
 
@@ -55,105 +95,109 @@ class RecruitmentService:
         """Upload a CV, parse it, match with JDs, and save as Pending CVApplication."""
         logger.info("Uploading and processing CV file.")
         try:
-            cv_dir = "./cv_uploads"
-            os.makedirs(cv_dir, exist_ok=True)
-            cv_path = os.path.join(cv_dir, file.filename)
-            with open(cv_path, "wb") as f:
-                shutil.copyfileobj(file.file, f)
+            with cv_processing_duration_seconds.time():
+                cv_dir = "./cv_uploads"
+                os.makedirs(cv_dir, exist_ok=True)
+                cv_path = os.path.join(cv_dir, file.filename)
+                with open(cv_path, "wb") as f:
+                    shutil.copyfileobj(file.file, f)
 
-            pipeline = build_recruitment_graph_matching(db)
-            state = RecruitmentState(cv_file_path=cv_path)
+                pipeline = build_recruitment_graph_matching(db)
+                state = RecruitmentState(cv_file_path=cv_path)
 
-            if override_email:
-                state.override_email = override_email
-            if position_applied_for:
-                state.position_applied_for = position_applied_for
+                if override_email:
+                    state.override_email = override_email
+                if position_applied_for:
+                    state.position_applied_for = position_applied_for
 
-            try:
-                updated_state = pipeline.invoke(state.model_dump())
-                final_state = RecruitmentState(**updated_state)
-                logger.debug(f"[upload_and_process_cv] final_state: {final_state}")
-                logger.info("CV parsing and JD matching completed.")
-            except Exception as e:
-                logger.error(f"Error during CV processing: {e}")
-                raise RuntimeError(f"Error during CV processing: {str(e)}")
+                try:
+                    updated_state = pipeline.invoke(state.model_dump())
+                    final_state = RecruitmentState(**updated_state)
+                    logger.debug(f"[upload_and_process_cv] final_state: {final_state}")
+                    logger.info("CV parsing and JD matching completed.")
+                except Exception as e:
+                    logger.error(f"Error during CV processing: {e}")
+                    raise RuntimeError(f"Error during CV processing: {str(e)}")
 
-            if not final_state.matched_jd:
-                logger.error("No matching JD found for this CV.")
-                return CVUploadResponseSchema(
-                    message="No suitable JD match found for this CV."
+                if not final_state.matched_jd:
+                    logger.error("No matching JD found for this CV.")
+                    return CVUploadResponseSchema(
+                        message="No suitable JD match found for this CV."
+                    )
+
+                email_to_check = final_state.override_email or final_state.parsed_cv.get(
+                    "email"
                 )
 
-            email_to_check = final_state.override_email or final_state.parsed_cv.get(
-                "email"
-            )
+                # Check duplicate
+                existing_cv = (
+                    db.query(CVApplication)
+                    .filter(
+                        CVApplication.candidate_name == final_state.parsed_cv.get("name"),
+                        CVApplication.email == email_to_check,
+                        CVApplication.matched_position
+                        == final_state.matched_jd.get("position"),
+                        CVApplication.status.in_(
+                            [
+                                FinalDecisionStatus.PENDING.value,
+                                FinalDecisionStatus.ACCEPTED.value,
+                            ]
+                        ),
+                    )
+                    .first()
+                )
 
-            # Check duplicate
-            existing_cv = (
-                db.query(CVApplication)
-                .filter(
-                    CVApplication.candidate_name == final_state.parsed_cv.get("name"),
-                    CVApplication.email == email_to_check,
-                    CVApplication.matched_position
-                    == final_state.matched_jd.get("position"),
-                    CVApplication.status.in_(
-                        [
-                            FinalDecisionStatus.PENDING.value,
-                            FinalDecisionStatus.ACCEPTED.value,
-                        ]
+                if existing_cv:
+                    logger.info("Duplicate CV detected. Skipping new insertion.")
+                    return CVUploadResponseSchema(
+                        message="CV already uploaded and matched successfully. Pending approval."
+                    )
+
+                # Validate experience
+                candidate_experience = final_state.parsed_cv.get("experience_years", 0)
+                jd_experience_required = final_state.matched_jd.get(
+                    "experience_required", 0
+                )
+
+                if abs(candidate_experience - jd_experience_required) > 1:
+                    logger.error(
+                        f"Candidate experience {candidate_experience}yrs does not match JD experience {jd_experience_required}yrs (bias > 1). Rejecting CV."
+                    )
+                    final_state.stop_pipeline = True
+                    final_state.final_decision = f"{FinalDecisionStatus.REJECTED.value}: Candidate experience does not match JD requirement."
+                    return CVUploadResponseSchema(
+                        message=f"{FinalDecisionStatus.REJECTED.value}: Candidate experience does not match JD requirements."
+                    )
+
+                # Save new CVApplication
+                cv_application = CVApplication(
+                    candidate_name=final_state.parsed_cv.get("name"),
+                    email=email_to_check,
+                    matched_position=final_state.matched_jd.get("position"),
+                    status=FinalDecisionStatus.PENDING.value,
+                    skills=json.dumps(final_state.parsed_cv.get("skills", [])),
+                    matched_jd_skills=json.dumps(
+                        final_state.matched_jd.get("skills_required", [])
                     ),
+                    matched_jd_experience_required=jd_experience_required,
+                    experience_years=candidate_experience,
+                    is_matched=True if final_state.matched_jd else False,
+                    parsed_cv=json.dumps(final_state.parsed_cv),
                 )
-                .first()
-            )
+                db.add(cv_application)
+                db.commit()
+                logger.info(
+                    f"New CVApplication created for candidate: {final_state.parsed_cv.get('name')}"
+                )
+                cv_upload_total.inc() # Increase metrics to 1 if one CV created
 
-            if existing_cv:
-                logger.info("Duplicate CV detected. Skipping new insertion.")
                 return CVUploadResponseSchema(
-                    message="CV already uploaded and matched successfully. Pending approval."
+                    message="CV uploaded and matched successfully. Pending approval."
                 )
-
-            # Validate experience
-            candidate_experience = final_state.parsed_cv.get("experience_years", 0)
-            jd_experience_required = final_state.matched_jd.get(
-                "experience_required", 0
-            )
-
-            if abs(candidate_experience - jd_experience_required) > 1:
-                logger.error(
-                    f"Candidate experience {candidate_experience}yrs does not match JD experience {jd_experience_required}yrs (bias > 1). Rejecting CV."
-                )
-                final_state.stop_pipeline = True
-                final_state.final_decision = f"{FinalDecisionStatus.REJECTED.value}: Candidate experience does not match JD requirement."
-                return CVUploadResponseSchema(
-                    message=f"{FinalDecisionStatus.REJECTED.value}: Candidate experience does not match JD requirements."
-                )
-
-            # Save new CVApplication
-            cv_application = CVApplication(
-                candidate_name=final_state.parsed_cv.get("name"),
-                email=email_to_check,
-                matched_position=final_state.matched_jd.get("position"),
-                status=FinalDecisionStatus.PENDING.value,
-                skills=json.dumps(final_state.parsed_cv.get("skills", [])),
-                matched_jd_skills=json.dumps(
-                    final_state.matched_jd.get("skills_required", [])
-                ),
-                matched_jd_experience_required=jd_experience_required,
-                experience_years=candidate_experience,
-                is_matched=True if final_state.matched_jd else False,
-                parsed_cv=json.dumps(final_state.parsed_cv),
-            )
-            db.add(cv_application)
-            db.commit()
-            logger.info(
-                f"New CVApplication created for candidate: {final_state.parsed_cv.get('name')}"
-            )
-
-            return CVUploadResponseSchema(
-                message="CV uploaded and matched successfully. Pending approval."
-            )
         except Exception as e:
             logger.exception(f"Error processing CV: {e}")
+            # Increase cv_processing failed to 1
+            cv_processing_failed_total.inc()
             return CVUploadResponseSchema(message=f"Error processing CV: {str(e)}")
 
     def approve_cv(self, candidate_id: int, db: Session):
@@ -184,6 +228,7 @@ class RecruitmentService:
             )
         except Exception as e:
             logger.error(f"Error loading CV or JD skills JSON: {e}")
+            cv_approval_failed_total.inc()
             raise RuntimeError(f"Error loading data from database: {str(e)}")
 
         state = RecruitmentState(
@@ -197,20 +242,24 @@ class RecruitmentService:
         )
 
         try:
-            updated_state = pipeline.invoke(state.model_dump())
-            final_state = RecruitmentState(**updated_state)
-            logger.info(f"[approve_cv] final_state: {final_state}")
-            logger.info("Approval graph execution completed.")
+            with cv_approval_duration_seconds.time():
+                updated_state = pipeline.invoke(state.model_dump())
+                final_state = RecruitmentState(**updated_state)
+                logger.info(f"[approve_cv] final_state: {final_state}")
+                logger.info("Approval graph execution completed.")
         except Exception as e:
             logger.error(f"Error during approval process: {e}")
+            cv_approval_failed_total.inc()
             raise RuntimeError(f"Error during approval process: {str(e)}")
 
         if final_state.final_decision and final_state.final_decision.startswith(
             FinalDecisionStatus.ACCEPTED.value
         ):
             cv_application.status = FinalDecisionStatus.ACCEPTED.value
+            cv_approved_total.inc()
         else:
             cv_application.status = FinalDecisionStatus.REJECTED.value
+            cv_rejected_total.inc()
 
         db.commit()
         logger.info(
@@ -225,110 +274,120 @@ class RecruitmentService:
         """Upload multiple JD entries into database."""
         logger.info("Uploading JD list.")
         for jd_data in jd_data_list:
-            jd_validated = JobDescriptionUploadSchema(**jd_data)
-            logger.debug(f"Validating JD data: {jd_validated}")
-            normalized_skills = json.dumps(sorted(jd_validated.skills_required))
-            logger.debug(f"Normalized skills: {normalized_skills}")
-            # Check for existing JD with same position and skills
-            if not jd_validated.position:
-                logger.warn("JD position is empty. Skipping this JD.")
-                continue
-            if not jd_validated.skills_required:
-                logger.warn("JD skills_required is empty. Skipping this JD.")
-                continue
-            if not jd_validated.experience_required:
-                logger.warn("JD experience_required is not set. Skipping this JD.")
-                continue
-            if not jd_validated.level:
-                logger.warn("JD level is not set. Defaulting to 'Mid'.")
-                jd_validated.level = "Mid"
-            existing = (
-                db.query(JobDescription)
-                .filter_by(
+            with jd_upload_duration_seconds.time():
+                jd_validated = JobDescriptionUploadSchema(**jd_data)
+                logger.debug(f"Validating JD data: {jd_validated}")
+                normalized_skills = json.dumps(sorted(jd_validated.skills_required))
+                logger.debug(f"Normalized skills: {normalized_skills}")
+                # Check for existing JD with same position and skills
+                if not jd_validated.position:
+                    logger.warn("JD position is empty. Skipping this JD.")
+                    continue
+                if not jd_validated.skills_required:
+                    logger.warn("JD skills_required is empty. Skipping this JD.")
+                    continue
+                if not jd_validated.experience_required:
+                    logger.warn("JD experience_required is not set. Skipping this JD.")
+                    continue
+                if not jd_validated.level:
+                    logger.warn("JD level is not set. Defaulting to 'Mid'.")
+                    jd_validated.level = "Mid"
+                existing = (
+                    db.query(JobDescription)
+                    .filter_by(
+                        position=jd_validated.position,
+                        skills_required=normalized_skills,
+                        experience_required=jd_validated.experience_required,
+                        level=jd_validated.level,
+                    )
+                    .first()
+                )
+                logger.debug(f"Checking for existing JD: {existing}")
+                if not existing:
+                    logger.debug("No existing JD found. Proceeding to insert new JD.")
+                else:
+                    logger.warn(
+                        f"JD with position '{jd_validated.position}' and skills '{normalized_skills}' already exists. Skipping this JD."
+                    )
+                    # If JD already exists, skip insertion
+                    continue
+
+                jd = JobDescription(
                     position=jd_validated.position,
                     skills_required=normalized_skills,
+                    location=jd_validated.location,
+                    datetime=jd_validated.datetime,
                     experience_required=jd_validated.experience_required,
                     level=jd_validated.level,
+                    referral=jd_validated.referral,
+                    referral_code=jd_validated.referral_code,
+                    company_description=jd_validated.company_description,
+                    job_description=jd_validated.job_description,
+                    responsibilities=jd_validated.responsibilities,
+                    qualifications=jd_validated.qualifications,
+                    additional_information=jd_validated.additional_information,
+                    hiring_manager=jd_validated.hiring_manager,
+                    recruiter=jd_validated.recruiter,
                 )
-                .first()
-            )
-            logger.debug(f"Checking for existing JD: {existing}")
-            if not existing:
-                logger.debug("No existing JD found. Proceeding to insert new JD.")
-            else:
-                logger.warn(
-                    f"JD with position '{jd_validated.position}' and skills '{normalized_skills}' already exists. Skipping this JD."
-                )
-                # If JD already exists, skip insertion
-                continue
+                logger.debug(f"Inserting new JD: {jd}")
+                db.add(jd)
+                jd_upload_total.inc()
 
-            jd = JobDescription(
-                position=jd_validated.position,
-                skills_required=normalized_skills,
-                location=jd_validated.location,
-                datetime=jd_validated.datetime,
-                experience_required=jd_validated.experience_required,
-                level=jd_validated.level,
-                referral=jd_validated.referral,
-                referral_code=jd_validated.referral_code,
-                company_description=jd_validated.company_description,
-                job_description=jd_validated.job_description,
-                responsibilities=jd_validated.responsibilities,
-                qualifications=jd_validated.qualifications,
-                additional_information=jd_validated.additional_information,
-                hiring_manager=jd_validated.hiring_manager,
-                recruiter=jd_validated.recruiter,
-            )
-            logger.debug(f"Inserting new JD: {jd}")
-            db.add(jd)
-
-        db.commit()
+        try:
+            db.commit()
+        except Exception as e:
+            jd_upload_failed_total.inc()
+            logger.error(f"Error committing JD uploads: {e}")
+            return CVUploadResponseSchema(message="Failed to save JD to the database.")
         logger.info("JD list uploaded successfully.")
         return CVUploadResponseSchema(message="JD uploaded successfully.")
 
     def schedule_interview(self, interview_data, db: Session):
         """Schedule an interview for a candidate."""
         logger.info(f"Scheduling interview for {interview_data.candidate_name}.")
+        with interview_scheduling_duration_seconds.time():
+            cv = (
+                db.query(CVApplication)
+                .filter_by(candidate_name=interview_data.candidate_name)
+                .first()
+            )
+            if not cv:
+                interview_schedule_failed_total.inc()
+                return CVUploadResponseSchema(message="Candidate CV not found.")
 
-        cv = (
-            db.query(CVApplication)
-            .filter_by(candidate_name=interview_data.candidate_name)
-            .first()
-        )
-        if not cv:
-            return CVUploadResponseSchema(message="Candidate CV not found.")
+            if not cv.is_matched:
+                interview_schedule_failed_total.inc()
+                return CVUploadResponseSchema(
+                    message="Candidate has not matched any JD. Cannot schedule interview."
+                )
 
-        if not cv.is_matched:
-            return CVUploadResponseSchema(
-                message="Candidate has not matched any JD. Cannot schedule interview."
+            existing = (
+                db.query(InterviewSchedule)
+                .filter_by(
+                    candidate_name=interview_data.candidate_name,
+                    interview_datetime=interview_data.interview_datetime,
+                )
+                .first()
             )
 
-        existing = (
-            db.query(InterviewSchedule)
-            .filter_by(
+            if existing:
+                return CVUploadResponseSchema(
+                    message="Candidate already has an interview scheduled at this time."
+                )
+
+            interview = InterviewSchedule(
                 candidate_name=interview_data.candidate_name,
+                interviewer_name=interview_data.interviewer_name,
                 interview_datetime=interview_data.interview_datetime,
+                status=FinalDecisionStatus.PENDING.value,
+                cv_application_id=cv.id
             )
-            .first()
-        )
-
-        if existing:
-            return CVUploadResponseSchema(
-                message="Candidate already has an interview scheduled at this time."
+            db.add(interview)
+            db.commit()
+            interview_scheduled_total.inc()
+            logger.info(
+                f"Interview scheduled successfully for {interview_data.candidate_name}."
             )
-
-        interview = InterviewSchedule(
-            candidate_name=interview_data.candidate_name,
-            interviewer_name=interview_data.interviewer_name,
-            interview_datetime=interview_data.interview_datetime,
-            status=FinalDecisionStatus.PENDING.value,
-            cv_application_id=cv.id
-        )
-        db.add(interview)
-        db.commit()
-        logger.info(
-            f"Interview scheduled successfully for {interview_data.candidate_name}."
-        )
 
         return CVUploadResponseSchema(message="Interview scheduled successfully.")
 
@@ -348,46 +407,58 @@ class RecruitmentService:
 
             logger.debug(f"Interview found: {interview}")
             logger.debug(f"Interview CV application ID: {interview.cv_application_id}")
+            
+            with interview_acceptance_duration_seconds.time():
+                # Step 1: Accept interview
+                interview.status = FinalDecisionStatus.ACCEPTED.value
+                db.commit()
+                interview_accepted_total.inc()
+                logger.info("Interview accepted successfully.")
 
-            interview.status = FinalDecisionStatus.ACCEPTED.value
-            db.commit()
-            logger.info("Interview accepted successfully.")
+                # Step 2: Fetch associated CV
+                cv = db.query(CVApplication).filter_by(id=interview.cv_application_id).first()
+                if not cv:
+                    logger.warning("Associated CV not found for this interview.")
+                    return CVUploadResponseSchema(message="Associated CV not found.")
 
-            # Generate interview questions upon acceptance
-            cv = db.query(CVApplication).filter_by(id=interview.cv_application_id).first()
-            if not cv:
-                logger.warning("Associated CV not found for this interview.")
-                return CVUploadResponseSchema(message="Associated CV not found.")
+                logger.info(f"Triggering InterviewQuestionAgent for candidate: {cv.candidate_name} (CV ID={cv.id})")
 
-            logger.info(f"Triggering InterviewQuestionAgent for candidate: {cv.candidate_name} (CV ID={cv.id})")
+                parsed_cv = json.loads(cv.parsed_cv)
+                matched_jd = {
+                    "position": cv.matched_position,
+                    "skills_required": json.loads(cv.matched_jd_skills),
+                    "experience_required": cv.matched_jd_experience_required,
+                }
 
-            parsed_cv = json.loads(cv.parsed_cv)
-            matched_jd = {
-                "position": cv.matched_position,
-                "skills_required": json.loads(cv.matched_jd_skills),
-                "experience_required": cv.matched_jd_experience_required,
-            }
+                logger.debug(f"Parsed CV: {parsed_cv}")
+                logger.debug(f"Matched JD: {matched_jd}")
 
-            logger.debug(f"Parsed CV: {parsed_cv}")
-            logger.debug(f"Matched JD: {matched_jd}")
+                # Step 3: Generate interview questions
+                agent = InterviewQuestionAgent(GenAI(model=DEFAULT_MODEL))
+                state = RecruitmentState(parsed_cv=parsed_cv, matched_jd=matched_jd)
 
-            agent = InterviewQuestionAgent(GenAI(model=DEFAULT_MODEL))
-            state = RecruitmentState(parsed_cv=parsed_cv, matched_jd=matched_jd)
-            result = agent.run(state)
-            questions = result.interview_questions or []
-            if not questions:
-                logger.warning("No interview questions were generated by the agent.")
-            logger.info(f"Generated {len(questions)} questions for CV ID={cv.id}")
-            db.query(InterviewQuestion).filter_by(cv_application_id=cv.id).delete()
-            for q in questions:
-                db.add(InterviewQuestion(
-                    cv_application_id=cv.id,
-                    original_question=q,
-                    source=DEFAULT_MODEL
-                ))
+                with interview_question_generation_duration_seconds.time():
+                    result = agent.run(state)
+                    questions = result.interview_questions or []
 
-            db.commit()
-            logger.info(f"{len(questions)} interview questions stored in DB for CV ID={cv.id}.")
+                if not questions:
+                    question_generation_failed_total.inc()
+                    logger.warning("No interview questions were generated by the agent.")
+                else:
+                    interview_questions_generated_total.inc()
+                    logger.info(f"Generated {len(questions)} questions for CV ID={cv.id}")
+
+                # Step 4: Store generated questions
+                db.query(InterviewQuestion).filter_by(cv_application_id=cv.id).delete()
+                for q in questions:
+                    db.add(InterviewQuestion(
+                        cv_application_id=cv.id,
+                        original_question=q,
+                        source=DEFAULT_MODEL
+                    ))
+
+                db.commit()
+                logger.info(f"{len(questions)} interview questions stored in DB for CV ID={cv.id}.")
 
             return CVUploadResponseSchema(
                 message=f"Interview accepted. Generated {len(questions)} questions for CV ID={cv.id}."
@@ -395,6 +466,7 @@ class RecruitmentService:
 
         except Exception as e:
             db.rollback()
+            interview_acceptance_failed_total.inc()
             logger.error(f"Error accepting interview: {e}")
             return CVUploadResponseSchema(
                 message=f"Failed to accept interview: {str(e)}"
@@ -431,7 +503,8 @@ class RecruitmentService:
             interviews = db.query(InterviewSchedule).filter(and_(*filters)).all()
         else:
             interviews = db.query(InterviewSchedule).all()
-
+        # Update Gauge metrics
+        scheduled_interview_count.set(len(interviews))
         logger.info(f"Fetched {len(interviews)} interviews.")
         return interviews
 
@@ -443,6 +516,8 @@ class RecruitmentService:
                 .filter(JobDescription.position.ilike(f"%{position}%"))
                 .all()
             )
+            # Update Gauge metrics for all JDs
+            jd_count.set(len(jds))
         else:
             jds = db.query(JobDescription).all()
 
@@ -463,6 +538,7 @@ class RecruitmentService:
             )
 
         pending_cvs = query.all()
+        pending_cv_count.set(len(pending_cvs))
 
         result = [
             {
@@ -513,6 +589,7 @@ class RecruitmentService:
 
         db.delete(cv)
         db.commit()
+        cv_deleted_total.inc() # Increase metrics delete to 1
         logger.info("CV application deleted.")
         return CVUploadResponseSchema(message="CV application deleted.")
 
@@ -577,6 +654,7 @@ class RecruitmentService:
             raise ValueError("Interview not found.")
         interview.status = FinalDecisionStatus.REJECTED.value
         db.commit()
+        interview_rejected_total.inc()
         logger.info("Interview cancelled.")
         return CVUploadResponseSchema(message="Interview cancelled.")
 
@@ -599,6 +677,7 @@ class RecruitmentService:
             raise ValueError("JD not found.")
         db.delete(jd)
         db.commit()
+        jd_deleted_total.inc()
         logger.info("JD deleted.")
         return CVUploadResponseSchema(message="JD deleted.")
     
@@ -607,6 +686,8 @@ class RecruitmentService:
 
         try:
             questions = db.query(InterviewQuestion).filter_by(cv_application_id=cv_id).all()
+            # Update Gauge metrics for interview_questions
+            interview_question_count.set(len(questions))
             logger.info(f"[get_interview_questions] Found {len(questions)} questions for CV ID={cv_id}")
             for i, q in enumerate(questions, 1):
                 logger.debug(f"[get_interview_questions] Q{i}: {q.original_question} (edited: {q.is_edited})")
@@ -637,8 +718,10 @@ class RecruitmentService:
     
     def regenerate_interview_questions(self, cv_id: int, db: Session) -> List[str]:
         logger.info(f"Regenerating interview questions for CV ID={cv_id}")
+        
         cv = db.query(CVApplication).filter_by(id=cv_id).first()
         if not cv:
+            regenerate_questions_failed_total.inc()
             raise ValueError("CV Application not found.")
 
         parsed_cv = json.loads(cv.parsed_cv)
@@ -648,16 +731,21 @@ class RecruitmentService:
             "experience_required": cv.matched_jd_experience_required,
         }
 
-        agent = InterviewQuestionAgent(GenAI(model=DEFAULT_MODEL))
-        state = RecruitmentState(parsed_cv=parsed_cv, matched_jd=matched_jd)
-        result = agent.run(state)
-        questions = result.interview_questions or []
-        
-        if not questions:
-           logger.warning("No questions generated, keeping existing questions")
-           return []
+        with interview_question_generation_duration_seconds.time():
+            agent = InterviewQuestionAgent(GenAI(model=DEFAULT_MODEL))
+            state = RecruitmentState(parsed_cv=parsed_cv, matched_jd=matched_jd)
+            result = agent.run(state)
+            questions = result.interview_questions or []
 
-        # Delete old question
+        if not questions:
+            regenerate_questions_failed_total.inc()
+            logger.warning("No questions generated, keeping existing questions")
+            return []
+
+        # Record Prometheus metric
+        interview_questions_regenerated_total.inc()
+
+        # Delete old questions
         db.query(InterviewQuestion).filter_by(cv_application_id=cv_id).delete()
 
         for q in questions:
@@ -668,6 +756,7 @@ class RecruitmentService:
             ))
 
         db.commit()
+        logger.info(f"{len(questions)} questions regenerated and stored for CV ID={cv_id}")
         return questions
     
     def delete_interview(self, interview_id: int, db: Session):
@@ -677,6 +766,7 @@ class RecruitmentService:
             raise ValueError("Interview not found.")
         db.delete(interview)
         db.commit()
+        interview_deleted_total.inc()
         logger.info("Interview deleted.")
         return CVUploadResponseSchema(message="Interview deleted successfully.")
 
@@ -690,6 +780,7 @@ class RecruitmentService:
 
         deleted_count = query.delete(synchronize_session=False)
         db.commit()
+        interview_bulk_deleted_total.inc()
 
         logger.info(f"{deleted_count} interview(s) deleted.")
         return CVUploadResponseSchema(message=f"{deleted_count} interview(s) deleted successfully.")

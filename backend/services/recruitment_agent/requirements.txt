@@ -20,3 +20,16 @@ langgraph==0.2.70
 # Utils
 requests==2.31.0
 python-dotenv==1.0.1
+
+# Prometheus
+prometheus_client==0.22.1
+
+# OpenTelemetry
+opentelemetry-api==1.23.0
+opentelemetry-sdk==1.23.0
+opentelemetry-exporter-otlp==1.23.0
+opentelemetry-instrumentation==0.44b0
+opentelemetry-instrumentation-fastapi==0.44b0
+opentelemetry-instrumentation-asgi==0.44b0
+opentelemetry-instrumentation-sqlalchemy==0.44b0
+opentelemetry-instrumentation-logging==0.44b0
