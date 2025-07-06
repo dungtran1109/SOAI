@@ -121,6 +121,23 @@ The architecture consists of the following components:
 - Candidate accepts the interview invitation via the frontend.
 - System updates the interview status to `ACCEPTED` in the database.
 
+### Deployment View
+
+Recruitment AI Agent Automation Process is packaged as a Docker container. It supports deployment in [Kubernetes][kubernetes] using [Helm][helm].
+
+![Recruitment Architecture Kubernetes](images/Recruitment-Architecture-Kubernetes.png)
+
+Figure 1 Deployment view of Recruitment AI Agent Service.
+
+Recruitment AI Agent is dependent on [Cert Manager Service][CertManager] (not shown in picture). If the TLS is enabled.
+
+TLS is enabled byy default in Recruitment AI Agent. This means the [Cert Manager Service][CertManager] must be installed, refer to the [Deployment section](#deployment), which:
+
+* explains how to get started using the Recruitment AI Agent Service in the supported environment.
+* specifies configuration options for starting the Recruitment AI Agent Service Docker container.
+
+The Recruitment Docker image supporting two types of architecture: `amd64/arm64`.
+
 ---
 
 ## System Roles
@@ -152,6 +169,8 @@ The diagram below illustrates the complete lifecycle of a candidate's applicatio
 
 ![Recruitment Sequence Diagram](images/Recruitment-AI-SequenceDiagram.png)
 
+Figure 2 Recruitment Basic Workflow Sequence Diagram.
+
 **Summary**:
 - The candidate initiates the process with a CV upload.
 - The system parses and scores the CV against job descriptions.
@@ -160,6 +179,12 @@ The diagram below illustrates the complete lifecycle of a candidate's applicatio
 - The candidate accepts the interview, concluding the initial workflow.
 
 ---
+
+## References
+
+[kubernetes]: https://kubernetes.io
+[helm]: https://helm.sh
+[CertManager]: https://cert-manager.io/
 
 ## Revision History
 

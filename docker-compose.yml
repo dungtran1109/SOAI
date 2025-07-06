@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   genai:
     image: soai-gen_ai_provider:latest
