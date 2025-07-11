@@ -1,0 +1,573 @@
+{
+  "title": "Recruitment AI Agent Metrics",
+  "uid": "recruitment-ai-agent",
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Pending Cv Count",
+      "targets": [
+        {
+          "expr": "pending_cv_count",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Scheduled Interview Count",
+      "targets": [
+        {
+          "expr": "scheduled_interview_count",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Question Count",
+      "targets": [
+        {
+          "expr": "interview_question_count",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Jd Count",
+      "targets": [
+        {
+          "expr": "jd_count",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cv Upload Total",
+      "targets": [
+        {
+          "expr": "cv_upload_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cv Approved Total",
+      "targets": [
+        {
+          "expr": "cv_approved_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cv Rejected Total",
+      "targets": [
+        {
+          "expr": "cv_rejected_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cv Deleted Total",
+      "targets": [
+        {
+          "expr": "cv_deleted_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 8,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cv Processing Failed Total",
+      "targets": [
+        {
+          "expr": "cv_processing_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 8,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cv Approval Failed Total",
+      "targets": [
+        {
+          "expr": "cv_approval_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Jd Upload Total",
+      "targets": [
+        {
+          "expr": "jd_upload_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 12,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Jd Deleted Total",
+      "targets": [
+        {
+          "expr": "jd_deleted_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 12,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Jd Upload Failed Total",
+      "targets": [
+        {
+          "expr": "jd_upload_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Scheduled Total",
+      "targets": [
+        {
+          "expr": "interview_scheduled_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 16,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Accepted Total",
+      "targets": [
+        {
+          "expr": "interview_accepted_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 16,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Rejected Total",
+      "targets": [
+        {
+          "expr": "interview_rejected_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Deleted Total",
+      "targets": [
+        {
+          "expr": "interview_deleted_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 20,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Bulk Deleted Total",
+      "targets": [
+        {
+          "expr": "interview_bulk_deleted_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 20,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Schedule Failed Total",
+      "targets": [
+        {
+          "expr": "interview_schedule_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Acceptance Failed Total",
+      "targets": [
+        {
+          "expr": "interview_acceptance_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 24,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Questions Generated Total",
+      "targets": [
+        {
+          "expr": "interview_questions_generated_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 24,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Interview Questions Regenerated Total",
+      "targets": [
+        {
+          "expr": "interview_questions_regenerated_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Question Generation Failed Total",
+      "targets": [
+        {
+          "expr": "question_generation_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 28,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Regenerate Questions Failed Total",
+      "targets": [
+        {
+          "expr": "regenerate_questions_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 28,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Jwt Verification Total",
+      "targets": [
+        {
+          "expr": "jwt_verification_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Jwt Verification Failed Total",
+      "targets": [
+        {
+          "expr": "jwt_verification_failed_total",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 32,
+        "w": 8,
+        "h": 4
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cv Processing Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(cv_processing_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cv Approval Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(cv_approval_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Jd Upload Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(jd_upload_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 52,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Interview Scheduling Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(interview_scheduling_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Interview Acceptance Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(interview_acceptance_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 68,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Interview Question Generation Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(interview_question_generation_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 76,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Genai Inference Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(genai_inference_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 84,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cv List Fetch Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(cv_list_fetch_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 92,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Interview List Fetch Duration Seconds",
+      "targets": [
+        {
+          "expr": "rate(interview_list_fetch_duration_seconds_bucket[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 100,
+        "w": 24,
+        "h": 8
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}
