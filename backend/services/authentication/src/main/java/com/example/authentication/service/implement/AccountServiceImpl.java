@@ -83,21 +83,11 @@ public class AccountServiceImpl implements AccountService {
         accounts.setCreateAt(LocalDateTime.now());
         accounts.setUpdateAt(LocalDateTime.now());
     
-        // 1. Create and Save `UserEntity` First
-        UserEntity user = new UserEntity();
-        user.setUserName(accounts.getUserName());
-        user.setAddress("UNKNOWN");
-        user.setGender("UNKNOWN");
-        user = userRepository.save(user); // Save the user and assign it back
-    
-        // 2. Set the saved `UserEntity` in `Accounts`
-        accounts.setUsers(user);
-    
-        // 3. Convert DTO to Entity & Save AccountEntity
+        // Convert DTO to Entity & Save AccountEntity
         AccountEntity accountEntity = accountMapper.toEntity(accounts);
         accountEntity = accountRepository.save(accountEntity);
     
-        // 4. Generate JWT Token
+        // Generate JWT Token
         String jwtToken = jwtService.generateToken(accountEntity);
         logger.info("Account created successfully for user: {}", accounts.getUserName());
     

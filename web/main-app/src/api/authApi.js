@@ -142,3 +142,66 @@ export const getUserByUserName = async (username) => {
         throw error;
     }
 }
+
+export const getAllUsers = async () => {
+    try {
+        const response = await fetch(`${AUTH_BASE_URL}/authentications/users`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch all users");
+        }
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Error fetching all users:', error);
+        throw error;
+    }
+}
+
+export const getAllAccounts = async () => {
+    try {
+        const response = await fetch(`${AUTH_BASE_URL}/authentications/accounts`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch all accounts");
+        }
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Error fetching all accounts:', error);
+        throw error;
+    }
+}
+
+export const deleteAccount = async (accId) => {
+    try {
+        const response = await fetch(`${AUTH_BASE_URL}/authentications/accounts/${accId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to delete account");
+        }
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        throw error;
+    }
+}

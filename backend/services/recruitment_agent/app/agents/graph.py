@@ -63,7 +63,6 @@ def build_recruitment_graph_approval(db_session, email_sender: EmailSender):
     graph.set_entry_point("approver_node")
     graph.add_edge("approver_node", "final_decision_node")
     graph.add_edge("final_decision_node", END)
-    # TODO(): Generate list of interview questions when CV is approved
 
     logger.info("RecruitmentGraph_Approval built and compiled.")
     return graph.compile()

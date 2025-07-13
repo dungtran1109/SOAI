@@ -1,0 +1,233 @@
+.admin-interview-list {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.admin-interview-list__header {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.admin-interview-list__items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-interview-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-interview-list__candidate {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.admin-interview-list__position {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.admin-interview-list__date {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.admin-interview-list__interviewer {
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b82f6;
+}
+
+.admin-interview-list__schedule-btn {
+  background-color: #4338ca;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-interview-list__schedule-btn:hover {
+  background-color: #3730a3;
+}
+
+.admin-interview-list__modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.admin-interview-list__modal {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.admin-interview-list__modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.admin-interview-list__modal label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.admin-interview-list__modal input[type="text"],
+.admin-interview-list__modal input[type="datetime-local"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f9fafb;
+  margin-bottom: 16px;
+}
+
+.admin-interview-list__submit-btn {
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.admin-interview-list__submit-btn:hover {
+  background-color: #059669;
+}
+
+.admin-interview-list__close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.admin-interview-list__close:hover {
+  color: #ef4444;
+}
+
+.admin-interview-list__actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  margin: 0 5px;
+  transition: color 0.2s;
+}
+
+.admin-interview-list__actions button:hover {
+  color: #007bff;
+}
+
+.admin-interview-list__status {
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  background-color: #f3f4f6; /* default gray bg */
+  color: #374151; /* text gray-700 */
+}
+
+.admin-interview-list__question-modal {
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.admin-interview-list__question-list {
+  padding-right: 8px;
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.7;
+}
+
+.admin-question-block {
+  background: #f9fafb;
+  border: 1px solid #e0e7ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+
+.admin-question-block:hover {
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+}
+
+.admin-question {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.admin-question svg {
+  margin-right: 10px;
+  flex-shrink: 0;
+  color: #2563eb;
+  font-size: 18px;
+}
+
+.admin-answer {
+  display: flex;
+  align-items: flex-start;
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.7;
+  margin-bottom: 8px;
+  padding-left: 28px;
+  position: relative;
+}
+
+.admin-answer svg {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  color: #6b7280;
+  font-size: 15px;
+}

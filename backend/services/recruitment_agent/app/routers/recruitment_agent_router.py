@@ -8,6 +8,7 @@ from schemas.interview_schema import (
     InterviewAcceptSchema,
 )
 import json
+from schemas.jd_schema import JobDescriptionUploadSchema
 from schemas.cv_schema import CVUploadResponseSchema
 from services.jwt_service import JWTService
 from config.log_config import AppLogger
@@ -26,24 +27,38 @@ def get_db():
     finally:
         db.close()
 
-# Any candidate or ADMIN can upload the CVs
+# Upload CVs without authentication
 @router.post("/cvs/upload", response_model=CVUploadResponseSchema)
 async def upload_cv(
     file: UploadFile = File(...),
     override_email: Optional[str] = Form(None),
     position_applied_for: str = Form(...),
-    db: Session = Depends(get_db),
-    get_current_user: dict = Depends(JWTService.verify_jwt),
+    db: Session = Depends(get_db)
 ):
-    username = get_current_user.get("sub")
-    role = get_current_user.get("role")
-    logger.debug(f"USER '{username}' [{role}] is calling /cv/upload endpoint.")
+    logger.debug(f"Uploading CV for position: {position_applied_for}")
     return recruitment_service.upload_and_process_cv(
         file,
         db,
         override_email=override_email,
         position_applied_for=position_applied_for,
     )
+    
+@router.get("/cvs/{cv_id}/preview")
+async def preview_cv_file(
+    cv_id: int,
+    db: Session = Depends(get_db)
+):
+    logger.debug(f"Fetching CV preview for CV ID: {cv_id}")
+    return recruitment_service.preview_cv_file(cv_id, db)
+
+# === JD edit/delete ===
+# Only administrator can get the Job Description preview
+@router.get("/jds/{jd_id}/preview")
+async def preview_jd_file(
+    jd_id: int,
+    db: Session = Depends(get_db)
+):
+    return recruitment_service.preview_jd_file(jd_id, db)
 
 # Only administrator can upload the Job Descriptions
 @router.post("/jds/upload", response_model=CVUploadResponseSchema)
@@ -59,6 +74,65 @@ async def upload_jd(
     jd_list = json.loads(content)
     return recruitment_service.upload_jd(jd_list, db)
 
+@router.post("/jds", response_model=CVUploadResponseSchema)
+async def create_jd(
+    jd_data: JobDescriptionUploadSchema,
+    db: Session = Depends(get_db),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
+):
+    """
+    Create a new Job Description from JSON body (not file upload).
+    """
+    username = get_current_user.get("sub")
+    role = get_current_user.get("role")
+    logger.debug(f"USER '{username}' [{role}] is calling POST /jds endpoint.")
+
+    try:
+        # Reuse upload_jd service, but wrap jd_data in a list
+        result = recruitment_service.upload_jd([jd_data.dict()], db)
+        return result
+    except Exception as e:
+        logger.error(f"Error creating JD: {e}")
+        return CVUploadResponseSchema(message=f"Failed to create JD: {str(e)}")
+
+# Candidate can get job descriptions list without authentication
+@router.get("/jds")
+async def get_jds(
+    position: Optional[str] = Query(None, description="Optional position filter"),
+    db: Session = Depends(get_db)
+):
+    logger.debug(f"Fetching job descriptions with position filter: {position}")
+    return recruitment_service.get_all_jds(db, position=position)
+
+# Only administrator can edit the Job Description
+@router.put("/jds/{jd_id}", response_model=CVUploadResponseSchema)
+async def edit_jd(
+    jd_id: int,
+    update_data: Dict = Body(...),
+    db: Session = Depends(get_db),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
+):
+    logger.debug(f"USER '{get_current_user.get('sub')}' is calling PUT /jds/{jd_id}")
+    return recruitment_service.edit_jd(jd_id, update_data, db)
+
+# Only Administrator can delete specific JD
+@router.delete("/jds/{jd_id}", response_model=CVUploadResponseSchema)
+async def delete_jd(
+    jd_id: int,
+    db: Session = Depends(get_db),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
+):
+    logger.debug(f"USER '{get_current_user.get('sub')}' is calling DELETE /jds/{jd_id}")
+    return recruitment_service.delete_jd(jd_id, db)
+
+# Only Administrator can delete all JDs
+@router.delete("/jds", response_model=CVUploadResponseSchema)
+async def delete_all_jds(
+    db: Session = Depends(get_db),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
+):
+    logger.debug(f"USER '{get_current_user.get('sub')}' is calling DELETE /jds")
+    return recruitment_service.delete_all_jds(db)
 
 # Only administrator can schedule interview
 @router.post("/interviews/schedule")
@@ -160,18 +234,6 @@ async def cancel_interview(
     )
     return recruitment_service.cancel_interview(interview_id, db)
 
-# Candidate can get job descriptions list -> But it need to verify JWT
-@router.get("/jds")
-async def get_jds(
-    position: Optional[str] = Query(None, description="Optional position filter"),
-    db: Session = Depends(get_db),
-    get_current_user: dict = Depends(JWTService.verify_jwt),
-):
-    username = get_current_user.get("sub")
-    role = get_current_user.get("role")
-    logger.debug(f"USER '{username}' [{role}] is calling GET /jds endpoint.")
-    return recruitment_service.get_all_jds(db, position=position)
-
 # === Interview question ===
 
 # Only TA can get a list of questions
@@ -242,6 +304,20 @@ async def get_pending_cv_list(
     logger.debug(f"USER '{username}' [{role}] is calling GET /cvs/pending endpoint.")
     return recruitment_service.get_pending_cvs(db, candidate_name=candidate_name)
 
+# Only administrator can get approved list CVs
+@router.get("/cvs/approved")
+async def get_approved_cv_list(
+    candidate_name: Optional[str] = Query(
+        None, description="Optional candidate name filter"
+    ),
+    db: Session = Depends(get_db),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
+):
+    username = get_current_user.get("sub")
+    role = get_current_user.get("role")
+    logger.debug(f"USER '{username}' [{role}] is calling GET /cvs/approved endpoint.")
+    return recruitment_service.get_approved_cvs(db, candidate_name=candidate_name)
+
 # Only administrator can update the CV
 @router.put("/cvs/{cv_id}", response_model=CVUploadResponseSchema)
 async def update_cv(
@@ -291,26 +367,3 @@ async def get_cv_by_id(
         return recruitment_service.get_cv_application_by_id(cv_id, db)
     except ValueError as e:
         return {"error": str(e)}
-
-# === JD edit/delete ===
-
-# Only administrator can edit the Job Description
-@router.put("/jds/{jd_id}", response_model=CVUploadResponseSchema)
-async def edit_jd(
-    jd_id: int,
-    update_data: Dict = Body(...),
-    db: Session = Depends(get_db),
-    get_current_user: dict = JWTService.require_role("ADMIN"),
-):
-    logger.debug(f"USER '{get_current_user.get('sub')}' is calling PUT /jds/{jd_id}")
-    return recruitment_service.edit_jd(jd_id, update_data, db)
-
-# Only Administrator can delete specific JD
-@router.delete("/jds/{jd_id}", response_model=CVUploadResponseSchema)
-async def delete_jd(
-    jd_id: int,
-    db: Session = Depends(get_db),
-    get_current_user: dict = JWTService.require_role("ADMIN"),
-):
-    logger.debug(f"USER '{get_current_user.get('sub')}' is calling DELETE /jds/{jd_id}")
-    return recruitment_service.delete_jd(jd_id, db)

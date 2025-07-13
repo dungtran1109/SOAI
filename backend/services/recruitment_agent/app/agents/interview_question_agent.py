@@ -7,7 +7,7 @@ logger = AppLogger(__name__)
 
 class InterviewQuestionAgent:
     def __init__(self, llm):
-        self.llm = llm  # The LLM service instance (e.g., GenAI, OpenAI wrapper)
+        self.llm = llm  # LLM service instance
 
     def _get_question_count_by_level(self, level: str) -> int:
         """Return number of questions based on candidate level using regex match."""
@@ -23,7 +23,7 @@ class InterviewQuestionAgent:
         for pattern, count in level_map:
             if re.search(pattern, level, re.IGNORECASE):
                 return count
-        return 5  # default fallback
+        return 5  # fallback
 
     def run(self, state: RecruitmentState) -> RecruitmentState:
         logger.debug("[InterviewQuestionAgent] Running question generation")
@@ -49,21 +49,44 @@ class InterviewQuestionAgent:
             f"Question Count: {question_count}"
         )
 
-        prompt = f"""
+        if state.cv_summary:
+            prompt = f"""
+You are a technical interviewer preparing to interview {name} for the position of "{position}" ({level} level).
+Here is a summary of the candidate's profile:
+
+{state.cv_summary}
+
+Generate {question_count} personalized interview questions. For each question, also provide at least one appropriate answer (can be multiple).
+
+Return the output strictly in JSON format:
+[
+  {{
+    "question": "Your question?",
+    "answers": ["Answer 1...", "Answer 2 (if any)..."]
+  }},
+  ...
+]
+Do not include any explanation, formatting, or headers outside this JSON array.
+""".strip()
+        else:
+            prompt = f"""
 You are a technical interviewer preparing for an interview with {name}, who applied for the position of "{position}" ({level} level).
 They have {experience} years of experience and key skills: {', '.join(skills)}.
 
-Please generate {question_count} relevant and personalized interview questions, covering:
-- Technical expertise
-- Problem solving
-- Experience and background
-- Communication
-- Cultural fit
+Generate {question_count} relevant interview questions. For each question, also provide at least one possible answer (can be multiple).
 
-Return ONLY the questions as a plain list without any introduction or explanation.
-"""
+Return the output strictly in JSON format:
+[
+  {{
+    "question": "Your question?",
+    "answers": ["Answer 1...", "Answer 2 (if any)..."]
+  }},
+  ...
+]
+No explanation or formatting outside this JSON array.
+""".strip()
 
-        logger.debug(f"[InterviewQuestionAgent] Prompt sent to LLM:\n{prompt.strip()}")
+        logger.debug(f"[InterviewQuestionAgent] Prompt sent to LLM:\n{prompt}")
 
         try:
             response = self.llm.invoke(prompt)
@@ -94,31 +117,43 @@ Return ONLY the questions as a plain list without any introduction or explanatio
 
         logger.debug(f"[InterviewQuestionAgent] Raw response:\n{response}")
 
-        questions = []
+        qa_pairs = []
+
         try:
             parsed_json = json.loads(response)
-            if isinstance(parsed_json, list) and all(isinstance(q, str) for q in parsed_json):
-                questions = parsed_json
-                logger.info("[InterviewQuestionAgent] Parsed response as JSON array.")
-            else:
-                raise ValueError("Invalid JSON array format")
-        except Exception:
+            if isinstance(parsed_json, list):
+                for item in parsed_json:
+                    question = item.get("question")
+                    answers = item.get("answers", [])
+                    if question and isinstance(answers, list) and all(isinstance(ans, str) for ans in answers):
+                        qa_pairs.append({"question": question, "answers": answers})
+            if not qa_pairs:
+                raise ValueError("No valid Q&A pairs found")
+            logger.info("[InterviewQuestionAgent] Parsed response as Q&A JSON.")
+        except Exception as e:
+            logger.warning(f"[InterviewQuestionAgent] JSON parsing failed: {e}")
+            qa_pairs = []
             lines = [line.strip() for line in response.splitlines() if line.strip()]
-            questions = [line for line in lines if re.match(r"^\d+[).\-] ", line) or re.match(r"^[-*•] ", line)]
-            if not questions:
-                questions = [line for line in lines if not re.search(r"\b(?:question|interview|instructions?)\b", line, re.IGNORECASE)]
-                if not questions:
-                    questions = lines[1:] if len(lines) > 1 else lines
-            logger.info("[InterviewQuestionAgent] Parsed response as numbered/bulleted lines.")
+            current_q = None
+            for line in lines:
+                if re.match(r"^\d+[).\-] ", line) or re.match(r"^[-*•] ", line):
+                    if current_q:
+                        qa_pairs.append(current_q)
+                    current_q = {"question": line, "answers": []}
+                elif current_q:
+                    current_q["answers"].append(line)
+            if current_q:
+                qa_pairs.append(current_q)
+            logger.info("[InterviewQuestionAgent] Parsed fallback semi-structured Q&A.")
 
-        logger.info(f"[InterviewQuestionAgent] Generated {len(questions)} questions.")
-        for i, q in enumerate(questions, 1):
-            logger.debug(f"Q{i}: {q}")
+        logger.info(f"[InterviewQuestionAgent] Generated {len(qa_pairs)} Q&A pairs.")
+        for i, item in enumerate(qa_pairs, 1):
+            logger.debug(f"Q{i}: {item['question']}")
+            for ans in item['answers']:
+                logger.debug(f"    A: {ans}")
 
-        if len(questions) < 5:
-            logger.warning(
-                f"[InterviewQuestionAgent] Only {len(questions)} questions generated (expected at least 5)."
-            )
+        if len(qa_pairs) < 5:
+            logger.warning(f"[InterviewQuestionAgent] Only {len(qa_pairs)} questions generated (expected at least 5).")
 
-        state.interview_questions = questions
+        state.interview_questions = qa_pairs
         return state

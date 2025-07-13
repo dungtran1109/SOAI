@@ -14,6 +14,7 @@ class FinalDecisionAgent(BaseAgent):
 
     def run(self, state: RecruitmentState) -> RecruitmentState:
         if state.stop_pipeline:
+            logger.info("[FinalDecisionAgent] Pipeline stopped. Skipping final decision.")
             return state
 
         if not state.parsed_cv:
@@ -28,20 +29,30 @@ class FinalDecisionAgent(BaseAgent):
             return state
 
         if state.approved_candidate:
-            logger.info(
-                f"[FinalDecisionAgent] Candidate approved: {state.approved_candidate.get('name')}"
-            )
+            candidate_name = state.approved_candidate.get("name", "Candidate")
+            logger.info(f"[FinalDecisionAgent] Candidate approved: {candidate_name}")
+
             recipient_email = (
                 getattr(state, "override_email", None)
                 or state.parsed_cv.get("email")
                 or DEFAULT_CANDIDATE_EMAIL
             )
+
             subject = "Your Application Has Been Approved"
+
+            # Use summary if available
+            summary_block = (
+                f"\nHere’s a brief summary of your profile:\n\n{state.cv_summary.strip()}\n"
+                if state.cv_summary else ""
+            )
+            logger.debug(f"[FinalDecisionAgent] CV Summary: {state.cv_summary}")
+            logger.debug(f"[FinalDecisionAgent] Sending email to {recipient_email}")
+
             body = f"""
-Dear {state.approved_candidate.get('name')},
+Dear {candidate_name},
 
 We are excited to inform you that your application has passed our screening process.
-Your qualifications are an excellent match for the {state.matched_jd.get('position')} role at our company.
+Your qualifications are an excellent match for the {state.matched_jd.get('position')} role at our company.{summary_block}
 
 Our hiring team was impressed by your CV, and we would like to proceed with the next steps in our hiring process.
 
@@ -50,11 +61,10 @@ Please confirm your interest and availability for an interview by replying to th
 Best regards,  
 Talent Acquisition Team
 """
+
             if recipient_email:
                 self.email_sender.send_email(recipient_email, subject, body)
-                logger.info(
-                    f"[FinalDecisionAgent] Offer email sent to {recipient_email}"
-                )
+                logger.info(f"[FinalDecisionAgent] Offer email sent to {recipient_email}")
                 state.final_decision = (
                     f"{FinalDecisionStatus.ACCEPTED.value}: Offer email sent."
                 )
@@ -64,9 +74,7 @@ Talent Acquisition Team
                     f"{FinalDecisionStatus.ACCEPTED.value} but no email sent."
                 )
         else:
-            logger.info(
-                "[FinalDecisionAgent] Candidate not approved after confirmation."
-            )
+            logger.info("[FinalDecisionAgent] Candidate not approved after confirmation.")
             state.final_decision = (
                 f"{FinalDecisionStatus.REJECTED.value}: Candidate not approved."
             )

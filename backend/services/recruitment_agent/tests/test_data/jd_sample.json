@@ -529,5 +529,97 @@
     },
     "hiring_manager": "Nhat Pham",
     "recruiter": "Han Nguyen"
+  },
+  {
+    "position": "Fullstack Cloud-Native Developer (Java + Kubernetes)",
+    "skills_required": [
+      "Java",
+      "Spring Boot",
+      "Kubernetes",
+      "Docker",
+      "Microservices",
+      "ReactJS",
+      "GitLab CI/CD",
+      "Kafka",
+      "MySQL",
+      "Helm",
+      "Linux",
+      "Bash Script"
+    ],
+    "location": "Ho Chi Minh City, Vietnam",
+    "date": "2025-07-13",
+    "experience_required": 3,
+    "level": "Mid-Senior",
+    "referral": true,
+    "referral_code": "REF1532F",
+    "company_description": "Technology is our how. And people are our why. For over two decades, we have been harnessing technology to drive meaningful change.\n\nBy combining world-class engineering, industry expertise and a people-centric mindset, we consult and partner with leading brands from various industries to create dynamic platforms and intelligent digital experiences that drive innovation and transform businesses.\n\nFrom prototype to real-world impact - be part of a global shift by doing work that matters.",
+    "job_description": "As a Fullstack Cloud-Native Developer, you will design and implement scalable, secure, and resilient microservices and backend services using Spring Boot and Kubernetes. You will collaborate across engineering and DevOps teams to build modern applications, integrate with CI/CD pipelines, and ensure production-readiness through observability and automation. Occasional frontend work with ReactJS may be required to deliver end-to-end features.",
+    "responsibilities": [
+      "Design and implement backend services and microservices using Java, Spring Boot, and related technologies.",
+      "Develop frontend components in ReactJS for fullstack delivery when needed.",
+      "Containerize applications using Docker and deploy via Kubernetes and Helm.",
+      "Build and maintain CI/CD pipelines using GitLab CI and Jenkins.",
+      "Implement secure coding practices and follow architectural guidelines for cloud-native systems.",
+      "Integrate Kafka-based event streaming where appropriate for scalable communication.",
+      "Ensure performance and reliability using observability tools, logs, and metrics.",
+      "Collaborate with cross-functional teams in Agile/Scrum methodology.",
+      "Participate in code reviews, technical discussions, and mentor junior team members."
+    ],
+    "qualifications": [
+      "3+ years of hands-on experience in backend development using Java and Spring Boot.",
+      "Solid understanding of containerization (Docker) and orchestration (Kubernetes, Helm).",
+      "Experience with microservices architecture and REST API development.",
+      "Working knowledge of frontend development using ReactJS, HTML/CSS/JavaScript.",
+      "Familiarity with Kafka or other event streaming platforms.",
+      "Proficiency in working with SQL databases such as MySQL or Oracle.",
+      "Experience with CI/CD tools such as GitLab CI or Jenkins.",
+      "Strong understanding of Linux environments and scripting (Bash).",
+      "Knowledge of security, monitoring, and scalable design principles.",
+      "Excellent communication and teamwork abilities in cross-functional setups."
+    ],
+    "additional_information": {
+      "finance": [
+        "Competitive salary package",
+        "Share plan",
+        "Company performance bonuses",
+        "Value-based recognition awards",
+        "Referral bonus"
+      ],
+      "career_development": [
+        "Career coaching",
+        "Global career opportunities",
+        "Non-linear career paths",
+        "Internal development programmes for management and technical leadership"
+      ],
+      "learning": [
+        "Complex projects",
+        "Rotations",
+        "Internal tech communities",
+        "Training",
+        "Certifications",
+        "Coaching",
+        "Online learning platforms subscriptions",
+        "Pass-it-on sessions",
+        "Workshops",
+        "Conferences"
+      ],
+      "work_life_balance": [
+        "Hybrid work",
+        "Flexible working hours",
+        "Employee assistance programme"
+      ],
+      "health": [
+        "Global internal wellbeing programme",
+        "Access to wellbeing apps"
+      ],
+      "community": [
+        "Global internal tech communities",
+        "Hobby clubs and interest groups",
+        "Inclusion and diversity programmes",
+        "Events and celebrations"
+      ]
+    },
+    "hiring_manager": "Nhat Pham",
+    "recruiter": "Han Nguyen"
   }
 ]

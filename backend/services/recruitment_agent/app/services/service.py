@@ -1,4 +1,4 @@
-import os
+import os, subprocess
 import shutil
 import json
 from sqlalchemy.orm import Session
@@ -10,6 +10,8 @@ from agents.graph import (
     build_recruitment_graph_matching,
     build_recruitment_graph_approval,
 )
+from fastapi.responses import FileResponse
+from fastapi import HTTPException
 from models.job_description import JobDescription
 from models.interview_schedule import InterviewSchedule
 from models.cv_application import CVApplication
@@ -92,111 +94,92 @@ class RecruitmentService:
         override_email: Optional[str] = None,
         position_applied_for: Optional[str] = None,
     ):
-        """Upload a CV, parse it, match with JDs, and save as Pending CVApplication."""
         logger.info("Uploading and processing CV file.")
         try:
             with cv_processing_duration_seconds.time():
                 cv_dir = "./cv_uploads"
                 os.makedirs(cv_dir, exist_ok=True)
-                cv_path = os.path.join(cv_dir, file.filename)
-                with open(cv_path, "wb") as f:
+
+                original_path = os.path.join(cv_dir, file.filename)
+                with open(original_path, "wb") as f:
                     shutil.copyfileobj(file.file, f)
 
+                # Convert to PDF if needed
+                if not file.filename.lower().endswith(".pdf"):
+                    try:
+                        subprocess.run([
+                            "libreoffice", "--headless", "--convert-to", "pdf",
+                            "--outdir", cv_dir, original_path
+                        ], check=True)
+                        pdf_filename = file.filename.rsplit(".", 1)[0] + ".pdf"
+                        pdf_path = os.path.join(cv_dir, pdf_filename)
+                        if not os.path.exists(pdf_path):
+                            raise RuntimeError("PDF conversion failed.")
+                    except Exception as e:
+                        logger.error(f"LibreOffice conversion failed: {e}")
+                        raise RuntimeError("Failed to convert CV to PDF.")
+                else:
+                    pdf_filename = file.filename
+
                 pipeline = build_recruitment_graph_matching(db)
-                state = RecruitmentState(cv_file_path=cv_path)
+                state = RecruitmentState(cv_file_path=os.path.join(cv_dir, pdf_filename))
 
                 if override_email:
                     state.override_email = override_email
                 if position_applied_for:
                     state.position_applied_for = position_applied_for
 
-                try:
-                    updated_state = pipeline.invoke(state.model_dump())
-                    final_state = RecruitmentState(**updated_state)
-                    logger.debug(f"[upload_and_process_cv] final_state: {final_state}")
-                    logger.info("CV parsing and JD matching completed.")
-                except Exception as e:
-                    logger.error(f"Error during CV processing: {e}")
-                    raise RuntimeError(f"Error during CV processing: {str(e)}")
+                updated_state = pipeline.invoke(state.model_dump())
+                final_state = RecruitmentState(**updated_state)
+                final_state.parsed_cv["cv_file_name"] = pdf_filename
 
                 if not final_state.matched_jd:
-                    logger.error("No matching JD found for this CV.")
-                    return CVUploadResponseSchema(
-                        message="No suitable JD match found for this CV."
-                    )
+                    return CVUploadResponseSchema(message="No suitable JD match found for this CV.")
 
-                email_to_check = final_state.override_email or final_state.parsed_cv.get(
-                    "email"
-                )
-
-                # Check duplicate
+                email_to_check = final_state.override_email or final_state.parsed_cv.get("email")
                 existing_cv = (
                     db.query(CVApplication)
                     .filter(
                         CVApplication.candidate_name == final_state.parsed_cv.get("name"),
                         CVApplication.email == email_to_check,
-                        CVApplication.matched_position
-                        == final_state.matched_jd.get("position"),
-                        CVApplication.status.in_(
-                            [
-                                FinalDecisionStatus.PENDING.value,
-                                FinalDecisionStatus.ACCEPTED.value,
-                            ]
-                        ),
-                    )
-                    .first()
+                        CVApplication.matched_position == final_state.matched_jd.get("position"),
+                        CVApplication.status.in_([FinalDecisionStatus.PENDING.value, FinalDecisionStatus.ACCEPTED.value])
+                    ).first()
                 )
 
                 if existing_cv:
-                    logger.info("Duplicate CV detected. Skipping new insertion.")
-                    return CVUploadResponseSchema(
-                        message="CV already uploaded and matched successfully. Pending approval."
-                    )
+                    return CVUploadResponseSchema(message="CV already uploaded and matched successfully. Pending approval.")
 
                 # Validate experience
                 candidate_experience = final_state.parsed_cv.get("experience_years", 0)
-                jd_experience_required = final_state.matched_jd.get(
-                    "experience_required", 0
-                )
+                jd_experience_required = final_state.matched_jd.get("experience_required", 0)
 
                 if abs(candidate_experience - jd_experience_required) > 1:
-                    logger.error(
-                        f"Candidate experience {candidate_experience}yrs does not match JD experience {jd_experience_required}yrs (bias > 1). Rejecting CV."
-                    )
-                    final_state.stop_pipeline = True
-                    final_state.final_decision = f"{FinalDecisionStatus.REJECTED.value}: Candidate experience does not match JD requirement."
                     return CVUploadResponseSchema(
                         message=f"{FinalDecisionStatus.REJECTED.value}: Candidate experience does not match JD requirements."
                     )
 
-                # Save new CVApplication
+                # Save CV
                 cv_application = CVApplication(
                     candidate_name=final_state.parsed_cv.get("name"),
                     email=email_to_check,
                     matched_position=final_state.matched_jd.get("position"),
                     status=FinalDecisionStatus.PENDING.value,
                     skills=json.dumps(final_state.parsed_cv.get("skills", [])),
-                    matched_jd_skills=json.dumps(
-                        final_state.matched_jd.get("skills_required", [])
-                    ),
+                    matched_jd_skills=json.dumps(final_state.matched_jd.get("skills_required", [])),
                     matched_jd_experience_required=jd_experience_required,
                     experience_years=candidate_experience,
-                    is_matched=True if final_state.matched_jd else False,
-                    parsed_cv=json.dumps(final_state.parsed_cv),
+                    is_matched=True,
+                    parsed_cv=json.dumps(final_state.parsed_cv)
                 )
                 db.add(cv_application)
                 db.commit()
-                logger.info(
-                    f"New CVApplication created for candidate: {final_state.parsed_cv.get('name')}"
-                )
-                cv_upload_total.inc() # Increase metrics to 1 if one CV created
+                cv_upload_total.inc()
 
-                return CVUploadResponseSchema(
-                    message="CV uploaded and matched successfully. Pending approval."
-                )
+                return CVUploadResponseSchema(message="CV uploaded and matched successfully. Pending approval.")
+
         except Exception as e:
             logger.exception(f"Error processing CV: {e}")
-            # Increase cv_processing failed to 1
             cv_processing_failed_total.inc()
             return CVUploadResponseSchema(message=f"Error processing CV: {str(e)}")
 
@@ -364,8 +347,7 @@ class RecruitmentService:
             existing = (
                 db.query(InterviewSchedule)
                 .filter_by(
-                    candidate_name=interview_data.candidate_name,
-                    interview_datetime=interview_data.interview_datetime,
+                    candidate_name=interview_data.candidate_name
                 )
                 .first()
             )
@@ -453,7 +435,7 @@ class RecruitmentService:
                 for q in questions:
                     db.add(InterviewQuestion(
                         cv_application_id=cv.id,
-                        original_question=q,
+                        original_question=json.dumps(q),
                         source=DEFAULT_MODEL
                     ))
 
@@ -552,6 +534,35 @@ class RecruitmentService:
         ]
 
         logger.info(f"Fetched {len(result)} pending CVs.")
+        return result
+    
+    def get_approved_cvs(
+        self, db: Session, candidate_name: Optional[str] = None
+    ) -> List[dict]:
+        """Get all approved CVs with optional filtering."""
+        query = db.query(CVApplication).filter_by(
+            status=FinalDecisionStatus.ACCEPTED.value
+        )
+
+        if candidate_name:
+            query = query.filter(
+                CVApplication.candidate_name.ilike(f"%{candidate_name}%")
+            )
+
+        approved_cvs = query.all()
+
+        result = [
+            {
+                "id": cv.id,
+                "candidate_name": cv.candidate_name,
+                "email": cv.email,
+                "matched_position": cv.matched_position,
+                "status": cv.status,
+            }
+            for cv in approved_cvs
+        ]
+
+        logger.info(f"Fetched {len(result)} approved CVs.")
         return result
 
     # TODO: Need to implement full CRUD for RecruitmentService
@@ -681,6 +692,13 @@ class RecruitmentService:
         logger.info("JD deleted.")
         return CVUploadResponseSchema(message="JD deleted.")
     
+    def delete_all_jds(self, db: Session):
+        """Delete all JDs from database."""
+        logger.info("Deleting all JDs.")
+        deleted_count = db.query(JobDescription).delete(synchronize_session=False)
+        db.commit()
+        jd_deleted_total.inc(deleted_count)
+    
     def get_interview_questions(self, cv_id: int, db: Session) -> List[InterviewQuestionSchema]:
         logger.info(f"[get_interview_questions] Fetching interview questions for CV ID={cv_id}")
 
@@ -784,3 +802,82 @@ class RecruitmentService:
 
         logger.info(f"{deleted_count} interview(s) deleted.")
         return CVUploadResponseSchema(message=f"{deleted_count} interview(s) deleted successfully.")
+    
+    def preview_cv_file(self, cv_id: int, db: Session):
+        """Serve CV file for inline preview."""
+        cv = db.query(CVApplication).filter_by(id=cv_id).first()
+        if not cv:
+            raise HTTPException(status_code=404, detail="CV not found.")
+
+        parsed_cv = json.loads(cv.parsed_cv)
+        filename = parsed_cv.get("cv_file_name") or f"{cv.candidate_name.replace(' ', '_')}.pdf"
+        file_path = os.path.join("./cv_uploads", filename)
+
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="CV file not found on server.")
+
+        return FileResponse(
+            path=file_path,
+            media_type="application/pdf",
+            filename=filename,
+            headers={"Content-Disposition": f'inline; filename=\"{filename}\"'}
+        )
+
+    def preview_jd_file(self, jd_id: int, db: Session):
+        """Serve a generated PDF file with JD content for preview."""
+        jd = db.query(JobDescription).filter_by(id=jd_id).first()
+        if not jd:
+            raise HTTPException(status_code=404, detail="Job Description not found.")
+
+        output_dir = "./jd_previews"
+        os.makedirs(output_dir, exist_ok=True)
+
+        filename = f"jd_{jd.id}_{jd.position.replace(' ', '_')}.pdf"
+        output_path = os.path.join(output_dir, filename)
+
+        # Build plain text content from JD fields
+        jd_text = f"""
+Position: {jd.position}
+Level: {jd.level}
+Experience Required: {jd.experience_required}
+
+Location: {jd.location}
+Referral Code: {jd.referral_code or ''}
+Recruiter: {jd.recruiter or ''}
+Hiring Manager: {jd.hiring_manager or ''}
+
+--- Company Description ---
+{jd.company_description or ''}
+
+--- Job Description ---
+{jd.job_description or ''}
+
+--- Responsibilities ---
+{jd.responsibilities or ''}
+
+--- Qualifications ---
+{jd.qualifications or ''}
+
+--- Additional Information ---
+{jd.additional_information or ''}
+        """
+
+        txt_path = os.path.join(output_dir, filename.replace(".pdf", ".txt"))
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(jd_text.strip())
+
+        try:
+            subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, txt_path], check=True)
+        except Exception as e:
+            logger.error(f"[preview_jd_file] LibreOffice failed: {e}")
+            raise HTTPException(status_code=500, detail="Failed to convert JD to PDF.")
+
+        if not os.path.exists(output_path):
+            raise HTTPException(status_code=500, detail="JD PDF was not created.")
+
+        return FileResponse(
+            path=output_path,
+            media_type="application/pdf",
+            filename=filename,
+            headers={"Content-Disposition": f'inline; filename="{filename}"'}
+        )

@@ -14,6 +14,7 @@
     "react": "^19.0.0",
     "react-chatbotify": "^2.0.0-beta.30",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.2.0",
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",

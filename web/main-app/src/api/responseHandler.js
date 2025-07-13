@@ -21,6 +21,9 @@ export const handleResponse = async (response) => {
   try {
     const result = await response.json();
     console.log("[DEBUG handleResponse] Parsed JSON:", result);
+    // Auto unwrap array if wrapped in { data: [...] }
+    if (result && Array.isArray(result.data)) return result.data;
+
     return result;
   } catch (err) {
     console.error("[DEBUG handleResponse] Failed to parse JSON:", err);

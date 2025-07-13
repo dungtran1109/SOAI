@@ -13,8 +13,7 @@ const authHeaders = () => ({
 // === CV SERVICES ===
 
 /**
- * Upload a CV file (candidate).
- * Uses FormData, so Content-Type is not set manually.
+ * Upload a CV file (candidate, no auth required).
  * @param {File} file - The CV file to upload.
  * @param {string} position_applied_for - The position the candidate is applying for.
  * @param {string|null} override_email - (optional) Override email address.
@@ -28,7 +27,6 @@ export const uploadCV = async (file, position_applied_for, override_email = null
 
   const response = await fetch(`${API_BASE_URL}/recruitment/cvs/upload`, {
     method: "POST",
-    headers: authHeaders(),
     body: formData,
   });
   return await handleResponse(response);
@@ -49,10 +47,30 @@ export const approveCV = async (candidateId) => {
 
 /**
  * Get all pending CVs (admin).
+ * @param {string} [candidateName] - Optional candidate name filter.
  * @returns {Promise<Array>} List of pending CVs.
  */
-export const getPendingCVs = async () => {
-  const response = await fetch(`${API_BASE_URL}/recruitment/cvs/pending`, {
+export const getPendingCVs = async (candidateName = "") => {
+  const url = new URL(`${API_BASE_URL}/recruitment/cvs/pending`);
+  if (candidateName) url.searchParams.append("candidate_name", candidateName);
+
+  const response = await fetch(url, {
+    headers: authHeaders()
+  });
+  return await handleResponse(response);
+};
+
+/**
+ * Get all approved CVs (admin).
+ * @param {string} [candidateName] - Optional candidate name filter.
+ * @returns {Promise<Array>} List of approved CVs.
+ * @description This fetches all CVs that have been approved by the admin.
+ * This is useful for displaying a list of candidates who have been approved for further recruitment steps.
+ */
+export const getApprovedCVs = async (candidateName = "") => {
+  const url = new URL(`${API_BASE_URL}/recruitment/cvs/approved`);
+  if (candidateName) url.searchParams.append("candidate_name", candidateName);
+  const response = await fetch(url, {
     headers: authHeaders()
   });
   return await handleResponse(response);
@@ -114,4 +132,13 @@ export const getCVById = async (cvId) => {
     headers: authHeaders()
   });
   return await handleResponse(response);
+};
+
+/**
+ * Get a preview URL for a CV (admin).
+ * @param {string|number} cvId - The ID of the CV to preview.
+ * @returns {string} The URL to access the CV preview.
+ */
+export const getCVPreviewUrl = (cvId) => {
+  return `${API_BASE_URL}/recruitment/cvs/${cvId}/preview`;
 };

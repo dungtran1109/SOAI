@@ -1,0 +1,103 @@
+.admin-user-list {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 32px;
+}
+
+.admin-user-list__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.admin-user-list__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-user-list__table th,
+.admin-user-list__table td {
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-user-list__table th {
+  font-weight: 600;
+  background-color: #f9fafb;
+  color: #374151;
+}
+
+.admin-user-list__user-cell {
+  display: flex;
+  align-items: center;
+}
+
+.admin-user-list__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-user-list__avatar {
+  color: #6b7280;
+}
+
+.admin-user-list__user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-user-list__name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.admin-user-list__email {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.admin-user-list__role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.admin-user-list__role-badge.admin {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.admin-user-list__role-badge.user {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-icon {
+  font-size: 16px;
+}
+
+.admin-user-list__delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  transition: color 0.2s ease;
+  padding: 4px;
+}
+
+.admin-user-list__delete-btn:hover {
+  color: #dc2626;
+}

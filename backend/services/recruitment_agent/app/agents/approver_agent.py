@@ -1,7 +1,6 @@
 from agents.base_agent import BaseAgent
 from agents.state import RecruitmentState
 from config.log_config import AppLogger
-from config.constants import *
 
 logger = AppLogger(__name__)
 
@@ -12,70 +11,68 @@ class ApproverAgent(BaseAgent):
 
     def run(self, state: RecruitmentState) -> RecruitmentState:
         if state.stop_pipeline:
+            logger.info("[ApproverAgent] Pipeline stopped. Skipping approval.")
             return state
 
         if not state.matched_jd:
-            logger.warn("[ApproverAgent] No matched JD, skipping developer approval.")
+            logger.warning("[ApproverAgent] No matched JD found. Skipping approval.")
             state.approved_candidate = None
             return state
 
-        logger.debug(f"[ApproverAgent] state.parsed_cv: {state.parsed_cv}")
-        logger.debug(f"[ApproverAgent] state.matched_jd: {state.matched_jd}")
+        if not state.parsed_cv:
+            logger.warning("[ApproverAgent] No parsed CV found. Cannot approve.")
+            state.approved_candidate = None
+            return state
 
-        candidate_skills = set(
-            skill.lower() for skill in state.parsed_cv.get("skills", [])
-        )
-        jd_skills = set(
-            skill.lower() for skill in state.matched_jd.get("skills_required", [])
-        )
+        logger.info("[ApproverAgent] Candidate approved without re-verification.")
+        state.approved_candidate = state.parsed_cv
 
-        logger.debug(f"[ApproverAgent] candidate_skills: {candidate_skills}")
-        logger.debug(f"[ApproverAgent] jd_skills: {jd_skills}")
-
-        candidate_experience = state.parsed_cv.get("experience_years", 0)
+        # LLM-based CV Summary
         try:
-            jd_experience = int(state.matched_jd.get("experience_required", 0))
-        except (TypeError, ValueError):
-            jd_experience = 0
-
-        if not candidate_skills or not jd_skills:
-            logger.warn("[ApproverAgent] Missing skills for matching.")
-            state.approved_candidate = None
-            return state
-
-        # Flexible skill matching: partial match allowed
-        matching_skills = []
-        for jd_skill in jd_skills:
-            for cv_skill in candidate_skills:
-                if jd_skill in cv_skill or cv_skill in jd_skill:
-                    matching_skills.append(jd_skill)
-                    break
-
-        if jd_skills:
-            skill_match_percentage = (len(matching_skills) / len(jd_skills)) * 100
-        else:
-            skill_match_percentage = 0.0
-
-        experience_match = (
-            candidate_experience >= jd_experience
-            or (jd_experience - candidate_experience) <= 1
-        )
-
-        logger.info(f"[ApproverAgent] Matching skills: {matching_skills}")
-        logger.info(f"[ApproverAgent] Skill match: {skill_match_percentage:.2f}%")
-        logger.info(
-            f"[ApproverAgent] Experience: CV {candidate_experience} yrs vs JD {jd_experience} yrs"
-        )
-
-        if skill_match_percentage >= MATCHING_SCORE_PERCENTAGE and experience_match:
-            logger.info(
-                "[ApproverAgent] Candidate approved (skills and experience matched)."
+            prompt = (
+                "You are assisting a technical recruiter by reviewing a candidate's profile.\n"
+                "Based on the information below, write a concise paragraph summarizing the candidate’s qualifications.\n"
+                "Include details about their professional experience, technical skills, tools or frameworks they've worked with, and any notable achievements or strengths.\n"
+                "The summary should be natural, readable, and written in plain English — not a list. Aim for 3–5 complete sentences.\n\n"
+                f"Candidate Profile:\n{state.parsed_cv}"
             )
-            state.approved_candidate = state.parsed_cv
-        else:
-            logger.info(
-                "[ApproverAgent] Candidate rejected (skills or experience mismatch)."
-            )
-            state.approved_candidate = None
+
+            raw_response = self.llm.invoke(prompt)
+            # Safely extract string content
+            if isinstance(raw_response, dict):
+                content = raw_response.get("data", "")
+            elif hasattr(raw_response, "json"):
+                try:
+                    content = raw_response.json().get("data", "")
+                except Exception:
+                    content = getattr(raw_response, "text", str(raw_response))
+            elif hasattr(raw_response, "content"):
+                content = raw_response.content
+            elif isinstance(raw_response, (str, bytes)):
+                content = raw_response
+            else:
+                content = str(raw_response)
+
+            # Decode bytes if needed
+            if isinstance(content, bytes):
+                content = content.decode("utf-8")
+
+            content = content.strip()
+            if not content:
+                raise ValueError("Received empty response from LLM.")
+
+            # Remove Markdown block formatting (``` or ```json)
+            if content.startswith("```"):
+                content = content.strip().strip("`")
+                if content.lower().startswith("json"):
+                    content = content[4:].strip()
+
+            state.cv_summary = content
+            logger.info("[ApproverAgent] CV summary generated by LLM.")
+            logger.debug(f"[ApproverAgent] state.cv_summary:\n{state.cv_summary}")
+
+        except Exception as e:
+            logger.error(f"[ApproverAgent] Failed to summarize CV: {e}")
+            state.cv_summary = None
 
         return state

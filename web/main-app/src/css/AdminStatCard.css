@@ -1,0 +1,40 @@
+.admin-stat-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
+}
+
+.admin-stat-card__icon img {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 12px;
+}
+
+.admin-stat-card__count {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.admin-stat-card__label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.admin-stat-card__indicator {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-stat-card__indicator.up {
+  color: #22c55e;
+}
+
+.admin-stat-card__indicator.down {
+  color: #ef4444;
+}

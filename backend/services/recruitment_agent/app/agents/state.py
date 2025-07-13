@@ -12,4 +12,5 @@ class RecruitmentState(BaseModel):
     approved_candidate: Optional[Dict[str, Any]] = None
     final_decision: Optional[str] = None
     interview_questions: Optional[List[str]] = None
+    cv_summary: Optional[str] = None
     stop_pipeline: bool = False
