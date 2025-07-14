@@ -32,9 +32,15 @@ export const scheduleInterview = async (interviewData) => {
  * @returns {Promise<Array>}
  */
 export const getInterviews = async (params = {}) => {
-  const url = new URL(`${API_BASE_URL}/recruitment/interviews`);
-  if (params.interview_date) url.searchParams.append("interview_date", params.interview_date);
-  if (params.candidate_name) url.searchParams.append("candidate_name", params.candidate_name);
+  const query = [];
+  if (params.interview_date) {
+    query.push(`interview_date=${encodeURIComponent(params.interview_date)}`);
+  }
+  if (params.candidate_name) {
+    query.push(`candidate_name=${encodeURIComponent(params.candidate_name)}`);
+  }
+  const queryString = query.length > 0 ? `?${query.join("&")}` : "";
+  const url = `${API_BASE_URL}/recruitment/interviews${queryString}`;
 
   const response = await fetch(url, {
     headers: authHeaders(false),
@@ -61,8 +67,8 @@ export const deleteInterview = async (interviewId) => {
  * @returns {Promise<Object>}
  */
 export const deleteAllInterviews = async (candidateName = "") => {
-  const url = new URL(`${API_BASE_URL}/recruitment/interviews`);
-  if (candidateName) url.searchParams.append("candidate_name", candidateName);
+  const query = candidateName ? `?candidate_name=${encodeURIComponent(candidateName)}` : "";
+  const url = `${API_BASE_URL}/recruitment/interviews${query}`;
 
   const response = await fetch(url, {
     method: "DELETE",

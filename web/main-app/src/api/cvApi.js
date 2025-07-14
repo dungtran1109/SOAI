@@ -51,8 +51,8 @@ export const approveCV = async (candidateId) => {
  * @returns {Promise<Array>} List of pending CVs.
  */
 export const getPendingCVs = async (candidateName = "") => {
-  const url = new URL(`${API_BASE_URL}/recruitment/cvs/pending`);
-  if (candidateName) url.searchParams.append("candidate_name", candidateName);
+  const query = candidateName ? `?candidate_name=${encodeURIComponent(candidateName)}` : "";
+  const url = `${API_BASE_URL}/recruitment/cvs/pending${query}`;
 
   const response = await fetch(url, {
     headers: authHeaders()
@@ -68,8 +68,9 @@ export const getPendingCVs = async (candidateName = "") => {
  * This is useful for displaying a list of candidates who have been approved for further recruitment steps.
  */
 export const getApprovedCVs = async (candidateName = "") => {
-  const url = new URL(`${API_BASE_URL}/recruitment/cvs/approved`);
-  if (candidateName) url.searchParams.append("candidate_name", candidateName);
+  const query = candidateName ? `?candidate_name=${encodeURIComponent(candidateName)}` : "";
+  const url = `${API_BASE_URL}/recruitment/cvs/approved${query}`;
+
   const response = await fetch(url, {
     headers: authHeaders()
   });
@@ -113,8 +114,8 @@ export const deleteCV = async (cvId) => {
  * @returns {Promise<Array>} List of CVs.
  */
 export const listCVsByPosition = async (position = "") => {
-  const url = new URL(`${API_BASE_URL}/recruitment/cvs/position`);
-  if (position) url.searchParams.append("position", position);
+  const query = position ? `?position=${encodeURIComponent(position)}` : "";
+  const url = `${API_BASE_URL}/recruitment/cvs/position${query}`;
 
   const response = await fetch(url, {
     headers: authHeaders()
