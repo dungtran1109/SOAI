@@ -12,18 +12,18 @@ class InterviewQuestionAgent:
     def _get_question_count_by_level(self, level: str) -> int:
         """Return number of questions based on candidate level using regex match."""
         level_map = [
-            (r"intern", 3),
-            (r"fresher", 4),
-            (r"junior", 5),
-            (r"mid", 6),
-            (r"senior", 8),
-            (r"lead", 10),
-            (r"architect", 12),
+            (r"intern", 5),
+            (r"fresher", 10),
+            (r"junior", 15),
+            (r"mid", 20),
+            (r"senior", 25),
+            (r"lead", 30),
+            (r"architect", 35),
         ]
         for pattern, count in level_map:
             if re.search(pattern, level, re.IGNORECASE):
                 return count
-        return 5  # fallback
+        return 20  # fallback
 
     def run(self, state: RecruitmentState) -> RecruitmentState:
         logger.debug("[InterviewQuestionAgent] Running question generation")

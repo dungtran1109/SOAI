@@ -176,40 +176,6 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
     }
   };
 
-  const regenerateQuestions = async (cvId) => {
-    const confirmed = window.confirm("Are you sure you want to regenerate and overwrite existing interview questions?");
-    if (!confirmed) return;
-
-    try {
-      setRegeneratingId(cvId);
-      const updated = await regenerateInterviewQuestions(cvId);
-      toast.success("Questions regenerated successfully.");
-      const parsed = updated.map((q) => {
-        let parsedContent;
-        try {
-          const tryParse = JSON.parse(q.original_question);
-          if (typeof tryParse === 'object' && tryParse.question && tryParse.answers) {
-            parsedContent = tryParse;
-          } else {
-            throw new Error('Not valid format');
-          }
-        } catch {
-          parsedContent = {
-            question: q.original_question,
-            answers: q.answer ? [q.answer] : []
-          };
-        }
-        return parsedContent;
-      });
-      setInterviewQuestions(parsed);
-      setQuestionModal(true);
-    } catch (err) {
-      toast.error("Failed to regenerate questions.");
-    } finally {
-      setRegeneratingId(null);
-    }
-  };
-
   const confirmRegeneration = async () => {
     const cvId = pendingRegenerationCvId;
     setConfirmDialogOpen(false);
@@ -248,20 +214,6 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
     <div className="admin-interview-list">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} className="confirm-dialog">
-        <div className="confirm-dialog__backdrop" aria-hidden="true" />
-        <div className="confirm-dialog__panel">
-          <Dialog.Title className="confirm-dialog__title">Confirm Regeneration</Dialog.Title>
-          <Dialog.Description className="confirm-dialog__desc">
-            Are you sure you want to regenerate and overwrite existing interview questions?
-          </Dialog.Description>
-          <div className="confirm-dialog__actions">
-            <button onClick={() => setConfirmDialogOpen(false)} className="confirm-dialog__cancel">Cancel</button>
-            <button onClick={confirmRegeneration} className="confirm-dialog__confirm">Yes, Regenerate</button>
-          </div>
-        </div>
-      </Dialog>
-
       <div className="admin-interview-list__header">
         <FaCalendarAlt style={{ marginRight: "8px" }} /> Upcoming Interviews
       </div>
@@ -289,11 +241,31 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                   <button title="View Questions" onClick={() => openQuestionsModal(interview.cv_application_id)}><FaQuestionCircle /></button>
                   <button
                     title="Regenerate Questions"
-                    onClick={() => regenerateQuestions(interview.cv_application_id)}
+                    onClick={() => handleRegenerateConfirm(interview.cv_application_id)}
                     disabled={regeneratingId === interview.cv_application_id}
                   >
                     {regeneratingId === interview.cv_application_id ? <FaSpinner className="spin" /> : <FaRedoAlt />}
                   </button>
+
+                  <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} className="confirm-dialog">
+                    <div className="confirm-dialog__backdrop" aria-hidden="true" />
+                    <div className="confirm-dialog__panel">
+                      <Dialog.Title className="confirm-dialog__title">Confirm Regeneration</Dialog.Title>
+                      <Dialog.Description className="confirm-dialog__desc">
+                        Are you sure you want to regenerate and overwrite existing interview questions?
+                      </Dialog.Description>
+                      <div className="confirm-dialog__actions">
+                        <button onClick={() => setConfirmDialogOpen(false)} className="confirm-dialog__cancel">Cancel</button>
+                        <button
+                          onClick={confirmRegeneration}
+                          className="confirm-dialog__confirm"
+                          disabled={regeneratingId === pendingRegenerationCvId}
+                        >
+                          {regeneratingId === pendingRegenerationCvId ? <FaSpinner className="spin" /> : "Yes, Regenerate"}
+                        </button>
+                      </div>
+                    </div>
+                  </Dialog>
                 </>
               ) : (
                 interview.status === "Accepted" ? null : (
