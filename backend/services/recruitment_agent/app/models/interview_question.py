@@ -15,6 +15,7 @@ class InterviewQuestion(DeclarativeBase):
     )
 
     original_question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=True)
     edited_question = Column(Text, nullable=True)
     is_edited = Column(Boolean, default=False)
 

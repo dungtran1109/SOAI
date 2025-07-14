@@ -433,9 +433,19 @@ class RecruitmentService:
                 # Step 4: Store generated questions
                 db.query(InterviewQuestion).filter_by(cv_application_id=cv.id).delete()
                 for q in questions:
+                    question_text = q.get("question", "")
+                    answer = "\n".join(q.get("answers", []))
+                    if not question_text:
+                        logger.warning("Generated question is empty, skipping storage.")
+                        continue
+                    logger.debug(f"Storing question: {question_text} with answer: {answer}")
+                    if not answer:
+                        answer = "No answer provided."
+                    # Store each question with its answer
                     db.add(InterviewQuestion(
                         cv_application_id=cv.id,
-                        original_question=json.dumps(q),
+                        original_question=question_text,
+                        answer=answer,
                         source=DEFAULT_MODEL
                     ))
 
@@ -734,9 +744,9 @@ class RecruitmentService:
         db.commit()
         return {"message": "Interview question updated successfully."}
     
-    def regenerate_interview_questions(self, cv_id: int, db: Session) -> List[str]:
+    def regenerate_interview_questions(self, cv_id: int, db: Session) -> List[InterviewQuestion]:
         logger.info(f"Regenerating interview questions for CV ID={cv_id}")
-        
+
         cv = db.query(CVApplication).filter_by(id=cv_id).first()
         if not cv:
             regenerate_questions_failed_total.inc()
@@ -760,22 +770,47 @@ class RecruitmentService:
             logger.warning("No questions generated, keeping existing questions")
             return []
 
-        # Record Prometheus metric
         interview_questions_regenerated_total.inc()
 
-        # Delete old questions
+        # Remove old questions
         db.query(InterviewQuestion).filter_by(cv_application_id=cv_id).delete()
 
         for q in questions:
+            # Get question text
+            question_text = q.get("question") or q.get("original_question") or ""
+            if not question_text.strip():
+                logger.warning("Generated question is empty or invalid, skipping.")
+                continue
+
+            # Handle answers: can be list or string
+            raw_answers = q.get("answers")
+            if isinstance(raw_answers, list):
+                answer_text = "\n".join(raw_answers)
+            elif isinstance(raw_answers, str):
+                answer_text = raw_answers
+            else:
+                answer_text = ""
+
+            logger.debug(f"Storing question: {question_text}")
+            logger.debug(f"With answer: {answer_text or 'No answer provided.'}")
+
             db.add(InterviewQuestion(
                 cv_application_id=cv_id,
-                original_question=q,
+                original_question=question_text.strip(),
+                answer=answer_text.strip() or "No answer provided.",
+                edited_question=None,
+                is_edited=False,
                 source=DEFAULT_MODEL
             ))
 
         db.commit()
-        logger.info(f"{len(questions)} questions regenerated and stored for CV ID={cv_id}")
-        return questions
+
+        # Re-fetch saved questions to return ORM objects
+        stored = db.query(InterviewQuestion).filter_by(cv_application_id=cv_id).all()
+        logger.info(f"{len(stored)} interview questions regenerated and stored for CV ID={cv_id}")
+        return stored
+
+
     
     def delete_interview(self, interview_id: int, db: Session):
         logger.info(f"Deleting interview ID={interview_id}")

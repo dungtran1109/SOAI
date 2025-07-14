@@ -260,7 +260,7 @@ async def edit_question(
     )
 
 # Only TA can regenerate the interview questions
-@router.post("/interview-questions/{cv_id}/questions/regenerate", response_model=List[str])
+@router.post("/interview-questions/{cv_id}/questions/regenerate", response_model=List[InterviewQuestionSchema])
 async def regenerate_questions(
     cv_id: int,
     db: Session = Depends(get_db),

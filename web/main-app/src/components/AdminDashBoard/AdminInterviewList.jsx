@@ -7,6 +7,7 @@ import {
   acceptInterview,
   cancelInterview,
   getInterviewQuestions,
+  regenerateInterviewQuestions,
 } from "../../api/interviewApi";
 import { getApprovedCVs } from "../../api/cvApi";
 import "../../css/AdminInterviewList.css";
@@ -22,9 +23,10 @@ import {
   FaGraduationCap,
   FaTimesCircle,
   FaCommentDots,
-  FaLightbulb
+  FaRedoAlt,
+  FaSpinner
 } from "react-icons/fa";
-
+import { Dialog } from "@headlessui/react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -41,6 +43,9 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
   const [editingInterviewId, setEditingInterviewId] = useState(null);
   const [questionModal, setQuestionModal] = useState(false);
   const [interviewQuestions, setInterviewQuestions] = useState([]);
+  const [regeneratingId, setRegeneratingId] = useState(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingRegenerationCvId, setPendingRegenerationCvId] = useState(null);
 
   useEffect(() => {
     fetchInterviews();
@@ -63,6 +68,11 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
     } catch (error) {
       toast.error("Failed to fetch approved CVs");
     }
+  };
+
+  const handleRegenerateConfirm = (cvId) => {
+    setPendingRegenerationCvId(cvId);
+    setConfirmDialogOpen(true);
   };
 
   const openModal = (cv) => {
@@ -141,31 +151,116 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
 
   const openQuestionsModal = async (cvId) => {
     try {
-        const questions = await getInterviewQuestions(cvId);
-
-        const parsed = questions.map((q) => {
+      const questions = await getInterviewQuestions(cvId);
+      const parsed = questions.map((q) => {
         let parsedContent;
         try {
-            parsedContent = JSON.parse(q.original_question);
-        } catch (err) {
-            parsedContent = {
-            question: "Invalid JSON",
-            answers: [typeof q.original_question === "string" ? q.original_question : JSON.stringify(q.original_question)]
-            };
+          const tryParse = JSON.parse(q.original_question);
+          if (typeof tryParse === 'object' && tryParse.question && tryParse.answers) {
+            parsedContent = tryParse;
+          } else {
+            throw new Error('Not valid format');
+          }
+        } catch {
+          parsedContent = {
+            question: q.original_question,
+            answers: q.answer ? [q.answer] : []
+          };
         }
         return parsedContent;
-        });
-
-        setInterviewQuestions(parsed);
-        setQuestionModal(true);
+      });
+      setInterviewQuestions(parsed);
+      setQuestionModal(true);
     } catch (err) {
-        toast.error("Failed to load interview questions.");
+      toast.error("Failed to load interview questions.");
+    }
+  };
+
+  const regenerateQuestions = async (cvId) => {
+    const confirmed = window.confirm("Are you sure you want to regenerate and overwrite existing interview questions?");
+    if (!confirmed) return;
+
+    try {
+      setRegeneratingId(cvId);
+      const updated = await regenerateInterviewQuestions(cvId);
+      toast.success("Questions regenerated successfully.");
+      const parsed = updated.map((q) => {
+        let parsedContent;
+        try {
+          const tryParse = JSON.parse(q.original_question);
+          if (typeof tryParse === 'object' && tryParse.question && tryParse.answers) {
+            parsedContent = tryParse;
+          } else {
+            throw new Error('Not valid format');
+          }
+        } catch {
+          parsedContent = {
+            question: q.original_question,
+            answers: q.answer ? [q.answer] : []
+          };
+        }
+        return parsedContent;
+      });
+      setInterviewQuestions(parsed);
+      setQuestionModal(true);
+    } catch (err) {
+      toast.error("Failed to regenerate questions.");
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
+  const confirmRegeneration = async () => {
+    const cvId = pendingRegenerationCvId;
+    setConfirmDialogOpen(false);
+    try {
+      setRegeneratingId(cvId);
+      const updated = await regenerateInterviewQuestions(cvId);
+      toast.success("Questions regenerated successfully.");
+      const parsed = updated.map((q) => {
+        let parsedContent;
+        try {
+          const tryParse = JSON.parse(q.original_question);
+          if (typeof tryParse === 'object' && tryParse.question && tryParse.answers) {
+            parsedContent = tryParse;
+          } else {
+            throw new Error('Not valid format');
+          }
+        } catch {
+          parsedContent = {
+            question: q.original_question,
+            answers: q.answer ? [q.answer] : []
+          };
+        }
+        return parsedContent;
+      });
+      setInterviewQuestions(parsed);
+      setQuestionModal(true);
+    } catch (err) {
+      toast.error("Failed to regenerate questions.");
+    } finally {
+      setRegeneratingId(null);
+      setPendingRegenerationCvId(null);
     }
   };
 
   return (
     <div className="admin-interview-list">
       <ToastContainer position="top-right" autoClose={3000} />
+
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} className="confirm-dialog">
+        <div className="confirm-dialog__backdrop" aria-hidden="true" />
+        <div className="confirm-dialog__panel">
+          <Dialog.Title className="confirm-dialog__title">Confirm Regeneration</Dialog.Title>
+          <Dialog.Description className="confirm-dialog__desc">
+            Are you sure you want to regenerate and overwrite existing interview questions?
+          </Dialog.Description>
+          <div className="confirm-dialog__actions">
+            <button onClick={() => setConfirmDialogOpen(false)} className="confirm-dialog__cancel">Cancel</button>
+            <button onClick={confirmRegeneration} className="confirm-dialog__confirm">Yes, Regenerate</button>
+          </div>
+        </div>
+      </Dialog>
 
       <div className="admin-interview-list__header">
         <FaCalendarAlt style={{ marginRight: "8px" }} /> Upcoming Interviews
@@ -187,20 +282,27 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
               </p>
             </div>
             <div className="admin-interview-list__actions">
-                {actionsEnabled ? (
-                    <>
-                    <button title="Edit" onClick={() => openEditModal(interview)}><FaRegEdit /></button>
-                    <button title="Delete" onClick={() => handleDelete(interview.id)}><FaTrashAlt /></button>
-                    <button title="View Questions" onClick={() => openQuestionsModal(interview.cv_application_id)}><FaQuestionCircle /></button>
-                    </>
-                ) : (
-                    interview.status === "Accepted" ? null : (
-                    <>
-                        <button title="Accept" onClick={() => handleAccept(interview)}><FaCheck /></button>
-                        <button title="Cancel" onClick={() => handleCancel(interview.id)}><FaTimes /></button>
-                    </>
-                    )
-                )}
+              {actionsEnabled ? (
+                <>
+                  <button title="Edit" onClick={() => openEditModal(interview)}><FaRegEdit /></button>
+                  <button title="Delete" onClick={() => handleDelete(interview.id)}><FaTrashAlt /></button>
+                  <button title="View Questions" onClick={() => openQuestionsModal(interview.cv_application_id)}><FaQuestionCircle /></button>
+                  <button
+                    title="Regenerate Questions"
+                    onClick={() => regenerateQuestions(interview.cv_application_id)}
+                    disabled={regeneratingId === interview.cv_application_id}
+                  >
+                    {regeneratingId === interview.cv_application_id ? <FaSpinner className="spin" /> : <FaRedoAlt />}
+                  </button>
+                </>
+              ) : (
+                interview.status === "Accepted" ? null : (
+                  <>
+                    <button title="Accept" onClick={() => handleAccept(interview)}><FaCheck /></button>
+                    <button title="Cancel" onClick={() => handleCancel(interview.id)}><FaTimes /></button>
+                  </>
+                )
+              )}
             </div>
           </li>
         ))}
@@ -260,17 +362,17 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                 {interviewQuestions.length > 0 ? (
                 interviewQuestions.map((q, index) => (
                     <div key={index} className="admin-question-block">
-                        <p className="admin-question">
-                            <FaQuestionCircle />
-                            <span>Question {index + 1}: {q.question}</span>
-                        </p>
-                        {q.answers && q.answers.map((ans, i) => (
+                    <p className="admin-question">
+                        <FaQuestionCircle />
+                        <span>Question {index + 1}: {q.question || q.original_question}</span>
+                    </p>
+                    {(q.answers || (q.answer ? [q.answer] : [])).map((ans, i) => (
                         <p key={i} className="admin-answer">
-                            <FaCommentDots /> {ans}
+                        <FaCommentDots /> {ans}
                         </p>
-                        ))}
+                    ))}
                     </div>
-                    ))
+                ))
                 ) : (
                 <p>No questions available.</p>
                 )}
