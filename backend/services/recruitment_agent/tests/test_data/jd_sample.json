@@ -149,7 +149,7 @@
         ],
         "location": "Cali, Valle del Cauca, Colombia",
         "date": null,
-        "experience_required": 0,
+        "experience_required": 1,
         "level": "Trung bình - Khá",
         "referral": true,
         "referral_code": "HS1026QA",
@@ -279,7 +279,7 @@
         ],
         "location": "Thành phố Hồ Chí Minh, Việt Nam",
         "date": "2025-08-15",
-        "experience_required": 0,
+        "experience_required": 1,
         "level": "Tiềm năng cao",
         "referral": true,
         "referral_code": "HS2025BIDA",
@@ -335,7 +335,7 @@
         ],
         "location": "Đà Nẵng, Việt Nam",
         "date": "2025-08-20",
-        "experience_required": 0,
+        "experience_required": 1,
         "level": "Học sinh nâng cao",
         "referral": false,
         "company_description": "Chương trình tuyển sinh ứng dụng AI trong phát hiện năng lực công nghệ phần cứng và tích hợp hệ thống.",
@@ -383,7 +383,7 @@
         ],
         "location": "Hà Nội, Việt Nam",
         "date": "2025-08-25",
-        "experience_required": 0,
+        "experience_required": 1,
         "level": "Xuất sắc",
         "referral": true,
         "referral_code": "HS2025MATH",
@@ -420,7 +420,7 @@
         ],
         "location": "TP. Hồ Chí Minh, Việt Nam",
         "date": "2025-08-25",
-        "experience_required": 0,
+        "experience_required": 1,
         "level": "Tiềm năng sáng tạo",
         "referral": false,
         "company_description": "Chương trình tuyển sinh dành cho học sinh có năng lực truyền đạt, tư duy sáng tạo và ứng dụng công nghệ vào kể chuyện, truyền thông, sản xuất nội dung.",
@@ -517,7 +517,7 @@
         ],
         "location": "TP. Hồ Chí Minh, Việt Nam",
         "date": "2025-08-30",
-        "experience_required": 2,
+        "experience_required": 1,
         "level": "Tiềm năng sáng tạo số",
         "referral": true,
         "referral_code": "HS2025XRGAME",
@@ -564,5 +564,69 @@
         },
         "hiring_manager": "Lương Hữu Phát (Trưởng nhóm tuyển sinh công nghệ tương tác)",
         "recruiter": "Nguyễn Hải My (Mentor lập trình sáng tạo)"
+    },
+    {
+        "position": "Chương trình Thiết kế Giao diện & Trải nghiệm Người dùng (UI/UX)",
+        "skills_required": [
+            "Tin học: 8.5",
+            "Mỹ thuật: 8.5",
+            "Ngữ văn: 8.0",
+            "Figma",
+            "Design Thinking",
+            "HTML/CSS cơ bản",
+            "Kỹ năng trình bày trực quan"
+        ],
+        "location": "TP. Hồ Chí Minh, Việt Nam",
+        "date": "2025-08-28",
+        "experience_required": 1,
+        "level": "Tiềm năng sáng tạo",
+        "referral": false,
+        "company_description": "Chương trình Tuyển sinh Thiết kế Giao diện & Trải nghiệm Người dùng hướng tới học sinh có tư duy thẩm mỹ, khả năng thiết kế số, và mong muốn tạo ra trải nghiệm học tập – công nghệ thân thiện, hiện đại. Chương trình được định hướng theo chuẩn UI/UX quốc tế và tích hợp đánh giá tiềm năng sáng tạo bằng AI Agent.",
+        "job_description": "Học sinh sẽ được hướng dẫn thiết kế giao diện phần mềm, sản phẩm học đường, và nội dung trực quan với tư duy người dùng làm trung tâm. Ngoài kỹ thuật, chương trình chú trọng cảm quan thẩm mỹ, khả năng kể chuyện trực quan và truyền đạt bằng công cụ thiết kế hiện đại.",
+        "responsibilities": [
+            "Thiết kế bố cục, màu sắc, hình ảnh giao diện ứng dụng học sinh.",
+            "Sử dụng công cụ Figma, Canva để trình bày ý tưởng trực quan.",
+            "Tham gia dự án nhóm xây dựng giao diện học tập / truyền thông nội bộ.",
+            "Áp dụng tư duy Design Thinking trong phân tích vấn đề và thiết kế giải pháp.",
+            "Trình bày portfolio và phản biện thiết kế trước mentor."
+        ],
+        "qualifications": [
+            "Có khả năng sử dụng Figma hoặc công cụ thiết kế số cơ bản.",
+            "Kỹ năng tư duy hình ảnh, trình bày logic và sáng tạo.",
+            "Yêu thích mỹ thuật, giao diện số và trải nghiệm người dùng.",
+            "Tư duy người dùng và làm việc nhóm tốt là điểm cộng.",
+            "Có dự án thiết kế cá nhân hoặc sản phẩm UI cơ bản là lợi thế."
+        ],
+        "additional_information": {
+            "tài_chính": [
+            "Học bổng thiết kế sáng tạo",
+            "Thưởng dự án cá nhân hoặc nhóm có UX nổi bật"
+            ],
+            "phát_triển_nghề_nghiệp": [
+            "Cố vấn UI/UX cá nhân",
+            "Kết nối mentor ngành Thiết kế Số",
+            "Thực tập học sinh tại startup thiết kế"
+            ],
+            "học_tập": [
+            "Khóa học UI cơ bản bằng Figma",
+            "Workshop thiết kế di động & trải nghiệm học đường",
+            "Phân tích giao diện thật và cải tiến UX"
+            ],
+            "cân_bằng_học_tập_cuộc_sống": [
+            "Dự án ngắn hạn phù hợp lịch học",
+            "Lịch trình thiết kế sáng tạo linh hoạt"
+            ],
+            "sức_khoẻ": [
+            "Hướng dẫn cân bằng thị lực – tư thế làm việc thiết kế",
+            "Thư giãn tư duy sáng tạo tích cực"
+            ],
+            "cộng_đồng": [
+            "Câu lạc bộ UI/UX học sinh",
+            "Studio thiết kế giao diện nội bộ",
+            "Cuộc thi sáng tạo trải nghiệm học sinh"
+            ]
+        },
+        "hiring_manager": "Phạm Thị Minh Tâm (Giám đốc Tuyển sinh Thiết kế số)",
+        "recruiter": "Trần Bảo Khang (Mentor thiết kế giao diện học sinh)"
     }
 ]
