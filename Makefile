@@ -71,10 +71,12 @@ image-web:
 	$(TOP_DIR)/vas.sh build_image --name=web
 
 run: run-mysql \
+	run-redis \
 	run-consul \
 	run-authentication \
 	run-genai \
 	run-recruitment \
+	run-recruitment-celery-worker \
 	run-web
 
 run-mysql:
@@ -102,6 +104,13 @@ run-consul:
 		--name=consul \
 		--port=8500:8500 \
 		--cmd="agent -server -bootstrap -ui -client=0.0.0.0"
+
+run-redis:
+	@echo "Run Redis Container"
+	$(TOP_DIR)/vas.sh run_public_image \
+		--image=redis:7 \
+		--name=redis \
+		--port=6379:6379
 
 run-authentication: wait-mysql
 	@echo "Run Authentication Container"
@@ -149,7 +158,37 @@ run-recruitment: wait-mysql wait-authentication wait-genai
 			DB_PORT=3306 \
 			DB_NAME=soai_db \
 			DB_USERNAME=soai_user \
+			REDIS_HOST=soai_redis \
+			REDIS_PORT=6379 \
+			CELERY_BROKER_URL=redis://soai_redis:6379/0 \
+			CELERY_RESULT_BACKEND=redis://soai_redis:6379/0 \
+			CELERY_TASK_TIME_LIMIT=600 \
+			CELERY_TASK_SOFT_TIME_LIMIT=500 \
+			CELERY_TIMEZONE=Asia/Ho_Chi_Minh \
 			LOG_LEVEL=INFO"
+
+run-recruitment-celery-worker:
+	@echo "Run celery worker for recruitment"
+	$(TOP_DIR)/vas.sh run_image \
+		--name=recruitment_agent-celery-worker \
+		--name_override=recruitment_agent \
+		--env="CONSUL_HOST=soai_consul:8500 \
+			GENAI_HOST=soai_gen_ai_provider:8004 \
+			SERVICE_NAME=soai_recruitment_agent \
+			SERVICE_PORT=8003 \
+			DB_HOST=soai_mysql \
+			DB_PORT=3306 \
+			DB_NAME=soai_db \
+			DB_USERNAME=soai_user \
+			REDIS_HOST=soai_redis \
+			REDIS_PORT=6379 \
+			CELERY_BROKER_URL=redis://soai_redis:6379/0 \
+			CELERY_RESULT_BACKEND=redis://soai_redis:6379/0 \
+			CELERY_TASK_TIME_LIMIT=600 \
+			CELERY_TASK_SOFT_TIME_LIMIT=500 \
+			CELERY_TIMEZONE=Asia/Ho_Chi_Minh \
+			LOG_LEVEL=INFO" \
+		--cmd="celery -A celery_worker worker --loglevel=info"
 
 run-web:
 	@echo "Run Frontend Web Container"
@@ -243,11 +282,16 @@ remove:		remove-recruitment \
 			remove-genai \
 			remove-web \
 			remove-consul \
-			remove-mysql
+			remove-mysql \
+			remove-recruitment-celery-worker \
+			remove-redis
 
 remove-recruitment:
 	@echo "Remove the Recruitment agent docker image"
 	$(TOP_DIR)/vas.sh remove_image --name=recruitment_agent
+remove-recruitment-celery-worker:
+	@echo "Remove the Recruitment celery docker image"
+	$(TOP_DIR)/vas.sh remove_image --name=recruitment_agent-celery-worker
 remove-authentication:
 	@echo "Remove the Authentication agent docker image"
 	$(TOP_DIR)/vas.sh remove_image --name=authentication
@@ -263,6 +307,9 @@ remove-consul:
 remove-mysql:
 	@echo "Remove the MySQL docker image"
 	$(TOP_DIR)/vas.sh remove_public_image --name=mysql
+remove-redis:
+	@echo "Remove the Redis docker image"
+	$(TOP_DIR)/vas.sh remove_public_image --name=redis
 
 generate-ca:
 	@echo "Generate CA files"

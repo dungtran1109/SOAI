@@ -23,5 +23,5 @@ def get_ai_service(model: str) -> Optional[object]:
             logger.info(f"Using {ServiceClass.__name__} for model: {model}")
             return service_instance
 
-    logger.warning(f"No AI service found for model: {model}")
+    logger.warn(f"No AI service found for model: {model}")
     return None

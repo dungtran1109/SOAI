@@ -21,6 +21,9 @@ langgraph==0.2.70
 requests==2.31.0
 python-dotenv==1.0.1
 unidecode==1.4.0
+
+celery==5.5.3
+redis==6.2.0
 # Prometheus
 prometheus_client==0.22.1
 

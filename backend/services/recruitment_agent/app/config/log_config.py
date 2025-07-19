@@ -83,7 +83,7 @@ class AppLogger:
         self.logger.error(msg, *args, **kwargs)
 
     def warn(self, msg: str, *args, **kwargs):
-        self.logger.warning(msg, *args, **kwargs)
+        self.logger.warn(msg, *args, **kwargs)
 
     def exception(self, msg: str, *args, **kwargs):
         self.logger.exception(msg, *args, **kwargs)

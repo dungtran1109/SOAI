@@ -2,17 +2,37 @@ import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
 
 export function isAuthenticated() {
-    const cookie = Cookies.get('profile');
-    if (!cookie) return false;
+  const token = getToken();
+  if (!token) return false;
 
-    try {
-        const parsed = JSON.parse(decodeURIComponent(cookie))
-        const token = parsed?.token;
-        const decoded = jwtDecode(token);
-        const isAuthenticated = decoded.exp * 1000 > Date.now()
-        console.log("isAuthenticated: ", isAuthenticated);
-        return isAuthenticated;
-    } catch {
-        return false;
-    }
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+export function getUserRole() {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    const decoded = jwtDecode(token);
+    return decoded?.role || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getToken() {
+  const cookie = Cookies.get('profile');
+  if (!cookie) return null;
+
+  try {
+    const parsed = JSON.parse(cookie);
+    return parsed?.token || null;
+  } catch {
+    return null;
+  }
 }

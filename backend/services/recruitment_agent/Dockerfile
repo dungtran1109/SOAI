@@ -22,6 +22,7 @@ FROM python:3.12-slim
 
 ARG USER_ID=1001
 ENV HOME=/home/soai_user
+ENV PYTHONPATH=/app/app
 WORKDIR /app
 
 # Install system dependencies and LibreOffice

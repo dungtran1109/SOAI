@@ -180,6 +180,13 @@ build_image() {
         target_dir="$VAS_GIT/$__name"
     fi
 
+    # Decide target registry path
+    if [ "$RELEASE" == "true" ]; then
+        target="$DOCKER_REGISTRY/$image_name:$version"
+    else
+        target="$DOCKER_REGISTRY/staging/$image_name:$version"
+    fi
+
     # Ensure buildx builder exists
     docker buildx inspect multiarch-builder >/dev/null 2>&1 || docker buildx create --name multiarch-builder --use
 
@@ -189,7 +196,7 @@ build_image() {
     if [ "$RELEASE" == "true" ]; then
         docker buildx build "$target_dir" \
             --file "$target_dir/Dockerfile" \
-            --tag "$DOCKER_REGISTRY/$image_name:$version" \
+            --tag "$target" \
             --platform linux/amd64,linux/arm64 \
             --build-arg COMMIT="$git_commit" \
             --build-arg APP_VERSION="$version" \
@@ -325,7 +332,7 @@ ensure_network() {
 ##
 run_image() {
     test -n "$__name" || die "Module name required"
-    image_name="soai-$__name"
+    image_name="soai-${__name_override:-$__name}"
     container_name="soai_$__name"
     version=$(get_version)
     full_image="$DOCKER_REGISTRY/$image_name:$version"

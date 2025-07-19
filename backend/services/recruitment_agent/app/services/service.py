@@ -67,6 +67,7 @@ from metrics.prometheus_metrics import (
 )
 from datetime import date
 from urllib.parse import quote
+from celery_tasks.pipeline import process_cv_pipeline
 
 logger = AppLogger(__name__)
 
@@ -92,7 +93,6 @@ class RecruitmentService:
     def upload_and_process_cv(
         self,
         file,
-        db: Session,
         override_email: Optional[str] = None,
         position_applied_for: Optional[str] = None,
     ):
@@ -123,84 +123,87 @@ class RecruitmentService:
                 else:
                     pdf_filename = file.filename
 
-                pipeline = build_recruitment_graph_matching(db)
-                state = RecruitmentState(cv_file_path=os.path.join(cv_dir, pdf_filename))
-
-                if override_email:
-                    state.override_email = override_email
-                if position_applied_for:
-                    state.position_applied_for = position_applied_for
-
-                updated_state = pipeline.invoke(state.model_dump())
-                final_state = RecruitmentState(**updated_state)
-                final_state.parsed_cv["cv_file_name"] = pdf_filename
-
-                email_to_check = final_state.override_email or final_state.parsed_cv.get("email")
-
-                matched_jd = final_state.matched_jd or {}
-                matched_position = matched_jd.get("position") or position_applied_for or "Không xác định"
-                matched_score = matched_jd.get("match_score", 0)
-                matched_skills = matched_jd.get("skills_required", [])
-
-                existing_cv = (
-                    db.query(CVApplication)
-                    .filter(
-                        CVApplication.candidate_name == final_state.parsed_cv.get("name"),
-                        CVApplication.email == email_to_check,
-                        CVApplication.matched_position == matched_position,
-                        CVApplication.status.in_([FinalDecisionStatus.PENDING.value, FinalDecisionStatus.ACCEPTED.value])
-                    ).first()
-                )
-
-                if existing_cv:
-                    return CVUploadResponseSchema(
-                        message="Hồ sơ này đã được nộp và đang chờ xét duyệt. Không cần nộp lại."
-                    )
-
-                # Save CV
-                cv_application = CVApplication(
-                    candidate_name=final_state.parsed_cv.get("name"),
-                    email=email_to_check,
-                    matched_position=matched_position,
-                    status=FinalDecisionStatus.PENDING.value,
-                    skills=json.dumps(final_state.parsed_cv.get("skills", [])),
-                    matched_jd_skills=json.dumps(matched_skills),
-                    matched_score=matched_score,
-                    is_matched=True,
-                    parsed_cv=json.dumps(final_state.parsed_cv),
-                    datetime=date.today()
-                )
-                db.add(cv_application)
-                db.commit()
-                cv_upload_total.inc()
-
-                if matched_score >= 50:
-                    return CVUploadResponseSchema(
-                        message=(
-                            f"Hồ sơ đã được hệ thống phân tích và ghép nối thành công với chuyên đề phù hợp "
-                            f"(Điểm đánh giá: {matched_score}/100). Vui lòng chờ hội đồng xét duyệt."
-                        )
-                    )
-                elif matched_score > 0:
-                    return CVUploadResponseSchema(
-                        message=(
-                            f"Hồ sơ của học sinh chưa đáp ứng đầy đủ yêu cầu chuyên đề nhưng đã được đánh giá "
-                            f"với điểm {matched_score}/100 dựa trên năng lực học tập. Hồ sơ sẽ được xét tuyển bổ sung."
-                        )
-                    )
-                else:
-                    return CVUploadResponseSchema(
-                        message=(
-                            "Hồ sơ đã được xử lý nhưng không tìm thấy chuyên đề phù hợp. "
-                            "Vui lòng kiểm tra lại thông tin học tập hoặc thử với vị trí khác."
-                        )
-                    )
+                full_path = os.path.join(cv_dir, pdf_filename)
+                process_cv_pipeline.delay(full_path, override_email, position_applied_for)
+                return CVUploadResponseSchema(message="Đang xử lý CV. Vui lòng kiểm tra sau.")
 
         except Exception as e:
             logger.exception(f"Error processing CV: {e}")
             cv_processing_failed_total.inc()
             return CVUploadResponseSchema(message="Đã xảy ra lỗi trong quá trình xử lý hồ sơ. Vui lòng thử lại sau.")
 
+    def upload_cv_from_file_path(
+        self,
+        cv_file_path: str,
+        override_email: str,
+        position_applied_for: str,
+        db: Session,
+    ):
+        logger.info(f"[Worker] Processing CV from file path: {cv_file_path}")
+        pipeline = build_recruitment_graph_matching(db)
+        state = RecruitmentState(cv_file_path=cv_file_path)
+
+        if override_email:
+            state.override_email = override_email
+        if position_applied_for:
+            state.position_applied_for = position_applied_for
+
+        updated_state = pipeline.invoke(state.model_dump())
+        final_state = RecruitmentState(**updated_state)
+        final_state.parsed_cv["cv_file_name"] = os.path.basename(cv_file_path)
+
+        email_to_check = final_state.override_email or final_state.parsed_cv.get("email")
+
+        matched_jd = final_state.matched_jd or {}
+        matched_position = matched_jd.get("position") or position_applied_for or "Không xác định"
+        matched_score = matched_jd.get("match_score", 0)
+        matched_skills = matched_jd.get("skills_required", [])
+
+        existing_cv = (
+            db.query(CVApplication)
+            .filter(
+                CVApplication.candidate_name == final_state.parsed_cv.get("name"),
+                CVApplication.email == email_to_check,
+                CVApplication.matched_position == matched_position,
+                CVApplication.status.in_([FinalDecisionStatus.PENDING.value, FinalDecisionStatus.ACCEPTED.value])
+            ).first()
+        )
+
+        if existing_cv:
+            return "Hồ sơ này đã được nộp và đang chờ xét duyệt. Không cần nộp lại."
+
+        # Save CV
+        cv_application = CVApplication(
+            candidate_name=final_state.parsed_cv.get("name"),
+            email=email_to_check,
+            matched_position=matched_position,
+            status=FinalDecisionStatus.PENDING.value,
+            skills=json.dumps(final_state.parsed_cv.get("skills", [])),
+            matched_jd_skills=json.dumps(matched_skills),
+            matched_score=matched_score,
+            is_matched=True,
+            parsed_cv=json.dumps(final_state.parsed_cv),
+            datetime=date.today()
+        )
+        db.add(cv_application)
+        db.commit()
+        cv_upload_total.inc()
+
+        if matched_score >= 50:
+            return (
+                f"Hồ sơ đã được hệ thống phân tích và ghép nối thành công với chuyên đề phù hợp " +
+                f"(Điểm đánh giá: {matched_score}/100). Vui lòng chờ hội đồng xét duyệt."
+            )
+        elif matched_score > 0:
+            return (
+                f"Hồ sơ của học sinh chưa đáp ứng đầy đủ yêu cầu chuyên đề nhưng đã được đánh giá " +
+                f"với điểm {matched_score}/100 dựa trên năng lực học tập. Hồ sơ sẽ được xét tuyển bổ sung."
+            )
+        else:
+            return (
+                "Hồ sơ đã được xử lý nhưng không tìm thấy chuyên đề phù hợp. " +
+                "Vui lòng kiểm tra lại thông tin học tập hoặc thử với vị trí khác."
+            )
     def approve_cv(self, candidate_id: int, db: Session):
         """Phê duyệt hồ sơ học sinh dựa trên đánh giá từ AI Agent."""
         logger.info(f"Starting approval for candidate_id={candidate_id}.")
@@ -267,9 +270,7 @@ class RecruitmentService:
             f"Trạng thái hồ sơ đã được cập nhật thành {cv_application.status} cho học sinh {cv_application.candidate_name}"
         )
 
-        return CVUploadResponseSchema(
-            message=decision_message
-        )
+        return decision_message
 
     def upload_jd(self, jd_data_list: list, db: Session):
         """Tải lên danh sách chuyên đề để hệ thống đánh giá năng lực học sinh."""
@@ -399,8 +400,8 @@ class RecruitmentService:
             )
 
             if not interview:
-                logger.warning("Không tìm thấy lịch phỏng vấn.")
-                return CVUploadResponseSchema(message="Không tìm thấy lịch phỏng vấn.")
+                logger.warn("Không tìm thấy lịch phỏng vấn.")
+                return "Không tìm thấy lịch phỏng vấn."
 
             logger.debug(f"Tìm thấy lịch phỏng vấn: {interview}")
             logger.debug(f"Liên kết với hồ sơ ID: {interview.cv_application_id}")
@@ -415,8 +416,8 @@ class RecruitmentService:
                 # Bước 3: Lấy hồ sơ liên kết
                 cv = db.query(CVApplication).filter_by(id=interview.cv_application_id).first()
                 if not cv:
-                    logger.warning("Không tìm thấy hồ sơ liên kết.")
-                    return CVUploadResponseSchema(message="Không tìm thấy hồ sơ liên kết với phỏng vấn.")
+                    logger.warn("Không tìm thấy hồ sơ liên kết.")
+                    return "Không tìm thấy hồ sơ liên kết với phỏng vấn."
 
                 logger.info(f"Khởi tạo sinh câu hỏi cho học sinh: {cv.candidate_name} (CV ID={cv.id})")
 
@@ -436,7 +437,7 @@ class RecruitmentService:
 
                 if not questions:
                     question_generation_failed_total.inc()
-                    logger.warning("Không tạo được câu hỏi từ AI.")
+                    logger.warn("Không tạo được câu hỏi từ AI.")
                 else:
                     interview_questions_generated_total.inc()
                     logger.info(f"Đã tạo {len(questions)} câu hỏi cho CV ID={cv.id}")
@@ -447,7 +448,7 @@ class RecruitmentService:
                     question_text = q.get("question", "")
                     answer = "\n".join(q.get("answers", []))
                     if not question_text:
-                        logger.warning("Câu hỏi trống, bỏ qua.")
+                        logger.warn("Câu hỏi trống, bỏ qua.")
                         continue
                     if not answer:
                         answer = "Chưa có câu trả lời."
@@ -462,17 +463,13 @@ class RecruitmentService:
                 db.commit()
                 logger.info(f"{len(questions)} câu hỏi phỏng vấn đã được lưu cho CV ID={cv.id}")
 
-            return CVUploadResponseSchema(
-                message=f"Học sinh đã xác nhận phỏng vấn. Hệ thống đã tạo {len(questions)} câu hỏi để chuẩn bị."
-            )
+            return f"Học sinh đã xác nhận phỏng vấn. Hệ thống đã tạo {len(questions)} câu hỏi để chuẩn bị."
 
         except Exception as e:
             db.rollback()
             interview_acceptance_failed_total.inc()
             logger.error(f"Lỗi khi xác nhận phỏng vấn: {e}")
-            return CVUploadResponseSchema(
-                message="Đã xảy ra lỗi khi xác nhận phỏng vấn. Vui lòng thử lại sau."
-            )
+            return "Đã xảy ra lỗi khi xác nhận phỏng vấn. Vui lòng thử lại sau."
 
 
     def get_all_interviews(
@@ -786,7 +783,7 @@ class RecruitmentService:
 
         if not questions:
             regenerate_questions_failed_total.inc()
-            logger.warning("Không tạo được câu hỏi mới.")
+            logger.warn("Không tạo được câu hỏi mới.")
             return []
 
         interview_questions_regenerated_total.inc()

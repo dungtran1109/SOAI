@@ -183,6 +183,7 @@ class TestRecruitmentAPI(unittest.TestCase):
             log_info("[Step 2] Upload CV")
             response = self.upload_cv(self.user_token, email, position)
             self.assertEqual(response.status_code, 200)
+            time.sleep(10)
 
             # Test GET Pending CV with admin
             log_info("[Step 3] Get pending CV")
@@ -199,6 +200,7 @@ class TestRecruitmentAPI(unittest.TestCase):
                 headers=get_headers(self.admin_token),
             )
             self.assertIn(response.status_code, [200, 400])
+            time.sleep(10)
 
             # Test Update CV with ADMIN
             log_info("[Step 5] Update CV")
@@ -252,6 +254,7 @@ class TestRecruitmentAPI(unittest.TestCase):
             )
             log_info(f"Accept Interview Response: {response.json()}")
             self.assertEqual(response.status_code, 200)
+            time.sleep(30)
             
             # Test the interview questions were generated after candidate accepted the interview
             log_info("Checking if interview questions were generated")
@@ -388,6 +391,7 @@ class TestRecruitmentAPI(unittest.TestCase):
         log_info("Uploading CV with USER role")
         response = self.upload_cv(self.user_token, email, position)
         self.assertEqual(response.status_code, 200)
+        time.sleep(10)
 
         # Get Pending CVs with candidate user => Blocked
         log_info("Trying to get pending CV with USER role")

@@ -18,7 +18,7 @@ class FinalDecisionAgent(BaseAgent):
             return state
 
         if not state.parsed_cv:
-            logger.warning("[FinalDecisionAgent] No parsed CV data.")
+            logger.warn("[FinalDecisionAgent] No parsed CV data.")
             return state
 
         if state.matched_jd is None:
@@ -73,7 +73,7 @@ Ban Tuyển sinh
                     f"{FinalDecisionStatus.ACCEPTED.value}: Offer email sent."
                 )
             else:
-                logger.warning("[FinalDecisionAgent] No valid email found.")
+                logger.warn("[FinalDecisionAgent] No valid email found.")
                 state.final_decision = (
                     f"{FinalDecisionStatus.ACCEPTED.value} but no email sent."
                 )

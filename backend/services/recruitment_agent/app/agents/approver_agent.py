@@ -15,12 +15,12 @@ class ApproverAgent(BaseAgent):
             return state
 
         if not state.matched_jd:
-            logger.warning("[ApproverAgent] No matched JD found. Skipping approval.")
+            logger.warn("[ApproverAgent] No matched JD found. Skipping approval.")
             state.approved_candidate = None
             return state
 
         if not state.parsed_cv:
-            logger.warning("[ApproverAgent] No parsed CV found. Cannot approve.")
+            logger.warn("[ApproverAgent] No parsed CV found. Cannot approve.")
             state.approved_candidate = None
             return state
 

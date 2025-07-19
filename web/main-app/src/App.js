@@ -8,88 +8,122 @@ import AdminDashBoardPage from "./pages/AdminPage";
 import AdminCVListPage from "./pages/AdminCVListPage";
 import AdminInterviewListPage from "./pages/AdminInterviewListPage";
 import AdminJDListPage from "./pages/AdminJDListPage";
+import AdminUserListPage from "./pages/AdminUserListPage";
 import AdminLayout from "./components/AdminDashBoard/AdminLayout";
 
-import { isAuthenticated } from "./components/authUtils";
+import { isAuthenticated, getUserRole } from "./components/authUtils";
 import "react-toastify/dist/ReactToastify.css";
-import AdminUserListPage from "./pages/AdminUserListPage";
 
 const AppRoutes = () => {
   const location = useLocation();
   const [auth, setAuth] = useState(isAuthenticated());
+  const [role, setRole] = useState(getUserRole());
 
   useEffect(() => {
-    // Re-check auth on every route change
     setAuth(isAuthenticated());
+    setRole(getUserRole());
   }, [location]);
 
   return (
     <Routes>
-      {/* Public-facing recruitment page */}
-      <Route path="/" element={<RecruitmentCandidatePage />} />
-
-      {/* Auth routes */}
+      {/* Candidate Page: USER only */}
       <Route
-        path="/admin/signin"
-        element={auth ? <Navigate to="/admin/dashboard" replace /> : <AuthPage isSignIn={true} />}
+        path="/"
+        element={
+          auth && role === "USER" ? (
+            <RecruitmentCandidatePage />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+
+      {/* Shared Auth Routes */}
+      <Route
+        path="/signin"
+        element={
+          auth ? (
+            role === "ADMIN" ? (
+              <Navigate to="/admin/dashboard" replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          ) : (
+            <AuthPage isSignIn={true} />
+          )
+        }
       />
       <Route
-        path="/admin/signup"
-        element={auth ? <Navigate to="/admin/dashboard" replace /> : <AuthPage isSignIn={false} />}
+        path="/signup"
+        element={
+          auth ? (
+            role === "ADMIN" ? (
+              <Navigate to="/admin/dashboard" replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          ) : (
+            <AuthPage isSignIn={false} />
+          )
+        }
       />
 
-      {/* Admin Dashboard Root */}
+      {/* Admin Routes (ADMIN only) */}
       <Route
         path="/admin/dashboard"
-        element={auth ? <AdminDashBoardPage /> : <Navigate to="/admin/signin" replace />}
+        element={
+          auth && role === "ADMIN" ? (
+            <AdminDashBoardPage />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
       />
-
-      {/* Admin Dashboard Subpages with Layout Wrapper */}
       <Route
         path="/admin/dashboard/cvs"
         element={
-          auth ? (
+          auth && role === "ADMIN" ? (
             <AdminLayout>
               <AdminCVListPage />
             </AdminLayout>
           ) : (
-            <Navigate to="/admin/signin" replace />
+            <Navigate to="/signin" replace />
           )
         }
       />
       <Route
         path="/admin/dashboard/interviews"
         element={
-          auth ? (
+          auth && role === "ADMIN" ? (
             <AdminLayout>
               <AdminInterviewListPage />
             </AdminLayout>
           ) : (
-            <Navigate to="/admin/signin" replace />
+            <Navigate to="/signin" replace />
           )
         }
       />
       <Route
         path="/admin/dashboard/jds"
         element={
-          auth ? (
+          auth && role === "ADMIN" ? (
             <AdminLayout>
               <AdminJDListPage />
             </AdminLayout>
           ) : (
-            <Navigate to="/admin/signin" replace />
+            <Navigate to="/signin" replace />
           )
         }
       />
       <Route
         path="/admin/dashboard/users"
         element={
-          auth ? (
+          auth && role === "ADMIN" ? (
             <AdminLayout>
               <AdminUserListPage />
             </AdminLayout>
           ) : (
-            <Navigate to="/admin/signin" replace />
+            <Navigate to="/signin" replace />
           )
         }
       />

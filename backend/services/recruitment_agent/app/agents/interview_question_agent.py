@@ -108,7 +108,7 @@ Return only valid JSON. No explanation or markdown.
                 raise ValueError("No valid Q&A pairs found")
             logger.info("[InterviewQuestionAgent] Parsed response as Q&A JSON.")
         except Exception as e:
-            logger.warning(f"[InterviewQuestionAgent] JSON parsing failed: {e}")
+            logger.warn(f"[InterviewQuestionAgent] JSON parsing failed: {e}")
             qa_pairs = []
             lines = [line.strip() for line in response.splitlines() if line.strip()]
             current_q = None
@@ -130,7 +130,7 @@ Return only valid JSON. No explanation or markdown.
                 logger.debug(f"    A: {ans}")
 
         if len(qa_pairs) < 3:
-            logger.warning(f"[InterviewQuestionAgent] Only {len(qa_pairs)} questions generated (expected at least 3).")
+            logger.warn(f"[InterviewQuestionAgent] Only {len(qa_pairs)} questions generated (expected at least 3).")
 
         state.interview_questions = qa_pairs
         return state

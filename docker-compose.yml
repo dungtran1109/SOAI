@@ -101,6 +101,13 @@ services:
       context: ./backend/services/recruitment_agent
       dockerfile: ./Dockerfile
     environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_TASK_TIME_LIMIT=600
+      - CELERY_TASK_SOFT_TIME_LIMIT=500
+      - CELERY_TIMEZONE=Asia/Ho_Chi_Minh
       - CONSUL_HOST=consul:8500
       - GENAI_HOST=genai:8004
       - SERVICE_NAME=soai_recruitment_agent
@@ -133,6 +140,54 @@ services:
         condition: service_healthy
       consul:
         condition: service_started
+      recruitment_worker:
+        condition: service_started
+
+  recruitment_worker:
+    container_name: soai_recruitment_worker
+    image: soai-recruitment_agent:latest
+    build:
+      context: ./backend/services/recruitment_agent
+      dockerfile: ./Dockerfile
+    command: ["celery", "-A", "celery_worker", "worker", "--loglevel=info", "--concurrency=4"]
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_TASK_TIME_LIMIT=600
+      - CELERY_TASK_SOFT_TIME_LIMIT=500
+      - CELERY_TIMEZONE=Asia/Ho_Chi_Minh
+      - DB_HOST=soai_mysql
+      - DB_PORT=3306
+      - DB_NAME=soai_db
+      - DB_USERNAME=soai_user
+      - DB_PASSWORD=soai_password
+      - CONSUL_HOST=consul:8500
+      - GENAI_HOST=genai:8004
+      - SERVICE_NAME=soai_recruitment_agent_worker
+      - SERVICE_PORT=8003
+      - OTEL_ENDPOINT=otel-collector:4317
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./backend/services/recruitment_agent:/app
+    depends_on:
+      redis:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    networks:
+      - soai-net
+
+  redis:
+    container_name: soai_redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - soai-net
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -157,7 +212,7 @@ services:
       - ./test/observability_config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     depends_on:
       clickhouse:
-        condition: service_healthy
+        condition: service_started
     networks:
       - soai-net
 
@@ -171,11 +226,6 @@ services:
       - clickhouse-data:/var/lib/clickhouse
       - ./test/observability_config/otel-user.xml:/etc/clickhouse-server/users.d/otel-user.xml
       - ./test/observability_config/init-tables.sql:/docker-entrypoint-initdb.d/init-tables.sql
-    healthcheck:
-      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
     ulimits:
       nofile:
         soft: 262144

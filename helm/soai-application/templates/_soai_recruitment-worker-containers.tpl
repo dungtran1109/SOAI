@@ -1,11 +1,12 @@
-{{- define "soai-recruitment-containers" -}}
+{{- define "soai-recruitment-worker-container" -}}
 {{- $top := index . 0 -}}
 {{- $g := fromJson (include "soai-application.global" $top) -}}
-- name: {{ $top.Values.server.recruitment.name }}
+- name: {{ $top.Values.server.recruitment.name }}-worker
   image: {{ template "soai-application.imagePath" (merge (dict "imageName" "soai-recruitment") $top) }}
   imagePullPolicy: {{ template "soai-application.imagePullPolicy" $top }}
+  command: ["celery"]
+  args: ["-A", "celery_worker", "worker", "--loglevel=info", "--concurrency=4"]
   securityContext:
-    {{- include "soai-application.appArmorProfile.securityContext" (list $top "recruitment") | indent 4 }}
     allowPrivilegeEscalation: false
     privileged: false
     readOnlyRootFilesystem: true
@@ -13,20 +14,6 @@
     capabilities:
       drop:
         - ALL
-    {{- with (index $top.Values "seccompProfile" "recruitment") }}
-    seccompProfile:
-    {{- toYaml . | nindent 6 }}
-    {{- end }}
-  ports:    
-    {{- if $g.security.tls.enabled }}
-    - name: tls-rcm-svc
-      containerPort: {{ $top.Values.server.recruitment.httpsPort }}
-    {{- else }}
-    - name: http-recruitment-svc
-      containerPort: {{ $top.Values.server.recruitment.httpPort }}
-    {{- end }}
-  resources:
-{{- include "soai-application.resources" (index $top.Values "resources" "recruitment") | indent 2 }}
   env:
   - name: OTEL_ENDPOINT
     value: {{ printf "otel-collector:%s" ($top.Values.otel.grpcPort | toString) }}
@@ -39,7 +26,7 @@
       fieldRef:
         fieldPath: metadata.namespace
   - name: CONTAINER_NAME
-    value: {{ $top.Values.server.recruitment.name }}
+    value: {{ $top.Values.server.recruitment.name }}-worker
   - name: LOG_LEVEL
     value: {{ $top.Values.server.recruitment.logLevel | default "INFO" | quote }}
   - name: GENAI_HOST
@@ -48,12 +35,6 @@
     value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ include "soai-recruitment.name" $top }}
-  - name: SERVICE_PORT
-  {{- if $g.security.tls.enabled }}
-    value: {{ $top.Values.server.recruitment.httpsPort | quote }}
-  {{- else }}
-    value: {{ $top.Values.server.recruitment.httpPort | quote }}
-  {{- end }}
   - name: DB_HOST
     valueFrom:
       secretKeyRef:
@@ -67,32 +48,15 @@
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-dbName
   - name: DB_USERNAME
-  {{- if not (eq ((include "soai-mysql.username" $top) | b64dec) "root") }}
-    valueFrom:
-      secretKeyRef:
-        name: {{ template "soai-mysql.name" $top }}-secret
-        key: {{ template "soai-mysql.name" $top }}-user
-  {{- else }}
     valueFrom:
       secretKeyRef:
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-root-password
-  {{- end }}
   - name: DB_PASSWORD
     valueFrom:
       secretKeyRef:
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-password
-  {{- if $g.security.tls.enabled }}
-  - name: CERT_PATH
-    value: {{ $top.Values.server.secretsPath.certPath }}/tls.crt
-  - name: KEY_PATH
-    value: {{ $top.Values.server.secretsPath.certPath }}/tls.key
-  - name: CA_PATH
-    value: {{ $top.Values.server.secretsPath.certPath }}/ca.crt
-  {{- end }}
-  - name: TLS_ENABLED
-    value: {{ ternary "true" "false" $g.security.tls.enabled | quote }}
   - name: REDIS_HOST
     value: redis
   - name: REDIS_PORT
@@ -105,6 +69,19 @@
     value: "600"
   - name: CELERY_TASK_SOFT_TIME_LIMIT
     value: "500"
+  {{- if $g.security.tls.enabled }}
+  - name: CERT_PATH
+    value: {{ $top.Values.server.secretsPath.certPath }}/tls.crt
+  - name: KEY_PATH
+    value: {{ $top.Values.server.secretsPath.certPath }}/tls.key
+  - name: CA_PATH
+    value: {{ $top.Values.server.secretsPath.certPath }}/ca.crt
+  - name: TLS_ENABLED
+    value: "true"
+  {{- else }}
+  - name: TLS_ENABLED
+    value: "false"
+  {{- end }}
   volumeMounts:
   {{- if $top.Values.storage.enabled }}
   - name: {{ template "soai-recruitment.name" $top }}-persistent-storage
@@ -123,6 +100,4 @@
   {{- end }}
   - name: tmp-volume
     mountPath: /tmp
-{{ include "soai-application.readinessProbe" (list $top "/api/v1/recruitment/health" "recruitment") | indent 2 }}
-{{ include "soai-application.livenessProbe" (list $top "/api/v1/recruitment/health" "recruitment") | indent 2 }}
 {{- end -}}

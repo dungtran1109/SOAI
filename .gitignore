@@ -25,6 +25,8 @@ backend/services/recruitment_agent/app/cv_uploads/
 backend/services/recruitment_agent/tests/__pycache__/
 backend/services/recruitment_agent/app/metrics/__pycache__/
 backend/services/recruitment_agent/app/jd_previews/
+backend/services/recruitment_agent/app/celery_tasks/__pycache__
+backend/services/recruitment_agent/app/celery_tasks/__pycache__
 # log generated
 backend/services/gen_ai_provider/app/logs/gen-ai_agent.log
 backend/services/recruitment_agent/app/logs/recruitment_agent.log

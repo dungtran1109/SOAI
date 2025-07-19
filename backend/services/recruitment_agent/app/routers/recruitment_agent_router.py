@@ -13,6 +13,7 @@ from schemas.cv_schema import CVUploadResponseSchema
 from services.jwt_service import JWTService
 from config.log_config import AppLogger
 from schemas.interview_question_schema import InterviewQuestionSchema
+from celery_tasks.pipeline import *
 
 logger = AppLogger(__name__)
 router = APIRouter()
@@ -32,13 +33,11 @@ def get_db():
 async def upload_cv(
     file: UploadFile = File(...),
     override_email: Optional[str] = Form(None),
-    position_applied_for: str = Form(...),
-    db: Session = Depends(get_db)
+    position_applied_for: str = Form(...)
 ):
     logger.debug(f"Uploading CV for position: {position_applied_for}")
     return recruitment_service.upload_and_process_cv(
         file,
-        db,
         override_email=override_email,
         position_applied_for=position_applied_for,
     )
@@ -199,7 +198,6 @@ async def delete_all_interviews(
 @router.post("/interviews/accept", response_model=CVUploadResponseSchema)
 async def accept_interview(
     interview_accept_data: InterviewAcceptSchema,
-    db: Session = Depends(get_db),
     get_current_user: dict = Depends(JWTService.verify_jwt),
 ):
     username = get_current_user.get("sub")
@@ -207,7 +205,8 @@ async def accept_interview(
     logger.debug(
         f"USER '{username}' [{role}] is calling POST /interviews/accept endpoint."
     )
-    return recruitment_service.accept_interview(interview_accept_data, db)
+    accept_interview_task.delay(interview_accept_data.dict())
+    return CVUploadResponseSchema(message="Interview acceptance is being processed.")
 
 # Only administrator can update the interview scheduler
 @router.put("/interviews/{interview_id}", response_model=CVUploadResponseSchema)
@@ -282,7 +281,8 @@ async def approve_cv(
     logger.debug(f"USER '{username}' [{role}] is calling /cvs/approve endpoint.")
 
     try:
-        return recruitment_service.approve_cv(candidate_id, db)
+        approve_cv_task.delay(candidate_id)
+        return CVUploadResponseSchema(message="CV Approval is being processed")
     except ValueError as e:
         return CVUploadResponseSchema(message="Value error.")
     except Exception as e:

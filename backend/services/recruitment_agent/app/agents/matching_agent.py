@@ -35,7 +35,7 @@ def infer_priority_subject_from_jd(jd: dict) -> Optional[str]:
         try:
             jd_skills_raw = json.loads(jd_skills_raw)
         except Exception as e:
-            logger.warning(f"[infer_priority_subject_from_jd] Lỗi parse kỹ năng JD: {e}")
+            logger.warn(f"[infer_priority_subject_from_jd] Lỗi parse kỹ năng JD: {e}")
             return None
 
     max_score = -1
@@ -106,15 +106,10 @@ class MatchingAgent(BaseAgent):
 
             total_pct = 0.0
             total_weight = 0.0
-            all_pass = True
 
             for subject, required_score in jd_scores.items():
                 norm_subject = normalize_subject_key(subject)
                 actual = cv_scores.get(norm_subject, 0.0)
-
-                if actual < required_score:
-                    all_pass = False
-                    logger.debug(f"[MatchingAgent] Môn '{norm_subject}' không đạt yêu cầu: {actual} < {required_score}")
 
                 is_priority = priority_subject and norm_subject == priority_subject
                 weight = 2.0 if is_priority else 1.0
@@ -134,12 +129,12 @@ class MatchingAgent(BaseAgent):
             score_subjects = min(avg_pct * 0.7, 70)
 
             score_extras = 0.0
-            if all_pass:
+            if jd.get("position") == state.position_applied_for:
                 prompt = self.build_extras_prompt(parsed_cv)
                 extras_score = self.query_llm_score(prompt)
                 score_extras = min(extras_score * 0.3, 30)
             else:
-                logger.debug("[MatchingAgent] Bỏ điểm hoạt động vì không đạt đủ yêu cầu môn học.")
+                logger.debug(f"[MatchingAgent] Bỏ điểm hoạt động vì không nộp vào đúng chuyên đề '{jd.get('position')}'.")
 
             total_score = round(score_subjects + score_extras, 2)
             logger.debug(f"[MatchingAgent] JD: {jd.get('position')} → total_score: {total_score:.2f}")

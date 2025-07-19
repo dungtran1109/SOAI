@@ -26,9 +26,14 @@ const Auth = ({ isSignIn = true }) => {
         const token = parsed?.token;
         if (token) {
           const decoded = jwtDecode(token);
+          const userRole = decoded?.role || 'USER';
+
           if (decoded.exp * 1000 > Date.now()) {
-            if (['/admin/signin', '/admin/signup'].includes(location.pathname)) {
+            // Đã đăng nhập
+            if (userRole === 'ADMIN' && location.pathname !== '/admin/dashboard') {
               navigate('/admin/dashboard', { replace: true });
+            } else if (userRole === 'USER' && location.pathname !== '/') {
+              navigate('/', { replace: true });
             }
           } else {
             Cookies.remove('profile');
@@ -49,13 +54,22 @@ const Auth = ({ isSignIn = true }) => {
       const payload = isSignIn ? { userName, password } : { userName, password, role };
       const response = isSignIn ? await signin(payload) : await signup(payload);
 
+      // Lưu token vào cookie
       Cookies.set('profile', JSON.stringify(response), {
         expires: rememberMe ? 7 : 1,
         secure: true,
         sameSite: 'Strict',
       });
 
-      navigate('/admin/dashboard', { replace: true });
+      // Decode và điều hướng theo role
+      const decoded = jwtDecode(response.token);
+      const userRole = decoded?.role || 'USER';
+
+      if (userRole === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       console.error(err);
       setError(isSignIn ? 'Invalid username or password.' : 'Signup failed. Please try again.');
@@ -144,11 +158,11 @@ const Auth = ({ isSignIn = true }) => {
           <div className="auth-footer">
             {isSignIn ? (
               <p>
-                Don&apos;t have an account? <Link to="/admin/signup">Sign up</Link>
+                Don&apos;t have an account? <Link to="/signup">Sign up</Link>
               </p>
             ) : (
               <p>
-                Already have an account? <Link to="/admin/signin">Sign in</Link>
+                Already have an account? <Link to="/signin">Sign in</Link>
               </p>
             )}
           </div>
