@@ -69,7 +69,7 @@ const AdminJDList = ({ actionsEnabled = true }) => {
   };
 
   const handleDelete = async (jdId) => {
-    if (window.confirm("Are you sure you want to delete this JD?")) {
+    if (window.confirm("Bạn có chắc muốn xóa mô tả tuyển sinh này không?")) {
       await deleteJD(jdId);
       fetchJDs();
     }
@@ -109,9 +109,9 @@ const AdminJDList = ({ actionsEnabled = true }) => {
     try {
       await uploadJDFile(file);
       fetchJDs();
-      alert("JD JSON file uploaded successfully!");
+      alert("Tệp JD JSON đã được tải lên thành công!");
     } catch (err) {
-      alert("Failed to upload JD JSON file: " + err.message);
+      alert("Không thể tải lên tệp JD JSON: " + err.message);
     }
   };
 
@@ -123,7 +123,7 @@ const AdminJDList = ({ actionsEnabled = true }) => {
     <div className="admin-jd-list">
       <div className="admin-jd-list__header">
         <div className="admin-jd-list__header-left">
-          <span className="admin-jd-list__header-title">All Job Descriptions</span>
+          <span className="admin-jd-list__header-title">Tất cả mô tả tuyển sinh</span>
         </div>
 
         {actionsEnabled && (
@@ -136,7 +136,7 @@ const AdminJDList = ({ actionsEnabled = true }) => {
               onChange={handleUploadJSONFile}
             />
             <label htmlFor="jd-upload-input" className="admin-jd-list__upload-btn">
-              Upload JSON
+              Tải lên JSON
             </label>
             <button
               className="admin-jd-list__create-btn"
@@ -145,7 +145,7 @@ const AdminJDList = ({ actionsEnabled = true }) => {
                 setShowCreate(true);
               }}
             >
-              + Add JD
+              + Thêm mới mô tả tuyển sinh
             </button>
           </div>
         )}
@@ -157,7 +157,7 @@ const AdminJDList = ({ actionsEnabled = true }) => {
             <div>
               <p className="admin-jd-list__title">{jd.position}</p>
               <p className="admin-jd-list__created">
-                Created At:{" "}
+                Tạo vào lúc:{" "}
                 {jd.datetime ? new Date(jd.datetime).toLocaleDateString() : "N/A"}
               </p>
             </div>
@@ -222,13 +222,13 @@ const AdminJDList = ({ actionsEnabled = true }) => {
                 <h2>{showCreate ? "Create JD" : "Edit JD"}</h2>
                 {/* Form Fields */}
                 {[
-                  { label: "Position", name: "position" },
-                  { label: "Level", name: "level" },
-                  { label: "Location", name: "location" },
-                  { label: "Experience Required", name: "experience_required" },
-                  { label: "Recruiter", name: "recruiter" },
-                  { label: "Hiring Manager", name: "hiring_manager" },
-                  { label: "Referral Code", name: "referral_code" },
+                    { label: "Tên đợt tuyển sinh", name: "position" },
+                    { label: "Trình độ học sinh yêu cầu", name: "level" },
+                    { label: "Khu vực tổ chức", name: "location" },
+                    { label: "Điều kiện đầu vào", name: "experience_required" },
+                    { label: "Cán bộ tuyển sinh phụ trách", name: "recruiter" },
+                    { label: "Người phê duyệt", name: "hiring_manager" },
+                    { label: "Mã giới thiệu (nếu có)", name: "referral_code" }
                 ].map((field) => (
                   <div key={field.name} className="admin-jd-list__form-group">
                     <label>{field.label}</label>
@@ -241,7 +241,7 @@ const AdminJDList = ({ actionsEnabled = true }) => {
                 ))}
 
                 <div className="admin-jd-list__form-group">
-                  <label>Job Description</label>
+                  <label>Mô tả tuyển sinh</label>
                   <textarea
                     name="job_description"
                     value={formJD.job_description}
@@ -269,12 +269,12 @@ const AdminJDList = ({ actionsEnabled = true }) => {
                       checked={formJD.referral}
                       onChange={handleFormChange}
                     />
-                    Referral
+                    Mã giới thiệu
                   </label>
                 </div>
 
                 <div className="admin-jd-list__form-group">
-                  <label>Company Description</label>
+                  <label>Mô tả chi tiết</label>
                   <textarea
                     name="company_description"
                     value={formJD.company_description}
@@ -290,14 +290,14 @@ const AdminJDList = ({ actionsEnabled = true }) => {
             ) : (
               <div className="admin-jd-list__modal-details">
                 <h2>{selectedJD.position}</h2>
-                <p><strong>Level:</strong> {selectedJD.level}</p>
-                <p><strong>Location:</strong> {selectedJD.location}</p>
-                <p><strong>Experience Required:</strong> {selectedJD.experience_required}</p>
-                <p><strong>Recruiter:</strong> {selectedJD.recruiter}</p>
-                <p><strong>Hiring Manager:</strong> {selectedJD.hiring_manager}</p>
-                <p><strong>Referral:</strong> {selectedJD.referral ? "Yes" : "No"}</p>
-                <p><strong>Referral Code:</strong> {selectedJD.referral_code}</p>
-                <p><strong>Company Description:</strong> {selectedJD.company_description}</p>
+                <p><strong>Trình độ yêu cầu:</strong> {selectedJD.level}</p>
+                <p><strong>Khu vực tổ chức:</strong> {selectedJD.location}</p>
+                <p><strong>Điều kiện đầu vào:</strong> {selectedJD.experience_required}</p>
+                <p><strong>Cán bộ tuyển sinh phụ trách:</strong> {selectedJD.recruiter}</p>
+                <p><strong>Người phê duyệt:</strong> {selectedJD.hiring_manager}</p>
+                <p><strong>Tuyển nội bộ:</strong> {selectedJD.referral ? "Có" : "Không"}</p>
+                <p><strong>Mã giới thiệu:</strong> {selectedJD.referral_code || "Không có"}</p>
+                <p><strong>Giới thiệu đơn vị tuyển sinh:</strong> {selectedJD.company_description}</p>
               </div>
             )}
           </div>
@@ -310,10 +310,10 @@ const AdminJDList = ({ actionsEnabled = true }) => {
             <button className="admin-jd-preview__close" onClick={() => setPreviewJDUrl(null)}>
               ×
             </button>
-            <h3>Job Description Preview</h3>
+            <h3>Xem trước mô tả tuyển sinh</h3>
             <iframe
               src={previewJDUrl}
-              title="JD Preview"
+              title="Mô tả tuyển sinh Preview"
               width="100%"
               height="600px"
               style={{ border: "1px solid #ccc" }}

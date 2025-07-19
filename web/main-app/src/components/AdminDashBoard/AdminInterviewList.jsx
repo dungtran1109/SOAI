@@ -9,7 +9,7 @@ import {
   getInterviewQuestions,
   regenerateInterviewQuestions,
 } from "../../api/interviewApi";
-import { getApprovedCVs } from "../../api/cvApi";
+import { getPendingCVs } from "../../api/cvApi";
 import "../../css/AdminInterviewList.css";
 
 import {
@@ -63,7 +63,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
 
   const fetchApprovedCVs = async () => {
     try {
-      const result = await getApprovedCVs();
+      const result = await getPendingCVs();
       setApprovedCVs(result || []);
     } catch (error) {
       toast.error("Failed to fetch approved CVs");
@@ -215,7 +215,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
       <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="admin-interview-list__header">
-        <FaCalendarAlt style={{ marginRight: "8px" }} /> Upcoming Interviews
+        <FaCalendarAlt style={{ marginRight: "8px" }} /> Lịch phỏng vấn sắp tới
       </div>
 
       <ul className="admin-interview-list__items">
@@ -227,10 +227,10 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                 {new Date(interview.interview_datetime).toLocaleString()}
               </p>
               <p className="admin-interview-list__interviewer">
-                Interviewer: {interview.interviewer_name}
+                Người phỏng vấn: {interview.interviewer_name}
               </p>
               <p className="admin-interview-list__status">
-                Status: {interview.status || "Scheduled"}
+                Trạng thái: {interview.status || "Scheduled"}
               </p>
             </div>
             <div className="admin-interview-list__actions">
@@ -250,18 +250,18 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                   <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} className="confirm-dialog">
                     <div className="confirm-dialog__backdrop" aria-hidden="true" />
                     <div className="confirm-dialog__panel">
-                      <Dialog.Title className="confirm-dialog__title">Confirm Regeneration</Dialog.Title>
+                      <Dialog.Title className="confirm-dialog__title">Xác nhận tái tạo</Dialog.Title>
                       <Dialog.Description className="confirm-dialog__desc">
-                        Are you sure you want to regenerate and overwrite existing interview questions?
+                        Bạn có chắc chắn muốn tái tạo và ghi đè các câu hỏi phỏng vấn hiện có không?
                       </Dialog.Description>
                       <div className="confirm-dialog__actions">
-                        <button onClick={() => setConfirmDialogOpen(false)} className="confirm-dialog__cancel">Cancel</button>
+                        <button onClick={() => setConfirmDialogOpen(false)} className="confirm-dialog__cancel">Hủy</button>
                         <button
                           onClick={confirmRegeneration}
                           className="confirm-dialog__confirm"
                           disabled={regeneratingId === pendingRegenerationCvId}
                         >
-                          {regeneratingId === pendingRegenerationCvId ? <FaSpinner className="spin" /> : "Yes, Regenerate"}
+                          {regeneratingId === pendingRegenerationCvId ? <FaSpinner className="spin" /> : "Có, Tái tạo"}
                         </button>
                       </div>
                     </div>
@@ -283,7 +283,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
       {actionsEnabled && (
         <>
           <div className="admin-interview-list__header">
-            <FaPlus style={{ marginRight: "8px", marginTop: "32px" }} /> Schedule Interview
+            <FaPlus style={{ marginRight: "8px", marginTop: "32px" }} /> Đặt lịch phỏng vấn
           </div>
           <ul className="admin-interview-list__items">
             {approvedCVs.map((cv) => (
@@ -293,7 +293,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                   <p className="admin-interview-list__position">{cv.matched_position}</p>
                 </div>
                 <button className="admin-interview-list__schedule-btn" onClick={() => openModal(cv)}>
-                  <FaPlus /> Schedule
+                  <FaPlus /> Lên lịch phỏng vấn
                 </button>
               </li>
             ))}
@@ -309,12 +309,12 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
             </button>
             <h3>{editMode ? "Edit Interview" : `Schedule Interview for ${selectedCV.candidate_name}`}</h3>
             <form onSubmit={handleScheduleOrUpdate} className="admin-interview-list__form">
-              <label>Interviewer Name</label>
+              <label>Người phỏng vấn</label>
               <input type="text" value={formData.interviewer_name} onChange={(e) => setFormData({ ...formData, interviewer_name: e.target.value })} required />
-              <label>Interview Date & Time</label>
+              <label>Ngày & Giờ phỏng vấn</label>
               <input type="datetime-local" value={formData.interview_datetime} onChange={(e) => setFormData({ ...formData, interview_datetime: e.target.value })} required />
               <button type="submit" className="admin-interview-list__submit-btn">
-                {editMode ? <><FaRegEdit /> Update</> : <><FaPlus /> Schedule</>}
+                {editMode ? <><FaRegEdit /> Cập nhật</> : <><FaPlus /> Đặt lịch</>}
               </button>
             </form>
           </div>
@@ -328,7 +328,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                 <FaTimesCircle />
             </button>
             <h3 className="admin-interview-list__question-title">
-                <FaGraduationCap style={{ marginRight: "6px" }} /> Generated Interview Questions
+                <FaGraduationCap style={{ marginRight: "6px" }} /> Câu hỏi phỏng vấn đã được tạo
             </h3>
             <div className="admin-interview-list__question-list">
                 {interviewQuestions.length > 0 ? (
@@ -336,7 +336,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                     <div key={index} className="admin-question-block">
                     <p className="admin-question">
                         <FaQuestionCircle />
-                        <span>Question {index + 1}: {q.question || q.original_question}</span>
+                        <span>Câu hỏi {index + 1}: {q.question || q.original_question}</span>
                     </p>
                     {(q.answers || (q.answer ? [q.answer] : [])).map((ans, i) => (
                         <p key={i} className="admin-answer">
@@ -346,7 +346,7 @@ const AdminInterviewList = ({ actionsEnabled = true }) => {
                     </div>
                 ))
                 ) : (
-                <p>No questions available.</p>
+                <p>Không có câu hỏi nào có sẵn.</p>
                 )}
             </div>
             </div>

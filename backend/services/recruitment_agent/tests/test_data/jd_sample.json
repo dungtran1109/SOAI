@@ -4,7 +4,7 @@
         "skills_required": [
             "Toán học: 9.5",
             "Vật lý: 8.5",
-            "Ngữ văn: 7.5"
+            "Hóa học: 8.0"
         ],
         "location": "Trường THPT Chuyên Lê Hồng Phong, TP. Hồ Chí Minh",
         "date": "2025-06-10",
@@ -171,7 +171,8 @@
         "position": "Tuyển sinh vào lớp 10 chuyên Lý",
         "skills_required": [
             "Vật lý: 9.0",
-            "Toán: 8.5"
+            "Toán: 8.5",
+            "Hóa học: 8.0"
         ],
         "location": "Trường THPT Chuyên Lê Hồng Phong, TP. Hồ Chí Minh",
         "date": "2025-06-25",
@@ -224,7 +225,8 @@
         "position": "Tuyển sinh vào lớp 10 chuyên Hóa",
         "skills_required": [
             "Hóa học: 9.0",
-            "Toán: 8.5"
+            "Toán: 8.5",
+            "Sinh học: 8.0"
         ],
         "location": "Trường THPT Chuyên Lê Hồng Phong, TP. Hồ Chí Minh",
         "date": "2025-06-30",

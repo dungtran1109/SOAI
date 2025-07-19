@@ -10,7 +10,6 @@ const TopHeader = () => {
   const avatarRef = useRef(null);
   const navigate = useNavigate();
 
-  // Fetch user info from API using userName from token
   useEffect(() => {
     const payload = getTokenPayload();
     const userName = payload?.sub;
@@ -23,7 +22,6 @@ const TopHeader = () => {
     }
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (avatarRef.current && !avatarRef.current.contains(event.target)) {
@@ -34,7 +32,6 @@ const TopHeader = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Helper to get initials from user object
   const getInitials = (user) => {
     if (!user) return "U";
     if (user.firstName && user.lastName) {
@@ -54,13 +51,13 @@ const TopHeader = () => {
     <header className="top-header">
       <div className="header-left">
         <Link to="/">
-          <img src={SmartRecruitmentLogo} alt="Endava Logo" className="header-logo" />
+          <img src={SmartRecruitmentLogo} alt="Logo tuyển sinh" className="header-logo" />
         </Link>
       </div>
       <nav className="header-center">
-        <a href="#jobs">JOBS</a>
-        <a href="#my-applications">MY APPLICATIONS</a>
-        <a href="#my-referals">MY REFERRALS</a>
+        <a href="#jobs">DANH SÁCH TUYỂN SINH</a>
+        <a href="#my-applications">HỒ SƠ CỦA TÔI</a>
+        <a href="#my-referals">GIỚI THIỆU CỦA TÔI</a>
       </nav>
       <div className="header-right" ref={avatarRef}>
         <div
@@ -72,12 +69,12 @@ const TopHeader = () => {
         </div>
         {open && (
           <div className="user-dropdown">
-            <div className="dropdown-item">My Profile</div>
-            <div className="dropdown-item">My Job Alerts</div>
-            <div className="dropdown-item">My Referrals</div>
-            <div className="dropdown-item">Settings</div>
+            <div className="dropdown-item">Thông tin cá nhân</div>
+            <div className="dropdown-item">Thông báo tuyển sinh</div>
+            <div className="dropdown-item">Giới thiệu của tôi</div>
+            <div className="dropdown-item">Cài đặt</div>
             <div className="dropdown-divider"></div>
-            <div className="dropdown-item" onClick={handleLogout}>Logout</div>
+            <div className="dropdown-item" onClick={handleLogout}>Đăng xuất</div>
           </div>
         )}
       </div>

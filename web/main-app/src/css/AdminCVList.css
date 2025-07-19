@@ -22,13 +22,12 @@
 
 .admin-cv-table__header-right {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
   align-items: center;
-  flex-grow: 1;
-  max-width: 320px;
-  min-width: 240px;
+  justify-content: flex-end;
+  gap: 12px;
+  max-width: 100%;
 }
-
 
 .admin-cv-table__title {
   font-size: 20px;
@@ -37,29 +36,49 @@
   margin: 0;
 }
 
-.admin-cv-table__search-form {
-  width: 100%;
-}
-
-.admin-cv-table__search {
-  width: 100%;
-  padding: 10px 4px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #f9fafb;
-}
-
-.admin-cv-table__search:focus {
-  border-color: #00bcd4;
-  outline: none;
-  background: #fff;
-}
-
 .admin-cv-table__subtitle {
   font-size: 13px;
   color: #6b7280;
   margin-top: 4px;
+}
+
+.admin-cv-table__search,
+.admin-cv-table__minscore-input {
+  width: 180px;
+  height: 38px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.admin-cv-table__search:focus,
+.admin-cv-table__minscore-input:focus {
+  border-color: #3b82f6;
+  background: #fff;
+  outline: none;
+}
+
+.admin-cv-table__sort-btn,
+.admin-cv-table__approve-btn {
+  height: 38px;
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-cv-table__sort-btn:hover,
+.admin-cv-table__approve-btn:hover {
+  background: #059669;
 }
 
 .admin-cv-table__content {
@@ -83,6 +102,13 @@
   background: #f9fafb;
 }
 
+.admin-cv-table__action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .admin-cv-table__icon-btn {
   background: transparent;
   border: none;
@@ -99,29 +125,32 @@
   color: #ef4444;
 }
 
-.admin-cv-table__approve-btn {
-  background: #10b981;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 16px;
+  text-transform: capitalize;
+  white-space: nowrap;
 }
 
-.admin-cv-table__approve-btn:hover {
-  background: #059669;
+.status-pending {
+  background-color: #fff4d3;
+  color: #b08800;
 }
 
-.admin-cv-table__action-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.status-accepted {
+  background-color: #d0f8e9;
+  color: #0f7c49;
 }
 
+.status-rejected {
+  background-color: #ffe1e1;
+  color: #c63232;
+}
+
+/* Modal overlay */
 .admin-cv-modal__overlay {
   position: fixed;
   top: 0;
@@ -136,6 +165,7 @@
   z-index: 1000;
 }
 
+/* Modal content */
 .admin-cv-modal__content {
   background: white;
   padding: 2rem;
@@ -146,6 +176,7 @@
   overflow-y: auto;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   position: relative;
+  animation: fadeIn 0.3s ease;
 }
 
 .admin-cv-modal__content h3 {
@@ -172,6 +203,10 @@
   cursor: pointer;
 }
 
+.admin-cv-modal__close:hover {
+  color: #ef4444;
+}
+
 .admin-cv-preview__iframe-container {
   margin-top: 1rem;
   border: 1px solid #ddd;
@@ -186,8 +221,12 @@
   border: none;
 }
 
-.admin-cv-modal__close:hover {
-  color: #ef4444;
+.admin-cv-modal__content select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #f9fafb;
 }
 
 @keyframes fadeIn {
@@ -199,37 +238,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.admin-cv-modal__content select {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  background: #f9fafb;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 16px;
-  text-transform: capitalize;
-  white-space: nowrap;
-}
-
-.status-pending {
-  background-color: #fff4d3;
-  color: #b08800;
-}
-
-.status-accepted {
-  background-color: #d0f8e9;
-  color: #0f7c49;
-}
-
-.status-rejected {
-  background-color: #ffe1e1;
-  color: #c63232;
 }

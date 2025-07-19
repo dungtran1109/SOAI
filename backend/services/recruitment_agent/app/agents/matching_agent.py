@@ -1,6 +1,7 @@
 import json
 import re
 from unidecode import unidecode
+from typing import Optional
 from agents.base_agent import BaseAgent
 from agents.state import RecruitmentState
 from config.log_config import AppLogger
@@ -8,7 +9,6 @@ from config.constants import *
 
 logger = AppLogger(__name__)
 
-# Subject alias map
 SUBJECT_ALIASES = {
     "toanhoc": "toán", "toan": "toán",
     "vatly": "vật lý", "ly": "vật lý",
@@ -29,6 +29,30 @@ def normalize_subject_key(key: str) -> str:
     key = re.sub(r"[\s\-_:]+", "", key)
     return SUBJECT_ALIASES.get(key, key)
 
+def infer_priority_subject_from_jd(jd: dict) -> Optional[str]:
+    jd_skills_raw = jd.get("skills_required", [])
+    if isinstance(jd_skills_raw, str):
+        try:
+            jd_skills_raw = json.loads(jd_skills_raw)
+        except Exception as e:
+            logger.warning(f"[infer_priority_subject_from_jd] Lỗi parse kỹ năng JD: {e}")
+            return None
+
+    max_score = -1
+    priority_subject = None
+    for item in jd_skills_raw:
+        if ":" in item:
+            try:
+                key, value = item.split(":", 1)
+                norm_key = normalize_subject_key(key)
+                score = float(value.strip())
+                if score > max_score:
+                    max_score = score
+                    priority_subject = norm_key
+            except:
+                continue
+    return priority_subject
+
 class MatchingAgent(BaseAgent):
     def __init__(self, llm):
         self.llm = llm
@@ -38,12 +62,12 @@ class MatchingAgent(BaseAgent):
             return state
 
         if not state.jd_list:
-            logger.warn("[MatchingAgent] No job descriptions available.")
+            logger.warn("[MatchingAgent] Không có chuyên đề để xét tuyển.")
             state.matched_jd = None
             return state
 
         if not state.parsed_cv:
-            logger.warn("[MatchingAgent] No parsed CV found.")
+            logger.warn("[MatchingAgent] Không có nội dung hồ sơ học sinh.")
             state.matched_jd = None
             return state
 
@@ -74,43 +98,50 @@ class MatchingAgent(BaseAgent):
                 try:
                     jd_skills_raw = json.loads(jd_skills_raw)
                 except Exception as e:
-                    logger.error(f"[MatchingAgent] Failed to parse JD skills: {e}")
+                    logger.error(f"[MatchingAgent] Lỗi khi parse skills_required: {e}")
                     continue
 
             jd_scores = parse_scores(jd_skills_raw)
+            priority_subject = infer_priority_subject_from_jd(jd)
 
-            # === Subject-based score ===
-            total_pct = 0
-            count = 0
+            total_pct = 0.0
+            total_weight = 0.0
+            all_pass = True
+
             for subject, required_score in jd_scores.items():
                 norm_subject = normalize_subject_key(subject)
-                actual = cv_scores.get(norm_subject)
-                if actual is not None:
-                    pct = min((actual / required_score) * 100, 100)
-                    total_pct += pct
-                    count += 1
+                actual = cv_scores.get(norm_subject, 0.0)
 
-            if count == 0:
-                # fallback to LLM
-                prompt = self.build_llm_match_prompt(parsed_cv, jd)
-                try:
-                    response = self.llm.invoke(prompt)
-                    result = json.loads(response.json()["data"])
-                    total_score = float(result.get("match_score", 0.0))
-                    logger.debug(f"[MatchingAgent] LLM fallback score: {total_score}")
-                except Exception as e:
-                    logger.error(f"[MatchingAgent] LLM fallback failed: {e}")
-                    continue
-            else:
-                avg_pct = total_pct / count
-                score_subjects = min(avg_pct * 0.7, 70)
+                if actual < required_score:
+                    all_pass = False
+                    logger.debug(f"[MatchingAgent] Môn '{norm_subject}' không đạt yêu cầu: {actual} < {required_score}")
 
+                is_priority = priority_subject and norm_subject == priority_subject
+                weight = 2.0 if is_priority else 1.0
+
+                if is_priority:
+                    logger.debug(f"[MatchingAgent] Ưu tiên môn '{norm_subject}': weight = {weight}")
+
+                pct = 0.0 if actual < required_score else min((actual / required_score) * 100, 100)
+                total_pct += pct * weight
+                total_weight += weight
+
+            if total_weight == 0:
+                logger.info(f"[MatchingAgent] Không có môn nào đạt yêu cầu. Bỏ qua JD: {jd.get('position')}")
+                continue
+
+            avg_pct = total_pct / total_weight
+            score_subjects = min(avg_pct * 0.7, 70)
+
+            score_extras = 0.0
+            if all_pass:
                 prompt = self.build_extras_prompt(parsed_cv)
-                score_extras_raw = self.query_llm_score(prompt)
-                score_extras = min(score_extras_raw * 0.3, 30)
+                extras_score = self.query_llm_score(prompt)
+                score_extras = min(extras_score * 0.3, 30)
+            else:
+                logger.debug("[MatchingAgent] Bỏ điểm hoạt động vì không đạt đủ yêu cầu môn học.")
 
-                total_score = round(score_subjects + score_extras, 2)
-
+            total_score = round(score_subjects + score_extras, 2)
             logger.debug(f"[MatchingAgent] JD: {jd.get('position')} → total_score: {total_score:.2f}")
 
             if total_score > best_score:
@@ -118,17 +149,17 @@ class MatchingAgent(BaseAgent):
                 best_match = jd
                 best_jd_skills = jd_skills_raw
 
+        state.matched_jd = {
+            "position": best_match.get("position") if best_match else state.position_applied_for or "Unknown",
+            "skills_required": best_jd_skills if best_match else [],
+            "level": best_match.get("level") if best_match else "Unknown",
+            "match_score": int(best_score)
+        }
+
         if best_match:
-            state.matched_jd = {
-                "position": best_match.get("position"),
-                "skills_required": best_jd_skills,
-                "level": best_match.get("level"),
-                "match_score": int(best_score)
-            }
             logger.info(f"[MatchingAgent] Best match: {best_match.get('position')} (match_score={best_score:.2f}%)")
         else:
-            state.matched_jd = None
-            logger.info("[MatchingAgent] No matched JD found.")
+            logger.info(f"[MatchingAgent] Không tìm thấy chuyên đề phù hợp. Fallback score: {best_score:.2f}")
 
         return state
 
@@ -177,10 +208,8 @@ Return a JSON object with:
         try:
             response = self.llm.invoke(prompt)
             content = response.json()["data"]
-
             if content.startswith("```") and content.endswith("```"):
                 content = content.strip("```").strip()
-
             return min(max(float(content), 0.0), 100.0)
         except Exception as e:
             logger.error(f"[MatchingAgent] LLM score failed: {e}")

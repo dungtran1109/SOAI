@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text
+from sqlalchemy import Column, Integer, String, Boolean, Date, Text
 from config.database import DeclarativeBase
+from datetime import date
 
 class CVApplication(DeclarativeBase):
     """
@@ -18,3 +19,4 @@ class CVApplication(DeclarativeBase):
     is_matched = Column(Boolean, default=False)  # Whether candidate matched any JD
     parsed_cv = Column(Text, nullable=True)  # Full parsed CV content as JSON string
     matched_score = Column(Integer, nullable=False, default=0) # LLM Score after Matching
+    datetime = Column(Date(), default=date.today ,nullable=True)

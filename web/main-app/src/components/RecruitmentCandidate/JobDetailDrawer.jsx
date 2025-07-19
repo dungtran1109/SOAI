@@ -22,7 +22,7 @@ const JobDetailDrawer = ({ job, onClose }) => {
     const d = new Date(dateStr);
     return isNaN(d.getTime())
       ? "N/A"
-      : d.toLocaleDateString("en-US", {
+      : d.toLocaleDateString("vi-VN", {
           year: "numeric",
           month: "short",
           day: "2-digit",
@@ -34,7 +34,7 @@ const JobDetailDrawer = ({ job, onClose }) => {
 
     return (
       <section>
-        <h4>Additional Information</h4>
+        <h4>Thông tin bổ sung</h4>
         {Object.entries(info).map(([category, items], idx) => (
           <div key={idx} className="additional-info-group">
             <strong className="category-title">
@@ -53,7 +53,6 @@ const JobDetailDrawer = ({ job, onClose }) => {
     );
   };
 
-  // Handle CV upload when Apply is clicked
   const handleApplyClick = () => {
     fileInputRef.current.click();
   };
@@ -64,65 +63,57 @@ const JobDetailDrawer = ({ job, onClose }) => {
     setSelectedFile(file.name);
     setIsUploading(true);
     try {
-      const MAX_SIZE =5 * 1024 * 1024; // 5 MB
+      const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
       if (file.size > MAX_SIZE) {
-        throw new Error("File size exceeds 5 MB limit.");
+        throw new Error("Kích thước tệp vượt quá giới hạn 5MB.");
       }
       if (!["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.type)) {
-        throw new Error("Invalid file type. Only PDF and Word documents are allowed.");
+        throw new Error("Định dạng không hợp lệ. Chỉ chấp nhận PDF hoặc Word.");
       }
-      const response = await uploadCV(file, job.position || job.title || "Unknown Position");
-      toast.success(response?.message || `CV uploaded successfully!`);
+      const response = await uploadCV(file, job.position || job.title || "Không rõ vị trí");
+      toast.success(response?.message || `Tải CV thành công!`);
     } catch (err) {
-      toast.error(err?.message || "Failed to upload CV.");
+      toast.error(err?.message || "Tải CV thất bại.");
     }
     setIsUploading(false);
-    e.target.value = ""; // Reset input so same file can be selected again
+    e.target.value = "";
   };
 
   return (
     <div className="drawer-overlay" onClick={handleOutsideClick}>
       <div className="drawer-content" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
         <div className="drawer-header">
           <img src={SmartRecruitmentLogo} alt="SmartRecruitment" className="drawer-logo" />
-          <button className="drawer-close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="drawer-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* Title */}
         <div className="drawer-top">
           <h2 className="drawer-title">
-            {job.position || job.title || "Untitled Position"}
+            {job.position || job.title || "Không rõ vị trí"}
           </h2>
           <p className="drawer-sub">
-            Requirement Grade: {job.level || "N/A"} •{" "}
-            <span className="job-ref">
-              {job.referral_code || job.ref || "N/A"}
-            </span>
+            Yêu cầu trình độ: {job.level || "Không rõ"} • <span className="job-ref">{job.referral_code || job.ref || "Không có mã"}</span>
           </p>
         </div>
 
-        {/* Scrollable Content */}
         <div className="drawer-body">
           {!!job.companyDescription?.trim() && (
             <section>
-              <h4>Company Description</h4>
+              <h4>Giới thiệu tổ chức</h4>
               <p>{job.companyDescription}</p>
             </section>
           )}
 
           {!!job.jobDescription?.trim() && (
             <section>
-              <h4>Job Description</h4>
+              <h4>Mô tả chi tiết</h4>
               <p>{job.jobDescription}</p>
             </section>
           )}
 
           {Array.isArray(job.responsibilities) && job.responsibilities.length > 0 && (
             <section>
-              <h4>Responsibilities</h4>
+              <h4>Nhiệm vụ</h4>
               <ul>
                 {job.responsibilities.map((r, idx) => (
                   <li key={idx}>{r}</li>
@@ -133,7 +124,7 @@ const JobDetailDrawer = ({ job, onClose }) => {
 
           {Array.isArray(job.qualifications) && job.qualifications.length > 0 && (
             <section>
-              <h4>Qualifications</h4>
+              <h4>Tiêu chí xét tuyển</h4>
               <ul>
                 {job.qualifications.map((q, idx) => (
                   <li key={idx}>{q}</li>
@@ -144,7 +135,7 @@ const JobDetailDrawer = ({ job, onClose }) => {
 
           {Array.isArray(job.skills_required) && job.skills_required.length > 0 && (
             <section>
-              <h4>Skills Required</h4>
+              <h4>Kỹ năng yêu cầu</h4>
               <ul>
                 {job.skills_required.map((s, idx) => (
                   <li key={idx}>{s}</li>
@@ -153,39 +144,32 @@ const JobDetailDrawer = ({ job, onClose }) => {
             </section>
           )}
 
-          {/* Grouped Additional Info */}
           {renderAdditionalInformation(job.additionalInformation)}
 
-          {/* Meta info */}
           <section className="job-meta-section">
             <div className="meta-row">
               <div>
-                <strong>Location</strong>
-                <br />
-                {job.location || "N/A"}
+                <strong>Địa điểm</strong><br />
+                {job.location || "Chưa cập nhật"}
               </div>
               <div>
-                <strong>Hiring Manager</strong>
-                <br />
-                {job.hiringManager || "N/A"}
+                <strong>Người phụ trách</strong><br />
+                {job.hiringManager || "Không rõ"}
               </div>
             </div>
             <div className="meta-row">
               <div>
-                <strong>Recruiter</strong>
-                <br />
-                {job.recruiter || "N/A"}
+                <strong>Người liên hệ</strong><br />
+                {job.recruiter || "Không rõ"}
               </div>
               <div>
-                <strong>Posted On</strong>
-                <br />
+                <strong>Ngày đăng</strong><br />
                 {formatDate(job.datetime)}
               </div>
             </div>
           </section>
         </div>
 
-        {/* Footer */}
         <div className="drawer-footer">
           <input
             type="file"
@@ -198,19 +182,19 @@ const JobDetailDrawer = ({ job, onClose }) => {
             className="btn-primary"
             onClick={handleApplyClick}
             disabled={isUploading}
-            aria-label="Apply for this job"
+            aria-label="Nộp hồ sơ"
           >
             {isUploading ? (
-              <span className="spinner" aria-label="Uploading"></span>
+              <span className="spinner" aria-label="Đang tải lên"></span>
             ) : (
-              "Apply"
+              "Nộp hồ sơ"
             )}
           </button>
-          <button className="btn-outline" aria-label="Refer a Friend">Refer a Friend</button>
-          <div className="referral-note">🔗 Referral link</div>
+          <button className="btn-outline" aria-label="Giới thiệu bạn bè">Giới thiệu bạn bè</button>
+          <div className="referral-note">🔗 Liên kết giới thiệu</div>
           {selectedFile && (
             <div className="selected-file" style={{ marginTop: 8, fontSize: 13 }}>
-              Selected file: <strong>{selectedFile}</strong>
+              Tệp đã chọn: <strong>{selectedFile}</strong>
             </div>
           )}
         </div>

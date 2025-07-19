@@ -8,28 +8,28 @@ const AdminSidebar = () => {
   const navigate = useNavigate();
 
   const menu = [
-    { label: "Home", path: "/admin/dashboard" },
-    { label: "All Users", path: "/admin/dashboard/users" },
-    { label: "All CVs", path: "/admin/dashboard/cvs" },
-    { label: "All Interviews", path: "/admin/dashboard/interviews" },
-    { label: "All Job Descriptions", path: "/admin/dashboard/jds" },
+    { label: "Trang chủ", path: "/admin/dashboard" },
+    { label: "Tài khoản người dùng", path: "/admin/dashboard/users" },
+    { label: "Hồ sơ đã nộp", path: "/admin/dashboard/cvs" },
+    { label: "Lịch phỏng vấn", path: "/admin/dashboard/interviews" },
+    { label: "Đợt tuyển sinh", path: "/admin/dashboard/jds" },
   ];
 
   const handleLogout = () => {
-    logout(); // clear cookies or token
+    logout();
     navigate("/admin/signin");
   };
 
   return (
     <div className="admin-sidebar">
-      <div className="admin-sidebar__brand">SmartRecruitment</div>
+      <div className="admin-sidebar__brand">Tuyển sinh thông minh</div>
 
       <ul className="admin-sidebar__menu">
         {menu.map((item) => (
           <li key={item.label}>
             <NavLink
               to={item.path}
-              end={item.label === "Home"}
+              end={item.label === "Trang chủ"}
               className={({ isActive }) =>
                 isActive
                   ? "admin-sidebar__link active"
@@ -49,13 +49,13 @@ const AdminSidebar = () => {
           className="admin-sidebar__avatar"
         />
         <div className="admin-sidebar__account-info">
-          <p className="admin-sidebar__name">Admin</p>
+          <p className="admin-sidebar__name">Quản trị viên</p>
           <p className="admin-sidebar__email">smart.recruit.ai@gmail.com</p>
         </div>
         <button
           className="admin-sidebar__logout-btn"
           onClick={handleLogout}
-          title="Logout"
+          title="Đăng xuất"
         >
           <FiLogOut size={18} />
         </button>

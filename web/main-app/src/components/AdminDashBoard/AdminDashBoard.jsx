@@ -28,7 +28,7 @@ const AdminDashBoard = () => {
                 ]);
                 setStats({ cvs: cvs.length, users: users.length, jds: jds.length });
             } catch (err) {
-                console.error("Failed to fetch dashboard stats", err);
+                console.error("Không thể tải số liệu thống kê:", err);
             }
         };
 
@@ -39,22 +39,22 @@ const AdminDashBoard = () => {
         <div className="admin-dashboard">
             <AdminSidebar />
             <div className="admin-dashboard__content">
-                <h1 className="admin-dashboard__title">Welcome, Admin</h1>
+                <h1 className="admin-dashboard__title">Xin chào, Quản trị viên</h1>
                 <p className="admin-dashboard__subtitle">
-                    Monitor all candidate applications and interview tasks here.
+                    Theo dõi toàn bộ hồ sơ ứng tuyển và lịch phỏng vấn tại đây.
                 </p>
 
-                {/* Stat Summary Cards */}
+                {/* Thống kê nhanh */}
                 <div className="admin-dashboard__stats">
-                    <AdminStatCard label="Total CVs" count={stats.cvs} icon={cvIcon} />
-                    <AdminStatCard label="Total Users" count={stats.users} icon={userIcon} />
-                    <AdminStatCard label="Job Descriptions" count={stats.jds} icon={jdIcon} />
+                    <AdminStatCard label="Tổng số hồ sơ" count={stats.cvs} icon={cvIcon} />
+                    <AdminStatCard label="Tài khoản người dùng" count={stats.users} icon={userIcon} />
+                    <AdminStatCard label="Đợt tuyển sinh" count={stats.jds} icon={jdIcon} />
                 </div>
 
                 <div className="admin-dashboard__grid-2col">
                     <div className="admin-dashboard__left-col">
                         <AdminCVList actionsEnabled={false} />
-                        <AdminInterviewList actionsEnabled={false}/>
+                        <AdminInterviewList actionsEnabled={false} />
                     </div>
                     <div className="admin-dashboard__right-col">
                         <AdminJDList actionsEnabled={false} />

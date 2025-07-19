@@ -16,6 +16,8 @@ const AdminCVList = ({ actionsEnabled = true }) => {
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editCV, setEditCV] = useState(null);
+  const [sortByScore, setSortByScore] = useState(false);
+  const [minScore, setMinScore] = useState("");
 
   useEffect(() => {
     fetchCVs();
@@ -26,13 +28,8 @@ const AdminCVList = ({ actionsEnabled = true }) => {
       const data = await listCVsByPosition(query);
       setCVs(data || []);
     } catch (error) {
-      console.error("Failed to fetch CVs:", error);
+      console.error("Không thể tải danh sách CV:", error);
     }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchCVs(search);
   };
 
   const handleApprove = async (id) => {
@@ -41,7 +38,7 @@ const AdminCVList = ({ actionsEnabled = true }) => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this CV?")) {
+    if (window.confirm("Bạn có chắc muốn xóa CV này?")) {
       await deleteCV(id);
       fetchCVs();
     }
@@ -64,45 +61,76 @@ const AdminCVList = ({ actionsEnabled = true }) => {
       setEditMode(false);
       fetchCVs();
     } catch (err) {
-      console.error("Failed to update CV:", err);
+      console.error("Cập nhật CV thất bại:", err);
     }
   };
+
+  const filteredCVs = cvs
+  .filter((cv) => {
+    try {
+      const regex = new RegExp(search, "i");
+      const matchesName = regex.test(cv.candidate_name);
+      const meetsMinScore =
+        minScore === "" || (cv.matched_score ?? 0) >= parseFloat(minScore);
+      return matchesName && meetsMinScore;
+    } catch (err) {
+      return true;
+    }
+  })
+  .sort((a, b) => {
+    if (sortByScore) {
+      return (b.matched_score || 0) - (a.matched_score || 0);
+    }
+    return 0;
+  });
 
   return (
     <div className="admin-cv-table">
       <div className="admin-cv-table__header">
         <div className="admin-cv-table__header-left">
-          <h2 className="admin-cv-table__title">All CVs</h2>
+          <h2 className="admin-cv-table__title">Danh sách hồ sơ</h2>
           <p className="admin-cv-table__subtitle">
-            Monitor submitted CVs below.
+            Quản lý tất cả CV đã nộp vào hệ thống.
           </p>
         </div>
         <div className="admin-cv-table__header-right">
-          <form onSubmit={handleSearch} className="admin-cv-table__search-form">
-            <input
-              type="text"
-              className="admin-cv-table__search"
-              placeholder="Search by position..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </form>
+          <button
+            className="admin-cv-table__approve-btn"
+            style={{ marginLeft: '12px' }}
+            onClick={() => setSortByScore(!sortByScore)}
+          >
+            Sắp xếp theo điểm {sortByScore ? '▲' : '▼'}
+          </button>
+          <input
+            type="text"
+            className="admin-cv-table__search-input"
+            placeholder="Tìm theo tên học sinh ..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <input
+            type="number"
+            className="admin-cv-table__minscore-input"
+            placeholder="Điểm tối thiểu"
+            value={minScore}
+            onChange={(e) => setMinScore(e.target.value)}
+          />
         </div>
       </div>
 
       <table className="admin-cv-table__content">
         <thead>
           <tr>
-            <th>Candidate Name</th>
-            <th>Position</th>
-            <th>Status</th>
+            <th>Họ tên</th>
+            <th>Vị trí ứng tuyển</th>
+            <th>Trạng thái</th>
             <th>Email</th>
-            <th>Score</th>
-            {actionsEnabled && <th>Action</th>}
+            <th>Điểm</th>
+            {actionsEnabled && <th>Hành động</th>}
           </tr>
         </thead>
         <tbody>
-          {cvs.map((cv) => (
+          {filteredCVs.map((cv) => (
             <tr key={cv.id}>
               <td>{cv.candidate_name}</td>
               <td>{cv.matched_position}</td>
@@ -119,21 +147,21 @@ const AdminCVList = ({ actionsEnabled = true }) => {
                     <button
                       className="admin-cv-table__icon-btn"
                       onClick={() => handleView(cv)}
-                      title="View"
+                      title="Xem"
                     >
                       <FaEye />
                     </button>
                     <button
                       className="admin-cv-table__icon-btn"
                       onClick={() => handleEdit(cv)}
-                      title="Edit"
+                      title="Chỉnh sửa"
                     >
                       <FaPen />
                     </button>
                     <button
                       className="admin-cv-table__icon-btn delete"
                       onClick={() => handleDelete(cv.id)}
-                      title="Delete"
+                      title="Xóa"
                     >
                       <FaTrash />
                     </button>
@@ -142,7 +170,7 @@ const AdminCVList = ({ actionsEnabled = true }) => {
                         onClick={() => handleApprove(cv.id)}
                         className="admin-cv-table__approve-btn"
                       >
-                        Approve
+                        Duyệt hồ sơ
                       </button>
                     )}
                   </div>
@@ -158,12 +186,12 @@ const AdminCVList = ({ actionsEnabled = true }) => {
         <div className="admin-cv-modal__overlay" onClick={() => setShowModal(false)}>
           <div className="admin-cv-modal__content" onClick={(e) => e.stopPropagation()}>
             <button className="admin-cv-modal__close" onClick={() => setShowModal(false)}>×</button>
-            <h3>CV Details</h3>
-            <p><strong>Name:</strong> {selectedCV.candidate_name}</p>
+            <h3>Chi tiết hồ sơ</h3>
+            <p><strong>Họ tên:</strong> {selectedCV.candidate_name}</p>
             <p><strong>Email:</strong> {selectedCV.email}</p>
-            <p><strong>Position:</strong> {selectedCV.matched_position}</p>
-            <p><strong>Status:</strong> {selectedCV.status}</p>
-            <p><strong>Score:</strong> {selectedCV.matched_score ?? "N/A"}</p>
+            <p><strong>Vị trí:</strong> {selectedCV.matched_position}</p>
+            <p><strong>Trạng thái:</strong> {selectedCV.status === "Accepted" ? "Đã duyệt" : selectedCV.status === "Rejected" ? "Từ chối" : "Đang chờ"}</p>
+            <p><strong>Điểm:</strong> {selectedCV.matched_score ?? "N/A"}</p>
             <div className="admin-cv-preview__iframe-container" style={{ marginTop: "1rem" }}>
               <iframe
                 src={getCVPreviewUrl(selectedCV.id)}
@@ -182,10 +210,10 @@ const AdminCVList = ({ actionsEnabled = true }) => {
         <div className="admin-cv-modal__overlay" onClick={() => setEditMode(false)}>
           <div className="admin-cv-modal__content" onClick={(e) => e.stopPropagation()}>
             <button className="admin-cv-modal__close" onClick={() => setEditMode(false)}>×</button>
-            <h3>Edit CV</h3>
+            <h3>Chỉnh sửa hồ sơ</h3>
             <form onSubmit={handleEditSubmit}>
               <label>
-                Name:
+                Họ tên:
                 <input
                   type="text"
                   value={editCV.candidate_name}
@@ -205,7 +233,7 @@ const AdminCVList = ({ actionsEnabled = true }) => {
                 />
               </label>
               <label>
-                Score:
+                Điểm:
                 <input
                   type="number"
                   value={editCV.matched_score}
@@ -215,7 +243,7 @@ const AdminCVList = ({ actionsEnabled = true }) => {
                 />
               </label>
               <label>
-                Position:
+                Vị trí:
                 <input
                   type="text"
                   value={editCV.matched_position}
@@ -225,21 +253,21 @@ const AdminCVList = ({ actionsEnabled = true }) => {
                 />
               </label>
               <label>
-                Status:
+                Trạng thái:
                 <select
                   value={editCV.status}
                   onChange={(e) =>
                     setEditCV({ ...editCV, status: e.target.value })
                   }
                 >
-                  <option value="Pending">Pending</option>
-                  <option value="Accepted">Accepted</option>
-                  <option value="Rejected">Rejected</option>
+                  <option value="Pending">Đang chờ</option>
+                  <option value="Accepted">Đã duyệt</option>
+                  <option value="Rejected">Từ chối</option>
                 </select>
               </label>
               <div style={{ marginTop: "12px" }}>
                 <button type="submit" className="admin-cv-table__approve-btn">
-                  Save Changes
+                  Lưu thay đổi
                 </button>
               </div>
             </form>

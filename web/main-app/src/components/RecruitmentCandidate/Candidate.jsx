@@ -12,8 +12,8 @@ const Candidate = () => {
   const [allJobs, setAllJobs] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [referralOnly, setReferralOnly] = useState(false);
-  const [location, setLocation] = useState("All");
-  const [experience, setExperience] = useState("All");
+  const [location, setLocation] = useState("Tất cả");
+  const [level, setLevel] = useState("Tất cả");
   const [showRefModal, setShowRefModal] = useState(false);
   const [refCodeInput, setRefCodeInput] = useState("");
   const [filteredByRef, setFilteredByRef] = useState(null);
@@ -25,10 +25,10 @@ const Candidate = () => {
         const jobs = await getAllJD();
         const formattedJobs = jobs.map((job) => ({
           id: job.id,
-          title: job.position || "Untitled Position",
-          location: job.location || "Unknown location",
+          title: job.position || "Không có tiêu đề",
+          location: job.location || "Chưa xác định",
           date: job.datetime
-            ? new Date(job.datetime).toLocaleDateString("en-US", {
+            ? new Date(job.datetime).toLocaleDateString("vi-VN", {
                 year: "numeric",
                 month: "short",
                 day: "2-digit",
@@ -38,7 +38,7 @@ const Candidate = () => {
           referral: job.referral || false,
           ref: typeof job.referral_code === "string" ? job.referral_code : null,
           experience_required: String(job.experience_required || ""),
-          level: job.level || "N/A",
+          level: job.level || "Không rõ",
           companyDescription: job.company_description || "",
           jobDescription: job.job_description || "",
           responsibilities: Array.isArray(job.responsibilities)
@@ -48,8 +48,8 @@ const Candidate = () => {
             ? job.qualifications
             : [],
           additionalInformation: job.additional_information || {},
-          hiringManager: job.hiring_manager || "N/A",
-          recruiter: job.recruiter || "N/A",
+          hiringManager: job.hiring_manager || "Không rõ",
+          recruiter: job.recruiter || "Không rõ",
           skills_required: (() => {
             try {
               return Array.isArray(job.skills_required)
@@ -61,10 +61,9 @@ const Candidate = () => {
           })(),
         }));
 
-        console.log("[DEBUG] Formatted jobs:", formattedJobs);
         setAllJobs(formattedJobs);
       } catch (error) {
-        console.error("Error loading job data:", error);
+        console.error("Lỗi khi tải dữ liệu tuyển sinh:", error);
       }
     };
 
@@ -76,8 +75,8 @@ const Candidate = () => {
     [allJobs]
   );
 
-  const experiences = useMemo(
-    () => [...new Set(allJobs.map((job) => job.experience_required))],
+  const levels = useMemo(
+    () => [...new Set(allJobs.map((job) => job.level))],
     [allJobs]
   );
 
@@ -85,26 +84,16 @@ const Candidate = () => {
     const filtered = allJobs.filter((job) => {
       const matchesTitle = job.title?.toLowerCase().includes(searchText.toLowerCase());
       const matchesReferral = referralOnly ? job.referral : true;
-      const matchesLocation = location === "All" || job.location === location;
-      const matchesExperience = experience === "All" || job.experience_required === experience;
+      const matchesLocation = location === "Tất cả" || job.location === location;
+      const matchesLevel = level === "Tất cả" || job.level === level;
 
-      return matchesTitle && matchesReferral && matchesLocation && matchesExperience;
-    });
-
-    console.log("[DEBUG] Filter logic:", {
-      searchText,
-      referralOnly,
-      location,
-      experience,
-      resultCount: filtered.length,
+      return matchesTitle && matchesReferral && matchesLocation && matchesLevel;
     });
 
     return filtered;
-  }, [allJobs, searchText, referralOnly, location, experience]);
+  }, [allJobs, searchText, referralOnly, location, level]);
 
   const visibleJobs = filteredByRef !== null ? filteredByRef : filteredJobs;
-
-  console.log("[DEBUG] visibleJobs:", visibleJobs);
 
   const handleRefSearch = () => {
     const match = allJobs.find(
@@ -112,7 +101,6 @@ const Candidate = () => {
         job.ref &&
         job.ref.toLowerCase() === refCodeInput.trim().toLowerCase()
     );
-    console.log("[DEBUG] REF search input:", refCodeInput, "→ match:", match);
     setFilteredByRef(match ? [match] : []);
     setShowRefModal(false);
   };
@@ -120,8 +108,8 @@ const Candidate = () => {
   const handleFilterClearSearch = () => {
     setSearchText("");
     setReferralOnly(false);
-    setLocation("All");
-    setExperience("All");
+    setLocation("Tất cả");
+    setLevel("Tất cả");
     setFilteredByRef(null);
   };
 
@@ -134,7 +122,7 @@ const Candidate = () => {
           <input
             className="search-input"
             type="text"
-            placeholder="Search"
+            placeholder="Tìm kiếm theo vị trí"
             value={searchText}
             onChange={(e) => {
               setSearchText(e.target.value);
@@ -142,7 +130,7 @@ const Candidate = () => {
             }}
           />
           <button className="ref-code-link" onClick={() => setShowRefModal(true)}>
-            Use a REF code
+            Sử dụng mã giới thiệu
           </button>
           <div className="internal-switch-container">
             <label className="switch">
@@ -153,27 +141,27 @@ const Candidate = () => {
               />
               <span className="slider" />
             </label>
-            <span className="switch-label">Internal jobs only</span>
+            <span className="switch-label">Chỉ hiển thị tuyển nội bộ</span>
           </div>
           <p className="job-count">
-            Showing {visibleJobs.length} of {allJobs.length} jobs
+            Hiển thị {visibleJobs.length} trong tổng số {allJobs.length} đợt tuyển sinh
           </p>
         </div>
 
         <div className="search-right">
           <div className="alert-section">
-            <img src={NotificationIcon} alt="Job alert" className="bell-icon" />
-            <span className="alert-label">Job alert</span>
+            <img src={NotificationIcon} alt="Thông báo" className="bell-icon" />
+            <span className="alert-label">Thông báo tuyển sinh</span>
             <span className="divider">|</span>
             <a href="#referral" className="referral-link">
-              How to make a referral <span className="help-icon">?</span>
+              Cách giới thiệu ứng viên <span className="help-icon">?</span>
             </a>
           </div>
           <div className="sort-select">
-            <span className="sort-label">Sort:</span>
+            <span className="sort-label">Sắp xếp:</span>
             <select defaultValue="Posted Date">
-              <option value="Posted Date">Posted Date</option>
-              <option value="Title">Title</option>
+              <option value="Posted Date">Ngày đăng</option>
+              <option value="Title">Tên vị trí</option>
             </select>
           </div>
         </div>
@@ -182,21 +170,21 @@ const Candidate = () => {
       {showRefModal && (
         <div className="ref-modal-overlay">
           <div className="ref-modal">
-            <h3>Use a REF code</h3>
+            <h3>Nhập mã giới thiệu</h3>
             <p className="ref-description">
-              REF codes are provided by your internal hiring team.
+              Mã REF do đội ngũ tuyển sinh nội bộ cung cấp cho bạn.
             </p>
             <input
               type="text"
               className="ref-input"
-              placeholder="For example: REF84O"
+              placeholder="Ví dụ: REF84O"
               value={refCodeInput}
               onChange={(e) => setRefCodeInput(e.target.value)}
             />
             <div className="ref-buttons">
-              <button onClick={() => setShowRefModal(false)}>Cancel</button>
+              <button onClick={() => setShowRefModal(false)}>Hủy</button>
               <button className="search-btn" onClick={handleRefSearch}>
-                Search
+                Tìm kiếm
               </button>
             </div>
           </div>
@@ -206,17 +194,17 @@ const Candidate = () => {
       <div className="recruitment-layout">
         <div className="filter-sidebar">
           <h3 className="filter-title">
-            <img src={FilterIcon} alt="Filter" className="filter-title-icon" />
-            Filters
+            <img src={FilterIcon} alt="Bộ lọc" className="filter-title-icon" />
+            Bộ lọc tìm kiếm
           </h3>
 
           <div className="filter-group">
-            <label>Location</label>
+            <label>Địa điểm</label>
             <select
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             >
-              <option value="All">All</option>
+              <option value="Tất cả">Tất cả</option>
               {locations.map((loc) => (
                 <option key={loc} value={loc}>
                   {loc}
@@ -226,22 +214,22 @@ const Candidate = () => {
           </div>
 
           <div className="filter-group">
-            <label>Experience</label>
+            <label>Trình độ yêu cầu</label>
             <select
-              value={experience}
-              onChange={(e) => setExperience(e.target.value)}
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
             >
-              <option value="All">All</option>
-              {experiences.map((exp) => (
-                <option key={exp} value={exp}>
-                  {exp}
+              <option value="Tất cả">Tất cả</option>
+              {levels.map((lvl) => (
+                <option key={lvl} value={lvl}>
+                  {lvl}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="filter-group">
-            <label>Other filters</label>
+            <label>Lọc khác</label>
             <div className="checkbox-label">
               <input
                 type="checkbox"
@@ -249,22 +237,22 @@ const Candidate = () => {
                 checked={referralOnly}
                 onChange={(e) => setReferralOnly(e.target.checked)}
               />
-              <label htmlFor="referral">Referral only</label>
+              <label htmlFor="referral">Chỉ hiển thị có mã giới thiệu</label>
             </div>
           </div>
 
           <div className="filter-group">
             <button className="clear-filter-btn" onClick={handleFilterClearSearch}>
-              <img src={FilterIcon} alt="Clear Filters" className="filter-icon" />
-              Clear Filters
+              <img src={FilterIcon} alt="Xóa bộ lọc" className="filter-icon" />
+              Xóa bộ lọc
             </button>
           </div>
         </div>
 
         <div className="job-list">
-          <h2 className="page-title">Available Job Listings</h2>
+          <h2 className="page-title">Danh sách đợt tuyển sinh</h2>
           {visibleJobs.length === 0 ? (
-            <p className="no-result">No job found for this REF code.</p>
+            <p className="no-result">Không tìm thấy kết quả phù hợp.</p>
           ) : (
             visibleJobs.map((job, idx) => (
               <JobCard key={idx} job={job} logo={SmartRecruitmentLogo} onClick={setSelectedJob} />

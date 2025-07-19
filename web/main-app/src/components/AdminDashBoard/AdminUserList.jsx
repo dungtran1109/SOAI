@@ -23,7 +23,7 @@ const AdminUserList = () => {
   }, []);
 
   const handleDelete = async (accId) => {
-    if (window.confirm("Are you sure you want to delete this account?")) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa tài khoản này không?")) {
       try {
         await deleteAccount(accId);
         fetchUsers();
@@ -35,14 +35,14 @@ const AdminUserList = () => {
 
   return (
     <div className="admin-user-list">
-      <h2 className="admin-user-list__title">All Registered Users</h2>
+      <h2 className="admin-user-list__title">Danh sách tài khoản người dùng</h2>
       <table className="admin-user-list__table">
         <thead>
           <tr>
-            <th>User Info</th>
-            <th>Role</th>
-            <th>Date Joined</th>
-            <th>Action</th>
+            <th>Thông tin người dùng</th>
+            <th>Vai trò</th>
+            <th>Ngày đăng ký</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
