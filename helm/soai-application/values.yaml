@@ -65,17 +65,19 @@ server:
   recruitment:
     name: recruitment
     replicaCount: 1
-    logLevel: INFO
+    logLevel: DEBUG
     serviceType: ClusterIP
     httpPort: "8003"
     httpsPort: "8433"
     httpNodePort: "30803"
     httpsNodePort: "30833"
+    worker:
+      name: recruitment-worker
 
   genai:
     name: genai
     replicaCount: 1
-    logLevel: INFO
+    logLevel: DEBUG
     serviceType: ClusterIP
     httpPort: "8004"
     httpsPort: "8434"
@@ -246,3 +248,6 @@ clickhouse:
   httpPort: 8123
   tcpPort: 9000
   storage: 1Gi
+
+redis:
+  port: 6379

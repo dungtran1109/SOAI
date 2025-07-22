@@ -284,13 +284,7 @@ push_image() {
     image_name=soai-$__name
     version=$(get_version)
 
-    # Decide target registry path
-    if [ "$RELEASE" == "true" ]; then
-        target="$DOCKER_REGISTRY/$image_name:$version"
-    else
-        target="$DOCKER_REGISTRY/staging/$image_name:$version"
-    fi
-
+    target="$DOCKER_REGISTRY/$image_name:$version"
     # Check if the image exists locally
     if docker image inspect "$target" >/dev/null 2>&1; then
         echo "Pushing image: $target"

@@ -1,0 +1,55 @@
+{{- $g := fromJson (include "soai-application.global" . ) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "soai-recruitment-worker.name" . }}
+  labels: {{- include "soai-recruitment-worker.labels" . | nindent 4 }}
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.recruitment.replicaCount }}
+  strategy:
+{{ toYaml .Values.updateStrategy | indent 4 }}
+  selector:
+    matchLabels: {{- include "soai-recruitment-worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations: 
+        {{- $appArmorAnn := include "soai-application.appArmorProfileAnnotation" . | fromYaml -}}
+        {{- $defaultAnn := include "soai-application.annotations" . | fromYaml -}}
+        {{- $annotations := list $appArmorAnn $defaultAnn -}}
+        {{- include "soai-application.mergeAnnotations" (dict "location" (.Template.Name) "sources" $annotations) | trim | nindent 8 }}
+      labels: {{- include "soai-recruitment-worker.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- include "soai-application.appArmorProfile.securityContext" (list .) | indent 8 }}
+        fsGroup: {{ template "soai-application.fsGroup.coordinated" . }}
+        {{- include "soai-application.podSeccompProfile" . | indent 8 }}
+        {{- include "soai-application.supplementalGroups" . }}
+      initContainers:
+      {{- include "soai-initContainers" (list . "recruitment") | indent 6 }}
+      containers:
+      {{- include "soai-recruitment-worker-container" (list .) | nindent 6 }}
+      volumes:
+      {{- if .Values.storage.enabled }}
+      - name: {{ template "soai-recruitment.name" . }}-persistent-storage
+        persistentVolumeClaim:
+          claimName: {{ template "soai-recruitment.name" . }}-pv-claim
+      {{- else }}
+      - name: {{ template "soai-recruitment.name" . }}-ephemeral-storage
+        emptyDir: {}
+      {{- end }}
+      - name: {{ template "soai-recruitment.name" . }}-jd-previews
+        emptyDir: {}
+      - name: home-volume
+        emptyDir: {}
+      {{- if $g.security.tls.enabled }}
+      - name: tls-cert
+        secret:
+          secretName: {{ template "soai-application.name" . }}-cert
+      {{- end }}
+      - name: tmp-volume
+        emptyDir: {}
+    {{- if include "soai-application.pullSecrets" . }}
+      imagePullSecrets:
+        - name: {{ template "soai-application.pullSecrets" . }}
+    {{- end }}

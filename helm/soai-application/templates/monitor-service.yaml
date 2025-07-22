@@ -55,3 +55,15 @@ spec:
     - name: tcp
       port: {{ .Values.clickhouse.tcpPort }}
       targetPort: {{ .Values.clickhouse.tcpPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - name: http
+      port: {{ .Values.redis.port }}

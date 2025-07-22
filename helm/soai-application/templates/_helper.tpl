@@ -54,6 +54,14 @@ Expand the name of the server chart
 {{- end -}}
 
 {{/*
+Expand the name of the server worker chart
+*/}}
+{{- define "soai-recruitment-worker.name" -}}
+{{- $name := (include "soai-application.name" .) -}}
+{{- printf "%s-recruitment-worker" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Expand the name of the genai chart
 */}}
 {{- define "soai-genai.name" -}}
@@ -103,6 +111,16 @@ Selector labels for recruitment.
 {{- define "soai-recruitment.selectorLabels" -}}
 component: {{ .Values.server.recruitment.name | quote }}
 app: {{ template "soai-recruitment.name" . }}
+release: {{ .Release.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}
+
+{{/*
+Selector labels for recruitment worker.
+*/}}
+{{- define "soai-recruitment-worker.selectorLabels" -}}
+component: {{ .Values.server.recruitment.worker.name | quote }}
+app: {{ template "soai-recruitment-worker.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
@@ -256,6 +274,19 @@ Merged labels for common server
     {{- $g := fromJson (include "soai-application.global" .) -}}
     {{- $selector := include "soai-recruitment.selectorLabels" . | fromYaml -}}
     {{- $name := (include "soai-recruitment.name" .) }}
+    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
+    {{- $global := $g.label -}}
+    {{- $service := .Values.labels -}}
+    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
+{{- end -}}
+
+{{/*
+Merged labels for common server worker
+*/}}
+{{- define "soai-recruitment-worker.labels" -}}
+    {{- $g := fromJson (include "soai-application.global" .) -}}
+    {{- $selector := include "soai-recruitment-worker.selectorLabels" . | fromYaml -}}
+    {{- $name := (include "soai-recruitment-worker.name" .) }}
     {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
     {{- $global := $g.label -}}
     {{- $service := .Values.labels -}}
