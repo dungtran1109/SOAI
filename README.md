@@ -43,45 +43,83 @@ $ docker compose up -d
 ```
 This will install dependencies and recruitment docker container start for you. This will run authentication for JWT verification and MySQL database for storing database.
 
-2. For recruitment agent.
-The repository used `sqlachemy` to automate create tables and structure all SQL database for you. So don't need to create tables manually. Check the database is created with
+You must export the `OPENAI_API_KEY` under environment
 ```bash
-$ docker exec -it soai_mysql mysql -usoai_user -psoai_password;
-$ use soai_db;
-$ show tables;
+$ export OPENAI_API_KEY=<your-api-key>
 ```
-3. Recruitment API Endpoint Summary
-
-| Endpoint                                                       | Method | Description                                      | Request Parameters / Body                                                                 | Auth Required | Role Access        |
-|----------------------------------------------------------------|--------|--------------------------------------------------|--------------------------------------------------------------------------------------------|---------------|---------------------|
-| `/cvs/upload`                                                  | POST   | Upload and parse candidate CV                    | FormData: `file`, `override_email` (optional), `position_applied_for`                      | Yes           | All authenticated   |
-| `/jds/upload`                                                  | POST   | Upload job descriptions (JSON format)            | FormData: `file` (JSON array of JDs)                                                       | Yes           | ADMIN only          |
-| `/cvs/{candidate_id}/approve`                                  | POST   | Approve a candidate’s CV                         | Path: `candidate_id`                                                                       | Yes           | ADMIN only          |
-| `/cvs/pending`                                                 | GET    | Get list of CVs with `PENDING` status            | Query: `candidate_name` (optional)                                                         | Yes           | ADMIN only          |
-| `/cvs/{cv_id}`                                                 | PUT    | Update a CV application                          | Path: `cv_id`, JSON Body: fields to update                                                 | Yes           | ADMIN only          |
-| `/cvs/{cv_id}`                                                 | DELETE | Delete a CV application                          | Path: `cv_id`                                                                              | Yes           | ADMIN only          |
-| `/cvs/position`                                                | GET    | List all CVs (optionally filter by position)     | Query: `position` (optional)                                                               | Yes           | ADMIN only          |
-| `/cvs/{cv_id}`                                                 | GET    | Get CV detail by ID                              | Path: `cv_id`                                                                              | Yes           | ADMIN only          |
-| `/interviews/schedule`                                         | POST   | Schedule an interview                            | JSON Body: `InterviewScheduleCreateSchema`                                                 | Yes           | ADMIN only          |
-| `/interviews/{interview_id}`                                   | PUT    | Update an interview                              | JSON Body: fields to update                                                                | Yes           | ADMIN only          |
-| `/interviews/{interview_id}/cancel`                            | POST   | Candidate cancels an interview                   | Path: `interview_id`                                                                       | Yes           | All authenticated   |
-| `/interviews`                                                  | GET    | Get list of interviews                           | Query: `interview_date`, `candidate_name` (optional)                                       | Yes           | ADMIN only          |
-| `/interviews/accept`                                           | POST   | Candidate accepts an interview                   | JSON Body: `InterviewAcceptSchema`                                                         | Yes           | All authenticated   |
-| `/interviews/{interview_id}`                                   | DELETE | Delete a specific interview                      | Path: `interview_id`                                                                       | Yes           | ADMIN only          |
-| `/interviews`                                                  | DELETE | Delete all interviews (optionally by candidate)  | Query: `candidate_name` (optional)                                                         | Yes           | ADMIN only          |
-| `/jds`                                                         | GET    | Get list of job descriptions                     | Query: `position` (optional)                                                               | Yes           | All authenticated   |
-| `/jds/{jd_id}`                                                 | PUT    | Update a job description                         | JSON Body: fields to update                                                                | Yes           | ADMIN only          |
-| `/jds/{jd_id}`                                                 | DELETE | Delete a job description                         | Path: `jd_id`                                                                              | Yes           | ADMIN only          |
-| `/interview-questions/{cv_id}/questions`                       | GET    | Get generated interview questions for a CV       | Path: `cv_id`                                                                              | Yes           | ADMIN only          |
-| `/interview-questions/{question_id}/edit`                      | PUT    | Edit a specific interview question               | Body: `{ "new_question": "..." }`                                                          | Yes           | ADMIN only          |
-| `/interview-questions/{cv_id}/questions/regenerate`            | POST   | Regenerate interview questions for a CV          | Path: `cv_id`                                                                              | Yes           | ADMIN only          |
-
-4. If you want to test APIs, run the test files in [Test Recruitment]("https://gitlab.endava.com/cuong.quang.nguyen/soai/-/tree/main/backend/services/recruitment_agent/tests?ref_type=heads") (Updating)
+2. If you want to test APIs, run
 ```
 $ make test-recruitment
 ```
 
-## Pushing the docker image to registry and release helm chart (Updating)
+## Deploy helm chart to k8s cluster
+### Prepare
+1. Need to install the k8s cluster (minikube/k3s for testing). Following page: https://docs.k3s.io/quick-start
+```bash
+$ curl -sfL https://get.k3s.io | sh -
+```
+2. Install `kubectl` and `helm`. Following the documentation: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/ and https://helm.sh/docs/intro/install/
+
+To install kubectl
+```bash
+$ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+```
+
+To install helm
+```bash
+$ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+$ chmod 700 get_helm.sh
+$ ./get_helm.sh
+```
+
+Once you install all the neccessary things, you need to go to `test/athena_chart` and run
+```bash
+$ ./deploy.sh -n monitoring
+```
+You can install the cert-manager, prometheus, grafana to monitor and create `cert-manager` CRDs in order to deploy TLS certificates in SOAI-application.
+
+3. You can get the latest released version and override the version in `build/var/.version`
+```bash
+$ latest_version=$(git describe --tags `git rev-list --tags --max-count=1`)
+$ echo $latest_version > build/var/.version
+```
+
+4. Package helm-chart
+```bash
+$ make package-helm
+```
+The helm build will locate at `build/helm-build/soai-application/` folder
+You can preview the helm chart by
+```bash
+$ helm template soai-app build/helm-build/soai-application/soai-application/
+```
+
+5. You must export the `OPENAI_API_KEY` in your environment
+```bash
+$ export OPENAI_API_KEY=<your-api-key>
+$ helm -n <namespace> install soai-app build/helm-build/soai-application/soai-application-<version>.tgz --set openai.apiKey=$OPENAI_API_KEY --debug --create-namespace
+```
+This will install SOAI helm chart to k8s cluster.
+
+6. The result looks like this after you done the installation
+```bash
+$ k $NAME get po
+NAME                                                   READY   STATUS    RESTARTS   AGE
+clickhouse-0                                           1/1     Running   0          148m
+grafana-8d59bb64b-4k5ql                                1/1     Running   0          148m
+otel-collector-67c9d4f69b-sw8m6                        1/1     Running   0          148m
+prometheus-69f449d776-bhjms                            1/1     Running   0          148m
+redis-7b986b9f57-5cb99                                 1/1     Running   0          148m
+soai-application-authentication-5f8dc6b7c9-p496t       1/1     Running   0          148m
+soai-application-consul-85854666b4-2q5np               1/1     Running   0          148m
+soai-application-genai-974987fd4-v6hxt                 1/1     Running   0          148m
+soai-application-mysql-0                               1/1     Running   0          148m
+soai-application-recruitment-57bb645c9b-bkjn7          1/1     Running   0          148m
+soai-application-recruitment-worker-6bd8c98c45-xkcwd   1/1     Running   0          148m
+soai-application-web-5c9bbc956d-5v67f                  1/1     Running   0          148m
+```
+
+## Pushing the docker image to registry and release helm chart
 ### Prepare
 1. To release the docker images and helm chart. Check out `vas.sh` and `Makefile` script.
 Set the `RELEASE` variable to true
@@ -93,11 +131,7 @@ To check the version release. The version will change based on commit hash and n
 ```bash
 $ ./vas.sh get_version
 ```
-3. Change the docker registry properly via env variable `DOCKER_REGISTRY`.
-```bash
-$ export DOCKER_REGISTRY=<your-docker-registry>
-```
-4. Create drop version.
+3. Create drop version.
 ```bash
 $ make clean init image push
 ```
@@ -107,24 +141,5 @@ This will sent and push the drop version to docker registry. Helm will manage to
 $ make git-tag
 ```
 This will create the git tag and push to git.
-## Deploy helm chart to k8s cluster
-### Prepare
-```bash
-$ make package-helm
-```
-The helm build will locate at `build/helm-build/soai-application/` folder
-You can preview the helm chart by
-```bash
-$ helm template soai-app build/helm-build/soai-application/soai-application/
-```
-```bash
-$ helm -n <namespace> install soai-app build/helm-build/soai-application/soai-application-<version>.tgz --set <values> --debug --create-namespace
-```
-This will install SOAI helm chart to k8s cluster.
-The TLS certificate was used by `cert-manager` you can install it in `test/athena_chart`.
-```bash
-$ ./deploy.sh -n monitoring
-```
-You can install the cert-manager, prometheus, grafana to monitor and create `cert-manaager` CRDs in order to deploy TLS certificates in SOAI-application.
 ### License
 This repository is proprietary and confidential. Usage is subject to internal policies. Contact maintainers for access or usage rights.
