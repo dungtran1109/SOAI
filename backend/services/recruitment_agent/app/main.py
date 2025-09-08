@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.constants import API_PREFIX
 from config.database import DeclarativeBase, engine
 from config.service_registration import ServiceRegistration
-from config.log_config import LoggingConfig, AppLogger
+from config.log_config import LoggingConfig, AppLogger, enable_otlp_logging
 from config.constants import *
 import uvicorn
 from config.constants import *
@@ -17,11 +17,13 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 # === OpenTelemetry setup ===
 from metrics.otel_setup import setup_otel
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
 
 logger = AppLogger(__name__)
 
 LoggingConfig.setup_logging(json_format=True)
-
+enable_otlp_logging(service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT)
 # Create tables automatically
 DeclarativeBase.metadata.create_all(bind=engine)
 
@@ -33,13 +35,17 @@ app = FastAPI(
     openapi_url=f"{API_PREFIX}/openapi.json"
 )
 
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 # Mount static folder
 UPLOAD_DIR = Path("cv_uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount(f"{API_PREFIX}/static", StaticFiles(directory=UPLOAD_DIR), name="static")
 
 # Setup OpenTelemetry
-setup_otel(app=app, service_name=SERVICE_NAME, engine=engine)
+setup_otel(app=app, service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT, engine=engine)
 
 # CORS
 app.add_middleware(

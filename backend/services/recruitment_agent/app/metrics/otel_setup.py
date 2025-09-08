@@ -1,4 +1,3 @@
-import socket
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -7,10 +6,11 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from fastapi import FastAPI
-from sqlalchemy.engine import Engine
 from config.constants import *
+from sqlalchemy.engine import Engine
 from config.log_config import AppLogger
+from fastapi import FastAPI
+import socket
 
 logger = AppLogger(__name__)
 

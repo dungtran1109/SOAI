@@ -23,6 +23,7 @@ spec:
           ports:
             - containerPort: {{ .Values.otel.grpcPort }}
             - containerPort: {{ .Values.otel.httpPort }}
+            - containerPort: {{ .Values.otel.metricsPort }}
           volumeMounts:
             - name: config
               mountPath: /etc/otel/config.yaml

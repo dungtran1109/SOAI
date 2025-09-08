@@ -236,13 +236,10 @@ grafana:
   adminPassword: admin
   port: 3000
 
-prometheus:
-  port: 9090
-  externalPort: 9091
-
 otel:
   grpcPort: 4317
   httpPort: 4318
+  metricsPort: 8888
 
 clickhouse:
   httpPort: 8123

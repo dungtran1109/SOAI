@@ -185,8 +185,8 @@ class TestRecruitmentAPI(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
             # Test GET Pending CV with admin
-            log_info("[Step 3] Get pending CV after 10s")
-            time.sleep(10)
+            log_info("[Step 3] Get pending CV after 30s")
+            time.sleep(30)
             pending_cv = self.get_pending_cv(name, self.admin_token)
             self.assertGreater(len(pending_cv), 0)
             cv_id = pending_cv[0]["id"]
@@ -200,7 +200,7 @@ class TestRecruitmentAPI(unittest.TestCase):
                 headers=get_headers(self.admin_token),
             )
             self.assertIn(response.status_code, [200, 400])
-            time.sleep(10)
+            time.sleep(30)
 
             # Test Update CV with ADMIN
             log_info("[Step 5] Update CV")
@@ -404,7 +404,7 @@ class TestRecruitmentAPI(unittest.TestCase):
         self.assertEqual(response.json().get("detail"), "Insufficient permission")
 
         log_info("Getting pending CVs as ADMIN")
-        time.sleep(10)
+        time.sleep(30)
         pending_cv = self.get_pending_cv(name, self.admin_token)
         if not pending_cv:
             log_info("No pending CV found, skipping test.")

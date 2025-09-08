@@ -65,14 +65,14 @@ class MatchingAgent(BaseAgent):
             return state
 
         if not state.jd_list:
-            logger.warning("[MatchingAgent] No Job Descriptions (JDs) available for matching.")
+            logger.warn("[MatchingAgent] No Job Descriptions (JDs) available for matching.")
             state.matched_jd = None
             state.stop_pipeline = True
             state.final_decision = "CV rejected: No available JDs."
             return state
 
         if not state.parsed_cv or not isinstance(state.parsed_cv, dict):
-            logger.warning("[MatchingAgent] No parsed CV data available.")
+            logger.warn("[MatchingAgent] No parsed CV data available.")
             state.matched_jd = None
             state.stop_pipeline = True
             state.final_decision = "CV rejected: Invalid CV content."

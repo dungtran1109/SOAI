@@ -7,6 +7,8 @@ import uvicorn
 from config.constants import *
 # === OpenTelemetry setup ===
 from metrics.otel_setup import setup_otel
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
 
 logger = AppLogger(__name__)
 
@@ -20,6 +22,10 @@ app = FastAPI(
     openapi_url="/api/v1/gen-ai/openapi.json",
 )
 
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Enable CORS
 app.add_middleware(

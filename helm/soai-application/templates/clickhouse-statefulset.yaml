@@ -25,14 +25,8 @@ spec:
             - name: config
               mountPath: /etc/clickhouse-server/users.d/otel-user.xml
               subPath: otel-user.xml
-            - name: init
-              mountPath: /docker-entrypoint-initdb.d/init-tables.sql
-              subPath: init-tables.sql
       volumes:
         - name: config
-          configMap:
-            name: soai-configmap
-        - name: init
           configMap:
             name: soai-configmap
   volumeClaimTemplates:

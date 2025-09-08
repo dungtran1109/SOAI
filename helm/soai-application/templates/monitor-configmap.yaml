@@ -3,63 +3,8 @@ kind: ConfigMap
 metadata:
   name: soai-configmap
 data:
-  prometheus.yml: |
-    {{- $g := fromJson (include "soai-application.global" . ) }}
-    global:
-      scrape_interval: 15s
-      evaluation_interval: 15s
-
-    scrape_configs:
-      - job_name: 'prometheus'
-        static_configs:
-          - targets: ['localhost:9090']
-
-      - job_name: 'soai_services'
-        scheme: {{ ternary "https" "http" $g.security.tls.enabled }}
-        {{- if $g.security.tls.enabled }}
-        tls_config:
-          insecure_skip_verify: true
-        {{- end }}
-        metrics_path: /metrics
-        static_configs:
-          - targets:
-              - {{ printf "%s:%s" (include "soai-genai.name" . ) (ternary .Values.server.genai.httpsPort .Values.server.genai.httpPort $g.security.tls.enabled) }}
-              - {{ printf "%s:%s" (include "soai-recruitment.name" . ) (ternary .Values.server.recruitment.httpsPort .Values.server.recruitment.httpPort $g.security.tls.enabled)}}
-        relabel_configs:
-          - source_labels: [__address__]
-            regex: '(.*):.*'
-            target_label: instance
-            replacement: '${1}'
-          - source_labels: [__address__]
-            target_label: service
-            regex: 'genai:.*'
-            replacement: 'gen_ai_provider'
-          - source_labels: [__address__]
-            target_label: service
-            regex: 'recruitment:.*'
-            replacement: 'recruitment_agent'
-
-      - job_name: 'authentication_service'
-        scheme: {{ ternary "https" "http" $g.security.tls.enabled }}
-        {{- if $g.security.tls.enabled }}
-        tls_config:
-          insecure_skip_verify: true
-        {{- end }}
-        metrics_path: /actuator/prometheus
-        static_configs:
-          - targets:
-              - {{ printf "%s:%s" (include "soai-authentication.name" . ) (ternary .Values.server.authentication.httpsPort .Values.server.authentication.httpPort $g.security.tls.enabled)}}
-        relabel_configs:
-          - source_labels: [__address__]
-            regex: '(.*):.*'
-            target_label: instance
-            replacement: '${1}'
-          - source_labels: [__address__]
-            target_label: service
-            regex: 'authentication:.*'
-            replacement: 'authentication_service'
-
   otel-collector-config.yaml: |
+    {{- $g := fromJson (include "soai-application.global" . ) }}
     receivers:
       otlp:
         protocols:
@@ -68,92 +13,189 @@ data:
           http:
             endpoint: 0.0.0.0:4318
 
+      hostmetrics:
+        collection_interval: 10s
+        scrapers:
+          cpu: {}
+          memory: {}
+          disk: {}
+          filesystem: {}
+          network: {}
+          load: {}
+
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'soai_services'
+              scheme: {{ ternary "https" "http" $g.security.tls.enabled }}
+              {{- if $g.security.tls.enabled }}
+              tls_config:
+                insecure_skip_verify: true
+              {{- end }}
+              metrics_path: /metrics
+              static_configs:
+                - targets:
+                    - {{ printf "%s:%s" (include "soai-genai.name" . ) (ternary .Values.server.genai.httpsPort .Values.server.genai.httpPort $g.security.tls.enabled) }}
+                    - {{ printf "%s:%s" (include "soai-recruitment.name" . ) (ternary .Values.server.recruitment.httpsPort .Values.server.recruitment.httpPort $g.security.tls.enabled)}}
+              relabel_configs:
+                - source_labels: [__address__]
+                  regex: '(.*):.*'
+                  target_label: instance
+                  replacement: '${1}'
+                - source_labels: [__address__]
+                  target_label: service
+                  regex: 'genai:.*'
+                  replacement: 'gen_ai_provider'
+                - source_labels: [__address__]
+                  target_label: service
+                  regex: 'recruitment:.*'
+                  replacement: 'recruitment_agent'
+
+            - job_name: 'authentication_service'
+              scheme: {{ ternary "https" "http" $g.security.tls.enabled }}
+              {{- if $g.security.tls.enabled }}
+              tls_config:
+                insecure_skip_verify: true
+              {{- end }}
+              metrics_path: /actuator/prometheus
+              static_configs:
+                - targets:
+                    - {{ printf "%s:%s" (include "soai-authentication.name" . ) (ternary .Values.server.authentication.httpsPort .Values.server.authentication.httpPort $g.security.tls.enabled)}}
+              relabel_configs:
+                - source_labels: [__address__]
+                  regex: '(.*):.*'
+                  target_label: instance
+                  replacement: '${1}'
+                - source_labels: [__address__]
+                  target_label: service
+                  regex: 'authentication:.*'
+                  replacement: 'authentication_service'
+
     exporters:
       clickhouse:
         endpoint: tcp://clickhouse:9000
-        username: otel_user
-        password: otel_pass
-        database: default
+        username: soai_user
+        password: soai_password
+        database: otel
+        create_schema: true
         logs_table_name: otel_logs
         traces_table_name: otel_traces
+        metrics_table_name: otel_metrics
+        timeout: 5s
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
 
     processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 1000
+        spike_limit_mib: 200
+
+      k8sattributes:
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.statefulset.name
+            - k8s.daemonset.name
+            - k8s.cronjob.name
+            - k8s.job.name
+            - k8s.node.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.pod.start_time
+            - container.image.name
+            - container.image.tag
+            - k8s.container.name
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.ip
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.uid
+          - sources:
+              - from: connection
+
+      resource:
+        attributes:
+          - action: insert
+            from_attribute: k8s.pod.uid
+            key: service.instance.id
+
       batch:
+        send_batch_size: 10000
+        timeout: 10s
+
+      transform:
+        error_mode: ignore
+        metric_statements:
+          - context: datapoint
+            statements:
+              - set(attributes["k8s_cluster_name"], resource.attributes["k8s.cluster.name"])
+              - set(attributes["namespace"], resource.attributes["k8s.namespace.name"])
+              - set(attributes["container"], resource.attributes["k8s.container.name"])
+              - set(attributes["pod"], resource.attributes["k8s.pod.name"])
+
+      transform/logs:
+        error_mode: ignore
+        log_statements:
+          - context: resource
+            statements:
+              - keep_keys(attributes, ["k8s.namespace.name", "k8s.container.name", "k8s.pod.name"])
+          - context: log
+            statements:
+              - set(attributes["namespace"], resource.attributes["k8s.namespace.name"])
+              - set(attributes["container"], resource.attributes["k8s.container.name"])
+              - set(attributes["pod"], resource.attributes["k8s.pod.name"])
+              - set(attributes["message"], body)
+              - set(body, "")
+              - delete_key(resource.attributes, "k8s.namespace.name")
+              - delete_key(resource.attributes, "k8s.container.name")
+              - delete_key(resource.attributes, "k8s.pod.name")
 
     service:
+      telemetry:
+        metrics:
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: 0.0.0.0
+                    port: {{ .Values.otel.metricsPort }}
+        logs:
+          encoding: json
+
       pipelines:
+        metrics/primary:
+          receivers: [otlp, hostmetrics, prometheus]
+          processors: [memory_limiter, k8sattributes, resource, transform, batch]
+          exporters: [clickhouse]
+
         traces:
           receivers: [otlp]
-          processors: [batch]
+          processors: [k8sattributes, batch]
           exporters: [clickhouse]
+
         logs:
           receivers: [otlp]
-          processors: [batch]
+          processors: [k8sattributes, transform/logs, batch]
           exporters: [clickhouse]
+
 
   otel-user.xml: |
     <yandex>
       <users>
-        <otel_user>
-          <password>otel_pass</password>
+        <soai_user>
+          <password>soai_password</password>
           <networks>
             <ip>::/0</ip>
           </networks>
           <profile>default</profile>
           <quota>default</quota>
-        </otel_user>
+        </soai_user>
       </users>
     </yandex>
-
-  init-tables.sql: |
-    DROP TABLE IF EXISTS otel_traces;
-
-    CREATE TABLE IF NOT EXISTS otel_traces (
-        Timestamp DateTime64(9),
-        TraceId String,
-        SpanId String,
-        TraceState String,
-        ParentSpanId String,
-        Name String,
-        Kind Int32,
-        StartTime DateTime64(9),
-        EndTime DateTime64(9),
-        Duration UInt64 ALIAS toUnixTimestamp64Nanosecond(EndTime) - toUnixTimestamp64Nanosecond(StartTime),
-        Attributes Map(String, String),
-        DroppedAttributesCount Int32,
-        Events Nested (
-            Name String,
-            Attributes Map(String, String),
-            DroppedAttributesCount Int32,
-            Timestamp DateTime64(9)
-        ),
-        DroppedEventsCount Int32,
-        StatusCode Int32,
-        StatusMessage String,
-        ServiceName LowCardinality(String),
-        ResourceAttributes Map(String, String),
-        ScopeName LowCardinality(String),
-        ScopeVersion String
-    ) ENGINE = MergeTree
-    ORDER BY (ServiceName, StartTime)
-    TTL StartTime + INTERVAL 7 DAY;
-
-    DROP TABLE IF EXISTS otel_logs;
-
-    CREATE TABLE IF NOT EXISTS otel_logs (
-        Timestamp DateTime64(9),
-        TraceId String,
-        SpanId String,
-        TraceFlags UInt8,
-        SeverityText String,
-        SeverityNumber Int32,
-        Body String,
-        Attributes Map(String, String),
-        DroppedAttributesCount Int32,
-        ResourceAttributes Map(String, String),
-        ScopeName LowCardinality(String),
-        ScopeVersion String,
-        ServiceName LowCardinality(String)
-    ) ENGINE = MergeTree
-    ORDER BY (ServiceName, Timestamp)
-    TTL Timestamp + INTERVAL 7 DAY;

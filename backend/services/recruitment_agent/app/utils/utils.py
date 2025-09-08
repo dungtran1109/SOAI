@@ -1,8 +1,9 @@
 # utils/cv_utils.py
 import json
 import re
+from socket import socket
 from typing import Any, Dict, List
-
+import time
 import fitz
 from config.log_config import AppLogger
 

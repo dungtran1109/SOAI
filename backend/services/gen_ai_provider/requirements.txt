@@ -16,3 +16,5 @@ opentelemetry-instrumentation==0.44b0
 opentelemetry-instrumentation-fastapi==0.44b0
 opentelemetry-instrumentation-asgi==0.44b0
 opentelemetry-instrumentation-logging==0.44b0
+
+prometheus_client==0.22.1

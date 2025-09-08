@@ -3,7 +3,7 @@ from services.openai_service import OpenAIService
 from services.gemini_service import GeminiAIService
 from services.service_factory import get_ai_service
 from config.log_config import AppLogger
-
+from metrics.prometheus_metrics import *
 logger = AppLogger(__name__)
 
 
@@ -14,6 +14,7 @@ class GenAIService:
         models = []
         for service in services:
             provider = service.__class__.__name__
+            GET_MODELS_REQUESTS.labels(provider=provider).inc()
             try:
                 available_models = service.get_available_models()
                 if available_models:
@@ -21,6 +22,7 @@ class GenAIService:
                     models.extend(available_models)
             except Exception as e:
                 logger.exception(f"Error getting models from {provider}: {e}")
+                GET_MODELS_ERRORS.labels(provider=provider).inc()
         return models
 
     @staticmethod
@@ -37,7 +39,9 @@ class GenAIService:
         try:
             service = get_ai_service(model)
             provider = service.__class__.__name__
+            CHAT_REQUESTS.labels(provider=provider).inc()
             return service.chat(messages)
         except Exception as e:
             logger.error(f"Chat error with provider {provider}: {e}")
+            CHAT_ERRORS.labels(provider=provider).inc()
         return "Error querying AI."
