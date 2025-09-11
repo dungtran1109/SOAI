@@ -28,7 +28,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: soai-configmap
+            name: soai-monitor-configmap
   volumeClaimTemplates:
     - metadata:
         name: data

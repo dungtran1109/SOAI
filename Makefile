@@ -52,6 +52,11 @@ package-helm: generate-ca
 		--release=$(RELEASE)
 		--user=$(USERNAME)
 
+# Run this one to build all images for CI/CD
+image-ci: image-authentication \
+		image-recruitment \
+		image-genai
+
 image: 	image-authentication \
 		image-recruitment \
 		image-genai \
@@ -69,6 +74,15 @@ image-genai:
 image-web:
 	@echo "build web frontend Image"
 	$(TOP_DIR)/vas.sh build_image --name=web
+
+# Run this one to run all services for CI/CD
+run-ci: 	run-mysql \
+			run-redis \
+			run-consul \
+			run-authentication \
+			run-genai \
+			run-recruitment \
+			run-recruitment-celery-worker
 
 run: run-mysql \
 	run-redis \
@@ -255,6 +269,9 @@ collect-recruitment-log:
 	@echo "Collect SOAI_RECRUITMENT logs"
 	$(TOP_DIR)/vas.sh collect_docker_logs --name=recruitment_agent
 
+push-ci: 	push-recruitment \
+			push-authentication \
+			push-genai
 push: 	push-recruitment \
 		push-authentication \
 		push-genai \
@@ -276,6 +293,14 @@ push-web:
 push-helm:
 	@echo "push helm chart"
 	$(TOP_DIR)/vas.sh push_helm
+
+remove-ci: 	remove-recruitment \
+			remove-authentication \
+			remove-genai \
+			remove-consul \
+			remove-mysql \
+			remove-recruitment-celery-worker \
+			remove-redis
 
 remove:		remove-recruitment \
 			remove-authentication \

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: soai-configmap
+  name: soai-monitor-configmap
 data:
   otel-collector-config.yaml: |
     {{- $g := fromJson (include "soai-application.global" . ) }}
@@ -26,22 +26,29 @@ data:
       prometheus:
         config:
           scrape_configs:
+            - job_name: 'otel-collector'
+              scrape_interval: 10s
+              static_configs:
+                - targets: ['0.0.0.0:8888']
             - job_name: 'soai_services'
-              scheme: {{ ternary "https" "http" $g.security.tls.enabled }}
+              scheme: {{ ternary "https" "http" $g.security.tls.enabled | quote }}
               {{- if $g.security.tls.enabled }}
               tls_config:
-                insecure_skip_verify: true
+                ca_file: {{ .Values.server.secretsPath.certPath }}/ca.crt
+                cert_file: {{ .Values.server.secretsPath.certPath }}/tls.crt
+                key_file: {{ .Values.server.secretsPath.certPath }}/tls.key
+                insecure_skip_verify: false
               {{- end }}
               metrics_path: /metrics
               static_configs:
                 - targets:
-                    - {{ printf "%s:%s" (include "soai-genai.name" . ) (ternary .Values.server.genai.httpsPort .Values.server.genai.httpPort $g.security.tls.enabled) }}
-                    - {{ printf "%s:%s" (include "soai-recruitment.name" . ) (ternary .Values.server.recruitment.httpsPort .Values.server.recruitment.httpPort $g.security.tls.enabled)}}
+                    - {{ printf "%s.%s.svc:%s" (include "soai-genai.name" .) .Release.Namespace (ternary .Values.server.genai.httpsPort .Values.server.genai.httpPort $g.security.tls.enabled) | quote }}
+                    - {{ printf "%s.%s.svc:%s" (include "soai-recruitment.name" .) .Release.Namespace (ternary .Values.server.recruitment.httpsPort .Values.server.recruitment.httpPort $g.security.tls.enabled) | quote }}
               relabel_configs:
                 - source_labels: [__address__]
                   regex: '(.*):.*'
                   target_label: instance
-                  replacement: '${1}'
+                  replacement: '$1'
                 - source_labels: [__address__]
                   target_label: service
                   regex: 'genai:.*'
@@ -52,20 +59,23 @@ data:
                   replacement: 'recruitment_agent'
 
             - job_name: 'authentication_service'
-              scheme: {{ ternary "https" "http" $g.security.tls.enabled }}
+              scheme: {{ ternary "https" "http" $g.security.tls.enabled | quote }}
               {{- if $g.security.tls.enabled }}
               tls_config:
-                insecure_skip_verify: true
+                ca_file: {{ .Values.server.secretsPath.certPath }}/ca.crt
+                cert_file: {{ .Values.server.secretsPath.certPath }}/tls.crt
+                key_file: {{ .Values.server.secretsPath.certPath }}/tls.key
+                insecure_skip_verify: false
               {{- end }}
               metrics_path: /actuator/prometheus
               static_configs:
                 - targets:
-                    - {{ printf "%s:%s" (include "soai-authentication.name" . ) (ternary .Values.server.authentication.httpsPort .Values.server.authentication.httpPort $g.security.tls.enabled)}}
+                    - {{ printf "%s.%s.svc:%s" (include "soai-authentication.name" . ) .Release.Namespace (ternary .Values.server.authentication.httpsPort .Values.server.authentication.httpPort $g.security.tls.enabled) | quote }}
               relabel_configs:
                 - source_labels: [__address__]
                   regex: '(.*):.*'
                   target_label: instance
-                  replacement: '${1}'
+                  replacement: '$1'
                 - source_labels: [__address__]
                   target_label: service
                   regex: 'authentication:.*'
@@ -95,6 +105,9 @@ data:
         spike_limit_mib: 200
 
       k8sattributes:
+        auth_type: serviceAccount
+        filter:
+          namespace: "{{ .Release.Namespace }}"
         extract:
           metadata:
             - k8s.namespace.name

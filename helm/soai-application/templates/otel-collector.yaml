@@ -1,7 +1,42 @@
+{{- $g := fromJson (include "soai-application.global" .) -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector-sa
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: otel-collector-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "events", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "daemonsets", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: otel-collector-rolebinding
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: otel-collector-role
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector-sa
+    namespace: {{ .Release.Namespace }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: otel-collector
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -12,6 +47,7 @@ spec:
       labels:
         app: otel-collector
     spec:
+      serviceAccountName: otel-collector-sa
       initContainers:
         - name: wait-for-clickhouse
           image: busybox
@@ -20,6 +56,15 @@ spec:
         - name: otel-collector
           image: otel/opentelemetry-collector-contrib:latest
           args: ["--config=/etc/otel/config.yaml"]
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           ports:
             - containerPort: {{ .Values.otel.grpcPort }}
             - containerPort: {{ .Values.otel.httpPort }}
@@ -28,7 +73,17 @@ spec:
             - name: config
               mountPath: /etc/otel/config.yaml
               subPath: otel-collector-config.yaml
+            {{- if $g.security.tls.enabled }}
+            - name: tls-cert
+              mountPath: {{ .Values.server.secretsPath.certPath }}
+              readOnly: true
+            {{- end }}
       volumes:
         - name: config
           configMap:
-            name: soai-configmap
+            name: soai-monitor-configmap
+        {{- if $g.security.tls.enabled }}
+        - name: tls-cert
+          secret:
+            secretName: {{ template "soai-application.name" . }}-cert
+        {{- end }}

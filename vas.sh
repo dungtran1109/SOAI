@@ -189,6 +189,12 @@ build_image() {
     fi
     echo "Building image [$image_name:$version]"
 
+    # Remove old builder if exists
+    if docker buildx inspect multiarch-builder >/dev/null 2>&1; then
+        echo "Removing existing buildx builder [multiarch-builder]..."
+        docker buildx rm multiarch-builder || true
+    fi
+
     # Support build image with multi-architecture amd64/arm64 when set RELEASE
     if [ "$RELEASE" == "true" ]; then
         # Ensure buildx builder exists

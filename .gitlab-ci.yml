@@ -64,8 +64,8 @@ image-push-combined:
   script:
     # Packaging the helm chart
     - make package-helm
-    - make image
-    - make push
+    - make image-ci
+    - make push-ci
     - chmod -R +w build/ || exit_code=$?
   needs:
     - job: prepare
@@ -79,7 +79,7 @@ remove:
   needs:
     - job: image-push-combined
   script:
-    - make remove
+    - make remove-ci
 
 functional-test:
   stage: Test
@@ -88,7 +88,7 @@ functional-test:
     - docker ps -a
     - chmod +x ./vas.sh Makefile
   script:
-    - make run # Need to run docker container first
+    - make run-ci # Need to run docker container first
     - make check-health # Check docker container healthy
     - make test # This for test when docker container is up
   artifacts:
