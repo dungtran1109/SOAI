@@ -40,6 +40,9 @@ COPY --from=builder /install /usr/local
 COPY --from=builder /app/app ./app
 COPY --from=builder /app/.env .env
 
+RUN install -d -o ${USER_ID} -g 0 /app/app/cv_uploads && \
+    chown -R ${USER_ID}:0 /app && chmod -R g=u /app
+
 # Metadata
 ARG COMMIT
 ARG APP_VERSION
