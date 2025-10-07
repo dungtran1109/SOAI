@@ -165,7 +165,34 @@ services:
         condition: service_healthy
     networks:
       - soai-net
-
+  agent_controller:
+    container_name: soai_agent_controller
+    image: soai-agent_controller:latest
+    build:
+      context: ./backend/services/agent_controller
+      dockerfile: ./Dockerfile
+    environment:
+      - SERVICE_NAME=soai_agent_controller
+      - SERVICE_PORT=8005
+      - SOAI_RECRUITMENT_AGENT=soai_recruitment_agent
+      - CONSUL_HOST=consul:8500
+      - LOG_LEVEL=DEBUG
+    restart: always
+    ports:
+      - "8005:8005"
+    networks:
+      - soai-net
+    volumes:
+      - ./backend/services/agent_controller:/app
+    depends_on:
+      authentication:
+        condition: service_started
+      consul:
+        condition: service_started
+      recruitment_worker:
+        condition: service_started
+      recruitment:
+        condition: service_started
   redis:
     container_name: soai_redis
     image: redis:7

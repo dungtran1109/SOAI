@@ -1,0 +1,52 @@
+pipeline:
+  - task: upload_cv
+    endpoint: "http://${SOAI_RECRUITMENT_AGENT}:8003/api/v1/recruitment/cvs/upload"
+    method: POST
+    input_schema:
+      type: object
+      properties:
+        candidate: { type: string }
+        position: { type: string }
+        file: { type: string }
+      required: [candidate, position, file]
+    output_schema:
+      type: object
+      properties:
+        cv_id: { type: integer }
+        position: { type: string }
+      required: [cv_id, position]
+    next: score_cv
+
+  - task: score_cv
+    endpoint: "http://${SOAI_RECRUITMENT_AGENT}:8003/api/v1/recruitment/score/cv"
+    method: POST
+    input_schema:
+      type: object
+      properties:
+        cv_id: { type: integer }
+      required: [cv_id]
+    output_schema:
+      type: object
+      properties:
+        cv_id: { type: integer }
+        score: { type: integer }
+      required: [cv_id, score]
+    condition:
+      if: "output.get('score', 0) > 60"
+      then: schedule_interview
+      else: notify_hr
+
+  - task: schedule_interview
+    endpoint: "http://${SOAI_RECRUITMENT_AGENT}:8003/api/v1/recruitment/interviews/schedule"
+    method: POST
+    input_schema:
+      type: object
+      properties:
+        cv_id: { type: integer }
+      required: [cv_id]
+    output_schema:
+      type: object
+      properties:
+        interview_id: { type: integer }
+        scheduled_time: { type: string }
+      required: [interview_id, scheduled_time]
