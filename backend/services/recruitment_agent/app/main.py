@@ -40,9 +40,11 @@ def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Mount static folder
-UPLOAD_DIR = Path("cv_uploads")
+BASE_DIR = Path(__file__).resolve().parent
+UPLOAD_DIR = BASE_DIR / "cv_uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-app.mount(f"{API_PREFIX}/static", StaticFiles(directory=UPLOAD_DIR), name="static")
+logger.info(f"CV Upload directory initialized at: {UPLOAD_DIR}")
+app.mount(f"{API_PREFIX}/static", StaticFiles(directory=str(UPLOAD_DIR)), name="static")
 
 # Setup OpenTelemetry
 setup_otel(app=app, service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT, engine=engine)

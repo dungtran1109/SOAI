@@ -21,7 +21,7 @@ volumeBindingMode: WaitForFirstConsumer
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ $mysqlName }}-pv-volume-ck
+  name: {{ $mysqlName }}-pv-volume-soai
   labels:
     app: {{ $mysqlName }}
 spec:
@@ -39,7 +39,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ $serverName }}-pv-volume-ck
+  name: {{ $serverName }}-pv-volume-soai
   labels:
     app: {{ $serverName }}
 spec:
@@ -52,24 +52,6 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: {{ .Values.storage.persistentVolume.hostPath.recruitment }}
----
-# PersistentVolume for authentication APIs
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: {{ $authenticationName }}-pv-volume-ck
-  labels:
-    app: {{ $authenticationName }}
-spec:
-  {{- if .Values.storage.storageClass.enabled }}
-  storageClassName: {{ $storageClassName }}
-  {{- end }}
-  capacity:
-    storage: {{ .Values.storage.persistentVolume.storageCapacity.authentication }}
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: {{ .Values.storage.persistentVolume.hostPath.authentication }}
 ---
 {{- end }}
 # PersistentVolumeClaim for MySQL
@@ -90,7 +72,7 @@ spec:
     requests:
       storage: {{ .Values.storage.persistentVolume.storageCapacity.mysql }}
 ---
-# PersistentVolumeClaim for face-model server
+# PersistentVolumeClaim for recruitment server
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -106,21 +88,4 @@ spec:
   resources:
     requests:
       storage: {{ .Values.storage.persistentVolume.storageCapacity.recruitment }}
----
-# PersistentVolumeClaim for authentication APIs
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ $authenticationName }}-pv-claim
-  labels:
-    app: {{ $authenticationName }}
-spec:
-  {{- if .Values.storage.storageClass.enabled }}
-  storageClassName: {{ $storageClassName }}
-  {{- end }}
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.storage.persistentVolume.storageCapacity.authentication }}
 {{- end }}

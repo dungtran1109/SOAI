@@ -808,7 +808,7 @@ class RecruitmentService:
         if not jd:
             raise HTTPException(status_code=404, detail="Job Description not found.")
 
-        output_dir = "./jd_previews"
+        output_dir = "/tmp/jd_previews"
         os.makedirs(output_dir, exist_ok=True)
 
         filename = f"jd_{jd.id}_{jd.position.replace(' ', '_')}.pdf"

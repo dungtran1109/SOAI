@@ -164,7 +164,7 @@ run-recruitment: wait-mysql wait-authentication wait-genai
 	$(TOP_DIR)/vas.sh run_image \
 		--name=recruitment_agent \
 		--port=8003:8003 \
-		--mount=$(RECRUITMENT_DIR)/app/cv_uploads:/app/app/cv_uploads \
+		--mount="$(RECRUITMENT_DIR):/app" \
 		--env="CONSUL_HOST=soai_consul:8500 \
 			GENAI_HOST=soai_gen_ai_provider:8004 \
 			SERVICE_NAME=soai_recruitment_agent \
@@ -187,6 +187,7 @@ run-recruitment-celery-worker:
 	$(TOP_DIR)/vas.sh run_image \
 		--name=recruitment_agent-celery-worker \
 		--name_override=recruitment_agent \
+		--mount="$(RECRUITMENT_DIR):/app" \
 		--env="CONSUL_HOST=soai_consul:8500 \
 			GENAI_HOST=soai_gen_ai_provider:8004 \
 			SERVICE_NAME=soai_recruitment_agent \

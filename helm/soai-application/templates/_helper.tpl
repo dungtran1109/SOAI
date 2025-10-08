@@ -204,7 +204,11 @@ Define imagePath
     {{- $registryUrl := $image.registry -}}
     {{- $name := $image.name -}}
     {{- $tag := $image.tag -}}
-    {{- printf "%s/%s:%s" $registryUrl $name $tag -}}
+    {{- if and $registryUrl (ne $registryUrl "") -}}
+      {{- printf "%s/%s:%s" $registryUrl $name $tag -}}
+    {{- else -}}
+      {{- printf "%s:%s" $name $tag -}}
+    {{- end -}}
 {{- end -}}
 
 {{/*

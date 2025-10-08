@@ -22,7 +22,7 @@ services:
       - soai-net
 
   mysql:
-    image: bitnami/mysql:8.0.32
+    image: mysql:9.4.0
     container_name: soai_mysql
     restart: always
     environment:

@@ -56,8 +56,9 @@ const TopHeader = () => {
         </Link>
       </div>
       <nav className="header-center">
-        <span className="header-link" onClick={() => navigate("/")}>JOBS</span>
-        <span className="header-link" onClick={() => navigate("/my-applications")}>MY APPLICATIONS</span>
+        <Link to="/">JOBS</Link>
+        <Link to="/my-applications">MY APPLICATIONS</Link>
+        <Link to="/my-referrals">MY REFERRALS</Link>
       </nav>
       <div className="header-right" ref={avatarRef}>
         <div

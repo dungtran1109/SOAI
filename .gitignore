@@ -21,7 +21,6 @@ backend/services/recruitment_agent/app/routers/__pycache__
 backend/services/recruitment_agent/app/schemas/__pycache__
 backend/services/recruitment_agent/app/services/__pycache__
 backend/services/recruitment_agent/app/utils/__pycache__
-backend/services/recruitment_agent/app/cv_uploads/
 backend/services/recruitment_agent/tests/__pycache__/
 backend/services/recruitment_agent/app/metrics/__pycache__/
 backend/services/recruitment_agent/app/jd_previews/

@@ -11,7 +11,7 @@
     privileged: false
     readOnlyRootFilesystem: true
     runAsNonRoot: true
-    runAsUser: 1001
+    runAsUser: 999
     capabilities:
       drop:
         - ALL

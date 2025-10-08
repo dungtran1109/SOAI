@@ -207,11 +207,9 @@ storage:
     hostPath:
       recruitment: /mnt/soai/data-recruitment
       mysql: /mnt/soai/data-mysql
-      authentication: /mnt/soai/data-authentication
     storageCapacity:
       mysql: 2Gi
-      recruitment: 1Gi
-      authentication: 1Gi
+      recruitment: 8Gi
   # StoageClass is enabled => PVC will use StorageClass
   # StorageClass is disabled => PVC will use default StorageClass
   storageClass:

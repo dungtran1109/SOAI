@@ -33,6 +33,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create user with real home directory
+ARG USER_ID=1001
 RUN useradd -u ${USER_ID} -m -d /home/soai_user -s /usr/sbin/nologin soai_user
 
 # Copy Python dependencies and app code from builder
@@ -58,6 +59,7 @@ EXPOSE 8003
 WORKDIR /app/app
 
 # Set the correct user and home for LibreOffice to work
+ARG USER_ID=1001
 USER ${USER_ID}
 ENV HOME=/home/soai_user
 
