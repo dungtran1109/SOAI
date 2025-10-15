@@ -35,7 +35,7 @@ spec:
   hostPath:
     path: {{ .Values.storage.persistentVolume.hostPath.mysql }}
 ---
-# PersistentVolume for face-model Server
+# PersistentVolume for Recruitment Server
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -72,7 +72,7 @@ spec:
     requests:
       storage: {{ .Values.storage.persistentVolume.storageCapacity.mysql }}
 ---
-# PersistentVolumeClaim for recruitment server
+# PersistentVolumeClaim for Recruitment server
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
