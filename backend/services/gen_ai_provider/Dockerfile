@@ -1,5 +1,5 @@
 # === Stage 1: Builder ===
-FROM python:3.12 AS builder
+FROM python:3.12-slim AS builder
 
 ARG USER_ID=1001
 ENV PYTHONDONTWRITEBYTECODE=1

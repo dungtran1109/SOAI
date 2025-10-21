@@ -1,5 +1,5 @@
 # === Stage 1: Build Python dependencies ===
-FROM python:3.12 AS builder
+FROM python:3.12-slim AS builder
 
 ARG USER_ID=1001
 
@@ -11,7 +11,6 @@ WORKDIR /app
 
 # Copy requirements and install Python packages into isolated folder
 COPY --chmod=0755 --chown=${USER_ID}:0 requirements.txt ./
-COPY --chmod=0755 --chown=${USER_ID}:0 .env ./
 RUN pip install --upgrade pip && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 # Copy source code

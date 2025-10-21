@@ -1,5 +1,5 @@
 # === Stage 1: Build Python dependencies ===
-FROM python:3.12 AS builder
+FROM python:3.12-slim AS builder
 
 ARG USER_ID=1001
 
@@ -21,15 +21,17 @@ COPY --chmod=0755 --chown=${USER_ID}:0 app/ ./app/
 FROM python:3.12-slim
 
 ARG USER_ID=1001
-ENV HOME=/home/soai_user
-ENV PYTHONPATH=/app/app
+ENV HOME=/home/soai_user \
+    PYTHONPATH=/app/app
 WORKDIR /app
 
-# Install system dependencies and LibreOffice
+# Install system dependencies and LibreOffice-headless
+# We don't need the full LibreOffice suite, just the core components for document processing
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libreoffice \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libreoffice-core libreoffice-writer libreoffice-calc libreoffice-base-core \
+    libreoffice-common ure uno-libs-private fonts-dejavu \
+    libglib2.0-0 libsm6 libxext6 libxrender1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create user with real home directory
@@ -63,6 +65,8 @@ WORKDIR /app/app
 # Set the correct user and home for LibreOffice to work
 ARG USER_ID=1001
 USER ${USER_ID}
-ENV HOME=/home/soai_user
-
+ENV HOME=/home/soai_user \
+    LIBREOFFICE_HEADLESS=1 \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    PATH="$PATH:/usr/lib/libreoffice/program"
 CMD ["python", "main.py"]
