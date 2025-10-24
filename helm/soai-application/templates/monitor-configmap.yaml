@@ -32,13 +32,8 @@ data:
                 - targets: ['0.0.0.0:8888']
             - job_name: 'soai_services'
               scheme: {{ ternary "https" "http" $g.security.tls.enabled | quote }}
-              {{- if $g.security.tls.enabled }}
               tls_config:
-                ca_file: {{ .Values.server.secretsPath.certPath }}/ca.crt
-                cert_file: {{ .Values.server.secretsPath.certPath }}/tls.crt
-                key_file: {{ .Values.server.secretsPath.certPath }}/tls.key
-                insecure_skip_verify: false
-              {{- end }}
+                insecure_skip_verify: true
               metrics_path: /metrics
               static_configs:
                 - targets:
@@ -60,13 +55,8 @@ data:
 
             - job_name: 'authentication_service'
               scheme: {{ ternary "https" "http" $g.security.tls.enabled | quote }}
-              {{- if $g.security.tls.enabled }}
               tls_config:
-                ca_file: {{ .Values.server.secretsPath.certPath }}/ca.crt
-                cert_file: {{ .Values.server.secretsPath.certPath }}/tls.crt
-                key_file: {{ .Values.server.secretsPath.certPath }}/tls.key
-                insecure_skip_verify: false
-              {{- end }}
+                insecure_skip_verify: true
               metrics_path: /actuator/prometheus
               static_configs:
                 - targets:
