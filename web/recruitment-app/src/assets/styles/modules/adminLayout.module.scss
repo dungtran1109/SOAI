@@ -1,0 +1,19 @@
+@use '../commons/variables' as *;
+
+.admin-layout {
+    display: flex;
+    position: relative;
+    min-height: 100vh;
+}
+
+.admin-layout__sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 240px;
+}
+
+.admin-layout__content {
+    flex-grow: 1;
+    padding: 32px;
+}

@@ -1,0 +1,91 @@
+@use '../commons/variables' as *;
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    min-width: 240px;
+    height: 100vh;
+    padding: 24px 16px;
+    overflow-y: auto;
+    background-color: #111827;
+}
+
+.sidebar__header {
+    color: #00bcd4;
+}
+
+.sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 50px;
+}
+
+.sidebar__nav-link {
+    display: block;
+    padding: 10px;
+    color: #d1d5db;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 15px;
+    font-weight: 500;
+
+    &:hover {
+        color: $text-white-color;
+        background-color: #1f2937;
+    }
+}
+
+.sidebar__nav-link.sidebar__nav-link--active {
+    color: $text-white-color;
+    background-color: #00bcd4;
+}
+
+.sidebar__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid #374151;
+}
+
+.sidebar__footer-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #ccc;
+}
+
+.sidebar__footer-account {
+    color: $text-white-color;
+}
+
+.sidebar__footer-account-email {
+    font-size: $font-small-size;
+    color: #9ca3af;
+    word-break: break-word;
+    max-width: 140px;
+}
+
+.sidebar__logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: none;
+    border-radius: 50%;
+    color: $error-color;
+    background-color: #fee2e2;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #fecaca;
+    }
+}
