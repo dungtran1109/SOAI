@@ -1,0 +1,43 @@
+@use './variables' as *;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    // Almost browsers set 16px as default.
+    // Reset: 16px * 62.5% = 10px => 1rem = 10px
+    font-size: 62.5%;
+}
+
+body {
+    line-height: 2rem;
+    font-size: $font-medium-size;
+    font-family: $font-family;
+    color: $text-black-color;
+    background-color: $background-white-color;
+}
+
+label,
+input,
+select,
+button,
+textarea,
+span,
+p,
+a {
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+
+a {
+    text-decoration: none;
+    color: #0072ce;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
