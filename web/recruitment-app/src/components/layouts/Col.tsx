@@ -1,6 +1,6 @@
 import React from 'react';
-import styles from '../../../assets/styles/modules/responsive.module.scss';
 import classNames from 'classnames/bind';
+import styles from '../../assets/styles/layouts/responsive.module.scss';
 
 const cx = classNames.bind(styles);
 

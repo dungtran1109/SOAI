@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/modules/adminCVList.module.scss';
-import { Col, Row } from '../layouts/responsive';
-import { fetchCVsByPosition } from '../../services/api/cvApi';
-import type { CadidateCV } from '../../utils/interfaces/adminInterfaces';
-import Badge from '../layouts/Badge';
+import styles from '../../assets/styles/admins/adminCVList.module.scss';
+import { useEffect, useMemo, useReducer, useState } from 'react';
+import { Col, Row, Badge } from '../layouts';
+import { fetchCVsByPosition } from '../../shared/api/cvApi';
+import type { CandidateCV } from '../../shared/interfaces/adminInterface';
 
 const cx = classNames.bind(styles);
 
@@ -12,6 +11,11 @@ type ColumnName = 'Candidate Name' | 'Position' | 'Status' | 'Email' | 'Score' |
 
 interface AdminCVListProps {
     disableColumns?: ColumnName[];
+}
+
+interface JustificationModal {
+    candidate: CandidateCV | null;
+    openModal: boolean;
 }
 
 interface Filter {
@@ -47,21 +51,16 @@ const filterReducer = (state: Filter, action: Action): Filter => {
     }
 };
 
-interface JustificationModal {
-    candidate: CadidateCV | null;
-    openModal: boolean;
-}
-
 const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     const [filter, dispatch] = useReducer(filterReducer, initFilterValue);
-    const [candidates, setCandidates] = useState<CadidateCV[]>([]);
+    const [cvs, setCVs] = useState<CandidateCV[]>([]);
     const [justificationModal, setJustificationModal] = useState<JustificationModal>({ candidate: null, openModal: false });
 
     useEffect(() => {
         const fetchCVs = async (position: string = '') => {
             try {
-                const data: CadidateCV[] = await fetchCVsByPosition(position);
-                setCandidates(data);
+                const data: typeof cvs = await fetchCVsByPosition(position);
+                setCVs(data);
             } catch (error) {
                 console.error('Failed to fetch candidate application:', error);
             }
@@ -70,25 +69,23 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         fetchCVs();
     }, []);
 
-    const filteredCV = useMemo<CadidateCV[]>(() => {
-        const filteredCV = candidates.filter(
+    const filteredCVs = useMemo<typeof cvs>(() => {
+        const filteredCVs = cvs.filter(
             (cv) => cv.candidate_name.toLowerCase().includes(filter.candidateName.toLowerCase()) && cv.matched_score >= filter.minimumScore,
         );
-        filteredCV.sort((a, b) => {
+        filteredCVs.sort((a, b) => {
             const scoreA = a.matched_score ?? 0;
             const scoreB = b.matched_score ?? 0;
             return filter.sortBy === 'ASCENDING' ? scoreA - scoreB : scoreB - scoreA;
         });
-        return filteredCV;
-    }, [filter, candidates]);
-
-    console.log(candidates);
+        return filteredCVs;
+    }, [filter, cvs]);
 
     return (
         <div className={cx('admin-cv-list')}>
             <div className={cx('cv-list-header')}>
                 <h2 className={cx('cv-list-header__title')}>CV List</h2>
-                <p className={cx('cv-list-header__subtitle')}>Manage all CVs submitted to the system.</p>
+                <p className={cx('cv-list-header__subtitle')}>Manage all candidateCVs submitted to the system.</p>
             </div>
 
             <div className={cx('cv-list-body')}>
@@ -137,7 +134,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredCV.map((cv) => (
+                        {filteredCVs.map((cv) => (
                             <tr key={cv.id}>
                                 {!disableColumns.includes('Candidate Name') && <td className={cx('cv-list-table__value')}>{cv.candidate_name}</td>}
                                 {!disableColumns.includes('Position') && <td className={cx('cv-list-table__value')}>{cv.position}</td>}

@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/modules/adminLayout.module.scss';
+import styles from '../../assets/styles/admins/adminLayout.module.scss';
 import AdminSidebar from './AdminSidebar';
 
 const cx = classNames.bind(styles);

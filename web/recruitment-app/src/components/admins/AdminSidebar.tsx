@@ -1,9 +1,9 @@
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/modules/adminSidebar.module.scss';
+import styles from '../../assets/styles/admins/adminSidebar.module.scss';
 import SmartRecruitmentLogo from '../../assets/images/smart-recruitment-admin-logo.png';
-import { NavLink, useNavigate } from 'react-router-dom';
 import { FiLogOut } from 'react-icons/fi';
-import { logout } from '../../services/api/authApi';
+import { logout } from '../../shared/api/authApi';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const cx = classNames.bind(styles);
 

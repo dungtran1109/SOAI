@@ -1,6 +1,6 @@
 import classNames from 'classnames/bind';
-import styles from '../assets/styles/modules/adminDashBoardPage.module.scss';
-import { Col, Row } from '../components/layouts/responsive';
+import styles from '../assets/styles/admins/adminDashBoardPage.module.scss';
+import { Col, Row } from '../components/layouts';
 import AdminStatCard from '../components/admins/AdminStatCard';
 import AdminCVList from '../components/admins/AdminCVList';
 import AdminLayout from '../components/admins/AdminLayout';

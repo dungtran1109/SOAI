@@ -36,7 +36,7 @@ a {
 a {
     cursor: pointer;
     text-decoration: none;
-    color: #0072ce;
+    color: $primary-color;
 
     &:hover {
         text-decoration: underline;

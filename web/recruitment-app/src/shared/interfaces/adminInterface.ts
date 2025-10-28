@@ -1,4 +1,4 @@
-export interface CadidateCV {
+export interface CandidateCV {
     id: number;
     email: string;
     username: string;

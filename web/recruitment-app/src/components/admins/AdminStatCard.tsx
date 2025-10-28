@@ -1,5 +1,5 @@
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/modules/adminStatCard.module.scss';
+import styles from '../../assets/styles/admins/adminStatCard.module.scss';
 
 const cx = classNames.bind(styles);
 

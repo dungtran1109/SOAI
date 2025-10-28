@@ -1,12 +1,12 @@
 import classNames from 'classnames/bind';
-import styles from '../assets/styles/modules/authPage.module.scss';
+import styles from '../assets/styles/auths/authPage.module.scss';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import React, { useReducer, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
-import { signin, signup } from '../services/api/authApi';
-import type { SignInData, SignUpData, Role, DecodedToken } from '../utils/interfaces/authInterfaces';
+import { signin, signup } from '../shared/api/authApi';
+import type { SignInData, SignUpData, Role, DecodedToken } from '../shared/interfaces/authInterface';
 
 const cx = classNames.bind(styles);
 

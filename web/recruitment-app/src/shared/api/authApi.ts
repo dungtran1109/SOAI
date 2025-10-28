@@ -1,5 +1,5 @@
-import { AUTH_BASE_URL } from '../../utils/constants/constants';
-import type { SignInData, SignUpData } from '../../utils/interfaces/authInterfaces';
+import { AUTH_BASE_URL } from '../constants/baseUrl';
+import type { SignInData, SignUpData } from '../interfaces/authInterface';
 import Cookies from 'js-cookie';
 
 export const signin = async (formData: SignInData) => {

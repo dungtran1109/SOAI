@@ -1,5 +1,5 @@
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/modules/badge.module.scss';
+import styles from '../../assets/styles/layouts/badge.module.scss';
 
 const cx = classNames.bind(styles);
 

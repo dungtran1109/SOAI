@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '../../utils/constants/constants';
-import { HTTP_ERROR_CODE } from '../../utils/constants/httpCodes';
-import type { CadidateCV } from '../../utils/interfaces/adminInterfaces';
+import { API_BASE_URL } from '../constants/baseUrl';
+import { HTTP_ERROR_CODE } from '../constants/httpCode';
+import type { CadidateCV } from '../interfaces/adminInterface';
 import { getToken } from './authApi';
 
 const authHeaders = (): HeadersInit => ({
