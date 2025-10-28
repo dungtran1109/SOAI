@@ -147,7 +147,7 @@ app.kubernetes.io/instance: {{ .Release.Name | quote }}
 Selector labels for agent-controller.
 */}}
 {{- define "soai-agent-controller.selectorLabels" -}}
-component: {{ .Values.server.genai.name | quote }}
+component: {{ .Values.server.agentcontroller.name | quote }}
 app: {{ template "soai-agent-controller.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
