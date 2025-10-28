@@ -10,7 +10,7 @@ const cx = classNames.bind(styles);
 const menu = [
     { label: 'Home', path: '/admin/dashboard' },
     { label: 'All Users', path: '/admin/dashboard/users' },
-    { label: 'All CVs', path: '/admin/dashboard/cvs' },
+    { label: 'All CVs', path: '/admin/dashboard/cv-candidate' },
     { label: 'All Interviews', path: '/admin/dashboard/interviews' },
     { label: 'All Job Descriptions', path: '/admin/dashboard/jds' },
 ];

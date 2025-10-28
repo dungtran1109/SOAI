@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './pages/AuthPage';
-import AdminLayout from './components/admins/AdminLayout';
 import AdminDashBoardPage from './pages/AdminDashBoardPage';
+import AdminCVListPage from './pages/AdminCVListPage';
 
 const AppRoutes = () => {
     return (
@@ -11,14 +11,8 @@ const AppRoutes = () => {
                 <Route path="/signin" element={<AuthPage isSignIn={true} />} />
                 <Route path="/signup" element={<AuthPage isSignIn={false} />} />
 
-                <Route
-                    path="/admin/dashboard"
-                    element={
-                        <AdminLayout>
-                            <AdminDashBoardPage />
-                        </AdminLayout>
-                    }
-                />
+                <Route path="/admin/dashboard" element={<AdminDashBoardPage />} />
+                <Route path="/admin/dashboard/cv-candidate" element={<AdminCVListPage />} />
             </Routes>
         </Router>
     );

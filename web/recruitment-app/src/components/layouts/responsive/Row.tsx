@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../assets/styles/modules/responsive.module.scss';
+import styles from '../../../assets/styles/modules/responsive.module.scss';
 import classNames from 'classnames/bind';
 
 const cx = classNames.bind(styles);
