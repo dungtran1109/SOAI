@@ -21,44 +21,17 @@
     justify-content: right;
 }
 
-.cv-list-filter__sort-btn,
-.edit-cv-modal-form-submit-btn {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: $font-small-size;
-    font-weight: 500;
-    white-space: nowrap;
-    cursor: pointer;
-    border: none;
-    color: $text-white-color;
-    background-color: #10b981;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-        background-color: #059669;
-    }
-
-    &:active {
-        background-color: #08b880;
-    }
-}
-
-.cv-list-filter__sort-btn-arrow {
-    display: inline-block;
-    margin-left: 4px;
-    transition: transform 0.3s ease;
-}
-
-.cv-list-filter__sort-btn-arrow.cv-list-filter__sort-btn-arrow--active {
-    transform: rotate(180deg);
-}
-
 .cv-list-filter__input {
     padding: 12px 16px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
     width: 100%;
+
+    &:focus {
+        border-color: $primary-color;
+        background: #fff;
+        outline: none;
+    }
 }
 
 .cv-list-table {
@@ -72,13 +45,96 @@
     padding: 12px 14px;
     text-align: left;
     color: $text-black-color;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #d1d5db;
 }
 
 .cv-list-table__title {
     font-weight: 600;
     color: #374151;
-    background: #f9fafb;
+    background-color: #f9fafb;
+    white-space: nowrap;
+}
+
+// Filter sections inside table column's title
+.cv-list-table__filter {
+    position: relative;
+    display: inline-block;
+    margin-left: 6px;
+    white-space: wrap;
+}
+
+.cv-list-table__filter-icon {
+    position: relative;
+    padding: 4px;
+    font-size: 1rem;
+    color: #8f99a8;
+    transition: color 0.1s ease-in-out;
+
+    &:hover {
+        color: #c4cad3;
+    }
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 16px;
+        right: -10px;
+        width: 130px;
+        height: 20px;
+        background-color: transparent;
+    }
+}
+
+.cv-list-table__filter-icon--filtered {
+    color: $primary-color;
+}
+
+.cv-list-table__filter-section {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: -10px;
+    min-width: 130px;
+    z-index: 1;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid rgb(240, 235, 235);
+    background-color: #f9fafb;
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        display: block;
+    }
+}
+
+.cv-list-table__filter-icon:hover ~ .cv-list-table__filter-section {
+    display: block;
+}
+
+.cv-list-table__filter-section-option {
+    display: inline-flex;
+    justify-content: left;
+    align-items: center;
+    margin: 6px 10px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.cv-list-table__filter-section-option input[type='checkbox'] {
+    margin-right: 10px;
+}
+
+.cv-list-table__filter-btn {
+    outline: none;
+    border: none;
+    background: none;
+    color: $primary-color;
+    padding: 2px 4px;
+    transition: color 0.1s ease-in-out;
+
+    &:hover {
+        color: #c4cad3;
+    }
 }
 
 .cv-list-table__action {
@@ -90,10 +146,10 @@
 
 .cv-list-table__action-btn {
     padding: 8px;
-    cursor: pointer;
     border: none;
     color: $primary-color;
     background-color: transparent;
+    cursor: pointer;
 }
 
 .cv-list-table__action-btn.cv-list-table__action-btn--delete {
@@ -118,7 +174,6 @@
     margin-bottom: 8px;
 }
 
-.show-cv-modal-body,
 .show-cv-modal-review {
     margin-top: 10px;
     margin-bottom: 20px;
@@ -163,5 +218,24 @@
 }
 
 .edit-cv-modal-form-submit-btn {
+    width: 100%;
     margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: $font-small-size;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+    color: $text-white-color;
+    background-color: #10b981;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
 }

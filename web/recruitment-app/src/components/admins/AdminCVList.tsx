@@ -1,10 +1,10 @@
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminCVList.module.scss';
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { FaFilter, FaPen, FaTrash } from 'react-icons/fa';
 import { Col, Row, Badge, ReviewModal } from '../layouts';
 import { fetchCVsByPosition, getCVPreviewUrl, updateCV } from '../../shared/api/cvApi';
-import type { CandidateCV, Status } from '../../shared/interfaces/adminInterface';
-import { FaPen, FaTrash } from 'react-icons/fa';
+import { STATUS, type CandidateCV, type Status } from '../../shared/interfaces/adminInterface';
 
 const cx = classNames.bind(styles);
 
@@ -17,20 +17,25 @@ interface AdminCVListProps {
 interface Filter {
     sortBy: 'ASCENDING' | 'DESCENDING';
     candidateName: string;
+    positions: string[];
+    status: Status[];
     minimumScore: number;
 }
-
-type FilterAction =
-    | { type: 'SORT_BY'; payload: 'ASCENDING' | 'DESCENDING' }
-    | { type: 'CANDIDATE_NAME'; payload: string }
-    | { type: 'MINIMUM_SCORE'; payload: number }
-    | { type: 'RESET' };
 
 const initFilterValue: Filter = {
     sortBy: 'DESCENDING',
     candidateName: '',
+    positions: [],
+    status: [...STATUS],
     minimumScore: 0,
 };
+
+type FilterAction =
+    | { type: 'SORT_BY'; payload: 'ASCENDING' | 'DESCENDING' }
+    | { type: 'CANDIDATE_NAME'; payload: string }
+    | { type: 'POSITION'; payload: string | string[] }
+    | { type: 'MINIMUM_SCORE'; payload: number }
+    | { type: 'STATUS'; payload: Status };
 
 const filterReducer = (state: Filter, action: FilterAction): Filter => {
     switch (action.type) {
@@ -38,10 +43,28 @@ const filterReducer = (state: Filter, action: FilterAction): Filter => {
             return { ...state, sortBy: action.payload };
         case 'CANDIDATE_NAME':
             return { ...state, candidateName: action.payload };
+        case 'POSITION':
+            // Support loading a position list at the first time
+            if (Array.isArray(action.payload)) {
+                return {
+                    ...state,
+                    positions: [...action.payload],
+                };
+            }
+            // Sub or add a position at the next times
+            return {
+                ...state,
+                positions: state.positions.includes(action.payload)
+                    ? state.positions.filter((pos) => pos !== action.payload)
+                    : [...state.positions, action.payload],
+            };
+        case 'STATUS':
+            return {
+                ...state,
+                status: state.status.includes(action.payload) ? state.status.filter((status) => status !== action.payload) : [...state.status, action.payload],
+            };
         case 'MINIMUM_SCORE':
             return { ...state, minimumScore: action.payload };
-        case 'RESET':
-            return initFilterValue;
         default:
             return state;
     }
@@ -63,7 +86,6 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     }, []);
 
     useEffect(() => {
-        console.log('abc');
         fetchCVs();
     }, [fetchCVs]);
 
@@ -84,8 +106,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
 
     const filteredCVs = useMemo<typeof cvs>(() => {
         const filteredCVs = cvs.filter(
-            (cv) => cv.candidate_name.toLowerCase().includes(filter.candidateName.toLowerCase()) && cv.matched_score >= filter.minimumScore,
+            (cv) =>
+                cv.candidate_name.toLowerCase().includes(filter.candidateName.toLowerCase()) &&
+                filter.positions.includes(cv.position) &&
+                filter.status.includes(cv.status) &&
+                cv.matched_score >= filter.minimumScore,
         );
+
         filteredCVs.sort((a, b) => {
             const scoreA = a.matched_score ?? 0;
             const scoreB = b.matched_score ?? 0;
@@ -93,6 +120,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         });
         return filteredCVs;
     }, [filter, cvs]);
+
+    const uniquePositions = useMemo<string[]>(() => [...new Set(cvs.map((cv) => cv.position).filter(Boolean))], [cvs]);
+
+    // Load a position list to filters as initValues
+    useEffect(() => {
+        dispatchFilter({ type: 'POSITION', payload: uniquePositions });
+    }, [uniquePositions]);
 
     const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
@@ -104,95 +138,152 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     };
 
     return (
-        <div className={cx('admin-cv-list')}>
-            <div className={cx('cv-list-header')}>
-                <h2 className={cx('cv-list-header__title')}>CV List</h2>
-                <p className={cx('cv-list-header__subtitle')}>Manage all candidateCVs submitted to the system.</p>
-            </div>
+        <>
+            <div className={cx('admin-cv-list')}>
+                <div className={cx('cv-list-header')}>
+                    <h2 className={cx('cv-list-header__title')}>CV List</h2>
+                    <p className={cx('cv-list-header__subtitle')}>Manage all candidate CVs submitted to the system.</p>
+                </div>
 
-            <div className={cx('cv-list-body')}>
-                <Row space={10} className={cx('cv-list-filter')}>
-                    <Col size={{ sm: 5, md: 3, lg: 2, xl: 1 }}>
-                        <button
-                            className={cx('cv-list-filter__sort-btn')}
-                            onClick={() => dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })}
-                        >
-                            Sort by {filter.sortBy.toLowerCase()}
-                            <span
-                                className={cx('cv-list-filter__sort-btn-arrow', { 'cv-list-filter__sort-btn-arrow--active': filter.sortBy === 'DESCENDING' })}
-                            >
-                                ▲
-                            </span>
-                        </button>
-                    </Col>
-                    <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
-                        <input
-                            type="text"
-                            placeholder="Search by candidate name"
-                            className={cx('cv-list-filter__input')}
-                            onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
-                        />
-                    </Col>
-                    <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
-                        <input
-                            type="number"
-                            placeholder="Minimum Score"
-                            className={cx('cv-list-filter__input')}
-                            min={0}
-                            onChange={(e) => dispatchFilter({ type: 'MINIMUM_SCORE', payload: Number(e.target.value) })}
-                        />
-                    </Col>
-                </Row>
+                <div className={cx('cv-list-body')}>
+                    <Row space={10} className={cx('cv-list-filter')}>
+                        <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
+                            <input
+                                type="text"
+                                placeholder="Search by candidate name"
+                                className={cx('cv-list-filter__input')}
+                                onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
+                            />
+                        </Col>
+                        <Col size={{ sm: 5, md: 3, lg: 2, xl: 2 }}>
+                            <input
+                                type="number"
+                                placeholder="Minimum Score"
+                                className={cx('cv-list-filter__input')}
+                                min={0}
+                                onChange={(e) => dispatchFilter({ type: 'MINIMUM_SCORE', payload: Number(e.target.value) })}
+                            />
+                        </Col>
+                    </Row>
 
-                <table className={cx('cv-list-table')}>
-                    <thead>
-                        <tr>
-                            {!disableColumns.includes('Candidate Name') && <th className={cx('cv-list-table__title')}>Candidate Name</th>}
-                            {!disableColumns.includes('Position') && <th className={cx('cv-list-table__title')}>Position</th>}
-                            {!disableColumns.includes('Status') && <th className={cx('cv-list-table__title')}>Status</th>}
-                            {!disableColumns.includes('Email') && <th className={cx('cv-list-table__title')}>Email</th>}
-                            {!disableColumns.includes('Score') && <th className={cx('cv-list-table__title')}>Score</th>}
-                            {!disableColumns.includes('Action') && <th className={cx('cv-list-table__title')}>Action</th>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredCVs.map((cv) => (
-                            <tr key={cv.id}>
-                                {!disableColumns.includes('Candidate Name') && <td className={cx('cv-list-table__value')}>{cv.candidate_name}</td>}
-                                {!disableColumns.includes('Position') && <td className={cx('cv-list-table__value')}>{cv.position}</td>}
-                                {!disableColumns.includes('Status') && (
-                                    <td className={cx('cv-list-table__value')}>
-                                        <Badge type={cv.status} label={cv.status} />
-                                    </td>
-                                )}
-                                {!disableColumns.includes('Email') && <td className={cx('cv-list-table__value')}>{cv.email}</td>}
-                                {!disableColumns.includes('Score') && (
-                                    <td className={cx('cv-list-table__value')}>
-                                        <a onClick={() => setShowCV({ ...cv })}>{cv.matched_score}</a>
-                                    </td>
-                                )}
-                                {!disableColumns.includes('Action') && (
-                                    <td className={cx('cv-list-table__value')}>
-                                        <div className={cx('cv-list-table__action')}>
-                                            <button className={cx('cv-list-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
-                                                <FaPen />
-                                            </button>
-                                            <button
-                                                className={cx('cv-list-table__action-btn', 'cv-list-table__action-btn--delete')}
-                                                onClick={() => console.log('status')}
-                                                title="Delete"
+                    <table className={cx('cv-list-table')}>
+                        <thead>
+                            <tr>
+                                {!disableColumns.includes('Candidate Name') && <th className={cx('cv-list-table__title')}>Candidate Name</th>}
+                                {!disableColumns.includes('Position') && (
+                                    <th className={cx('cv-list-table__title')}>
+                                        Position
+                                        <section className={cx('cv-list-table__filter')}>
+                                            <span
+                                                className={cx('cv-list-table__filter-icon', {
+                                                    'cv-list-table__filter-icon--filtered': filter.positions.length > 0,
+                                                })}
                                             >
-                                                <FaTrash />
-                                            </button>
-                                        </div>
-                                    </td>
+                                                <FaFilter />
+                                            </span>
+
+                                            <div className={cx('cv-list-table__filter-section')}>
+                                                {uniquePositions.map((pos) => (
+                                                    <label key={pos} className={cx('cv-list-table__filter-section-option')}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={filter.positions.includes(pos)}
+                                                            onChange={() => dispatchFilter({ type: 'POSITION', payload: pos })}
+                                                        />
+                                                        {pos}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    </th>
                                 )}
+                                {!disableColumns.includes('Status') && (
+                                    <th className={cx('cv-list-table__title')}>
+                                        Status
+                                        <section className={cx('cv-list-table__filter')}>
+                                            <span
+                                                className={cx('cv-list-table__filter-icon', {
+                                                    'cv-list-table__filter-icon--filtered': filter.status.length > 0,
+                                                })}
+                                            >
+                                                <FaFilter />
+                                            </span>
+
+                                            <div className={cx('cv-list-table__filter-section')}>
+                                                {STATUS.map((status) => (
+                                                    <label key={status} className={cx('cv-list-table__filter-section-option')}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={filter.status.includes(status)}
+                                                            onChange={() => dispatchFilter({ type: 'STATUS', payload: status })}
+                                                        />
+                                                        {status}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    </th>
+                                )}
+                                {!disableColumns.includes('Email') && <th className={cx('cv-list-table__title')}>Email</th>}
+                                {!disableColumns.includes('Score') && (
+                                    <th className={cx('cv-list-table__title')}>
+                                        Score
+                                        <section className={cx('cv-list-table__filter')}>
+                                            <button
+                                                className={cx('cv-list-table__filter-btn')}
+                                                onClick={() =>
+                                                    dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })
+                                                }
+                                                title={filter.sortBy === 'ASCENDING' ? 'Sort Ascending' : 'Sort Descending'}
+                                            >
+                                                {filter.sortBy === 'ASCENDING' ? '▲' : '▼'}
+                                            </button>
+                                        </section>
+                                    </th>
+                                )}
+                                {!disableColumns.includes('Action') && <th className={cx('cv-list-table__title')}>Action</th>}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredCVs.map((cv) => (
+                                <tr key={cv.id}>
+                                    {!disableColumns.includes('Candidate Name') && <td className={cx('cv-list-table__value')}>{cv.candidate_name}</td>}
+                                    {!disableColumns.includes('Position') && <td className={cx('cv-list-table__value')}>{cv.position}</td>}
+                                    {!disableColumns.includes('Status') && (
+                                        <td className={cx('cv-list-table__value')}>
+                                            <Badge type={cv.status} label={cv.status} />
+                                        </td>
+                                    )}
+                                    {!disableColumns.includes('Email') && <td className={cx('cv-list-table__value')}>{cv.email}</td>}
+                                    {!disableColumns.includes('Score') && (
+                                        <td className={cx('cv-list-table__value')}>
+                                            <a onClick={() => setShowCV({ ...cv })}>{cv.matched_score}</a>
+                                        </td>
+                                    )}
+                                    {!disableColumns.includes('Action') && (
+                                        <td className={cx('cv-list-table__value')}>
+                                            <div className={cx('cv-list-table__action')}>
+                                                <button className={cx('cv-list-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
+                                                    <FaPen />
+                                                </button>
+                                                <button
+                                                    className={cx('cv-list-table__action-btn', 'cv-list-table__action-btn--delete')}
+                                                    onClick={() => console.log('status')}
+                                                    title="Delete"
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
+            {/* Candidate modals */}
             <ReviewModal open={!!showCV} title="Candidate Details" onClose={() => setShowCV(null)}>
                 {showCV && (
                     <>
@@ -312,7 +403,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                     </div>
                 )}
             </ReviewModal>
-        </div>
+        </>
     );
 };
 

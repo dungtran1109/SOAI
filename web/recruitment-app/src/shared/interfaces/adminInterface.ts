@@ -1,4 +1,5 @@
-export type Status = 'Accepted' | 'Rejected' | 'Pending';
+export const STATUS = ['Pending', 'Accepted', 'Rejected'] as const;
+export type Status = (typeof STATUS)[number];
 
 export interface CandidateCV {
     id: number;
