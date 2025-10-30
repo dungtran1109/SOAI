@@ -21,11 +21,12 @@
     justify-content: right;
 }
 
-.cv-list-filter__sort-btn {
+.cv-list-filter__sort-btn,
+.edit-cv-modal-form-submit-btn {
     width: 100%;
     padding: 12px 16px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: $font-small-size;
     font-weight: 500;
     white-space: nowrap;
     cursor: pointer;
@@ -103,27 +104,27 @@
     }
 }
 
-// CV modals
-.cv-modal-header {
+// Show CV modals
+.show-cv-modal-info {
     display: flex;
     flex-wrap: wrap;
     margin-bottom: 10px;
 }
 
-.cv-modal-header__personal-data {
+.show-cv-modal-info__personal-data {
     flex: 0 0 50%;
     min-width: 50%;
     margin-top: 8px;
     margin-bottom: 8px;
 }
 
-.cv-modal-body,
-.cv-modal-body__assessment {
+.show-cv-modal-body,
+.show-cv-modal-review {
     margin-top: 10px;
     margin-bottom: 20px;
 }
 
-.cv-modal-body__assessment {
+.show-cv-modal-review__assessment {
     padding: 12px 15px;
     margin-top: 8px;
     border-radius: 6px;
@@ -132,7 +133,35 @@
     white-space: pre-line;
 }
 
-.cv-modal-body__assessment-missed-justification {
-    font-style: italic;
-    color: #999;
+.show-cv-modal-iframe-container {
+    margin-top: 1rem;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+// Edit CV modals
+.edit-cv-modal-form-group {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.edit-cv-modal-form-group__label {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.edit-cv-modal-form-group__entry {
+    width: 100%;
+    padding: 10px;
+    outline: none;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background-color: transparent;
+}
+
+.edit-cv-modal-form-submit-btn {
+    margin-top: 12px;
 }

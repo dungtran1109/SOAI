@@ -1,26 +1,18 @@
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminCVList.module.scss';
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Col, Row, Badge, ReviewModal } from '../layouts';
-import { fetchCVsByPosition, getCVPreviewUrl } from '../../shared/api/cvApi';
-import type { CandidateCV } from '../../shared/interfaces/adminInterface';
+import { fetchCVsByPosition, getCVPreviewUrl, updateCV } from '../../shared/api/cvApi';
+import type { CandidateCV, Status } from '../../shared/interfaces/adminInterface';
 import { FaPen, FaTrash } from 'react-icons/fa';
 
 const cx = classNames.bind(styles);
 
 type ColumnName = 'Candidate Name' | 'Position' | 'Status' | 'Email' | 'Score' | 'Action';
-type ModalType = 'CV_DETAILS' | 'CLOSE_MODAL' | null;
 
 interface AdminCVListProps {
     disableColumns?: ColumnName[];
 }
-
-interface SelectedCVModal {
-    candidate: CandidateCV;
-    modalType: ModalType;
-}
-
-const initSelectedCVValue: SelectedCVModal = { candidate: {} as CandidateCV, modalType: null };
 
 interface Filter {
     sortBy: 'ASCENDING' | 'DESCENDING';
@@ -28,7 +20,7 @@ interface Filter {
     minimumScore: number;
 }
 
-type Action =
+type FilterAction =
     | { type: 'SORT_BY'; payload: 'ASCENDING' | 'DESCENDING' }
     | { type: 'CANDIDATE_NAME'; payload: string }
     | { type: 'MINIMUM_SCORE'; payload: number }
@@ -40,7 +32,7 @@ const initFilterValue: Filter = {
     minimumScore: 0,
 };
 
-const filterReducer = (state: Filter, action: Action): Filter => {
+const filterReducer = (state: Filter, action: FilterAction): Filter => {
     switch (action.type) {
         case 'SORT_BY':
             return { ...state, sortBy: action.payload };
@@ -57,20 +49,37 @@ const filterReducer = (state: Filter, action: Action): Filter => {
 
 const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     const [cvs, setCVs] = useState<CandidateCV[]>([]);
-    const [filter, dispatch] = useReducer(filterReducer, initFilterValue);
-    const [selectedCVModal, setSelectedCVModal] = useState<SelectedCVModal>(initSelectedCVValue);
+    const [showCV, setShowCV] = useState<CandidateCV | null>(null);
+    const [editCV, setEditCV] = useState<CandidateCV | null>(null);
+    const [filter, dispatchFilter] = useReducer(filterReducer, initFilterValue);
+
+    const fetchCVs = useCallback(async (position: string = '') => {
+        try {
+            const data: typeof cvs = await fetchCVsByPosition(position);
+            setCVs(data);
+        } catch (error) {
+            console.error('Failed to fetch candidate application:', error);
+        }
+    }, []);
 
     useEffect(() => {
-        const fetchCVs = async (position: string = '') => {
-            try {
-                const data: typeof cvs = await fetchCVsByPosition(position);
-                setCVs(data);
-            } catch (error) {
-                console.error('Failed to fetch candidate application:', error);
+        console.log('abc');
+        fetchCVs();
+    }, [fetchCVs]);
+
+    // Support closing modal when pressing ESC key
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setShowCV(null);
+                setEditCV(null);
             }
         };
 
-        fetchCVs();
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     const filteredCVs = useMemo<typeof cvs>(() => {
@@ -85,16 +94,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         return filteredCVs;
     }, [filter, cvs]);
 
-    const handleOpenModal = (type: ModalType, cv: CandidateCV = {} as CandidateCV): void => {
-        if (type === 'CLOSE_MODAL') {
-            setSelectedCVModal(initSelectedCVValue);
-        } else {
-            if (Object.keys(cv).length !== 0) {
-                setSelectedCVModal({ candidate: cv, modalType: type });
-            } else {
-                console.error('Missing a candidate CV');
-            }
+    const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+        e.preventDefault();
+        if (editCV) {
+            await updateCV(editCV);
+            fetchCVs();
         }
+        setEditCV(null);
     };
 
     return (
@@ -109,7 +115,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                     <Col size={{ sm: 5, md: 3, lg: 2, xl: 1 }}>
                         <button
                             className={cx('cv-list-filter__sort-btn')}
-                            onClick={() => dispatch({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })}
+                            onClick={() => dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })}
                         >
                             Sort by {filter.sortBy.toLowerCase()}
                             <span
@@ -124,7 +130,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                             type="text"
                             placeholder="Search by candidate name"
                             className={cx('cv-list-filter__input')}
-                            onChange={(e) => dispatch({ type: 'CANDIDATE_NAME', payload: e.target.value })}
+                            onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
                         />
                     </Col>
                     <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
@@ -133,7 +139,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                             placeholder="Minimum Score"
                             className={cx('cv-list-filter__input')}
                             min={0}
-                            onChange={(e) => dispatch({ type: 'MINIMUM_SCORE', payload: Number(e.target.value) })}
+                            onChange={(e) => dispatchFilter({ type: 'MINIMUM_SCORE', payload: Number(e.target.value) })}
                         />
                     </Col>
                 </Row>
@@ -162,13 +168,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                 {!disableColumns.includes('Email') && <td className={cx('cv-list-table__value')}>{cv.email}</td>}
                                 {!disableColumns.includes('Score') && (
                                     <td className={cx('cv-list-table__value')}>
-                                        <a onClick={() => handleOpenModal('CV_DETAILS', cv)}>{cv.matched_score}</a>
+                                        <a onClick={() => setShowCV({ ...cv })}>{cv.matched_score}</a>
                                     </td>
                                 )}
                                 {!disableColumns.includes('Action') && (
                                     <td className={cx('cv-list-table__value')}>
                                         <div className={cx('cv-list-table__action')}>
-                                            <button className={cx('cv-list-table__action-btn')} onClick={() => console.log('status')} title="Edit">
+                                            <button className={cx('cv-list-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
                                                 <FaPen />
                                             </button>
                                             <button
@@ -187,28 +193,28 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                 </table>
             </div>
 
-            <ReviewModal open={selectedCVModal.modalType === 'CV_DETAILS'} title="Candidate Details" onClose={() => handleOpenModal('CLOSE_MODAL')}>
-                {Object.keys(selectedCVModal.candidate).length !== 0 && (
+            <ReviewModal open={!!showCV} title="Candidate Details" onClose={() => setShowCV(null)}>
+                {showCV && (
                     <>
-                        <div className={cx('cv-modal-header')}>
-                            <p className={cx('cv-modal-header__personal-data')}>
-                                <strong>Name:</strong> {selectedCVModal.candidate.candidate_name}
+                        <div className={cx('show-cv-modal-info')}>
+                            <p className={cx('show-cv-modal-info__personal-data')}>
+                                <strong>Name:</strong> {showCV.candidate_name}
                             </p>
-                            <p className={cx('cv-modal-header__personal-data')}>
-                                <strong>Email:</strong> {selectedCVModal.candidate.email}
+                            <p className={cx('show-cv-modal-info__personal-data')}>
+                                <strong>Email:</strong> {showCV.email}
                             </p>
-                            <p className={cx('cv-modal-header__personal-data')}>
-                                <strong>Position:</strong> {selectedCVModal.candidate.position}
+                            <p className={cx('show-cv-modal-info__personal-data')}>
+                                <strong>Position:</strong> {showCV.position}
                             </p>
-                            <p className={cx('cv-modal-header__personal-data')}>
-                                <strong>Score:</strong> {selectedCVModal.candidate.matched_score}
+                            <p className={cx('show-cv-modal-info__personal-data')}>
+                                <strong>Score:</strong> {showCV.matched_score}
                             </p>
                         </div>
                         <hr />
-                        <div className={cx('cv-modal-body')}>
+                        <div className={cx('show-cv-modal-review')}>
                             <h3>Reviewed by AI</h3>
-                            <div className={cx('cv-modal-body__assessment')}>
-                                {selectedCVModal.candidate.justification.split('\n').map((line, idx) => (
+                            <div className={cx('show-cv-modal-review__assessment')}>
+                                {showCV.justification.split('\n').map((line, idx) => (
                                     <span key={idx}>
                                         {line}
                                         <br />
@@ -216,16 +222,94 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                 ))}
                             </div>
                         </div>
-                        <div className="admin-cv-preview__iframe-container" style={{ marginTop: '1rem' }}>
-                            <iframe
-                                src={getCVPreviewUrl(selectedCVModal.candidate.id)}
-                                title="CV Preview"
-                                width="100%"
-                                height="600px"
-                                style={{ border: '1px solid #ccc' }}
-                            />
+                        <div className={cx('show-cv-modal-iframe-container')} style={{ marginTop: '1rem' }}>
+                            <iframe src={getCVPreviewUrl(showCV.id)} title="CV Preview" width="100%" height="600px" style={{ border: '1px solid #ccc' }} />
                         </div>
                     </>
+                )}
+            </ReviewModal>
+
+            <ReviewModal open={!!editCV} title="Edit Candidate Information" onClose={() => setEditCV(null)} width={500}>
+                {editCV && (
+                    <div className={cx('edit-cv-modal')} onClick={(e) => e.stopPropagation()}>
+                        <form onSubmit={handleEditSubmit}>
+                            <div className={cx('edit-cv-modal-form-group')}>
+                                <label htmlFor="candidate-name" className={cx('edit-cv-modal-form-group__label')}>
+                                    Name
+                                </label>
+                                <input
+                                    id="candidate-name"
+                                    type="text"
+                                    value={editCV.candidate_name}
+                                    onChange={(e) => setEditCV({ ...editCV, candidate_name: e.target.value })}
+                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    required
+                                />
+                            </div>
+
+                            <div className={cx('edit-cv-modal-form-group')}>
+                                <label htmlFor="candidate-email" className={cx('edit-cv-modal-form-group__label')}>
+                                    Email
+                                </label>
+                                <input
+                                    id="candidate-email"
+                                    type="email"
+                                    value={editCV.email}
+                                    onChange={(e) => setEditCV({ ...editCV, email: e.target.value })}
+                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    required
+                                />
+                            </div>
+
+                            <div className={cx('edit-cv-modal-form-group')}>
+                                <label htmlFor="candidate-score" className={cx('edit-cv-modal-form-group__label')}>
+                                    Score
+                                </label>
+                                <input
+                                    id="candidate-score"
+                                    type="number"
+                                    value={editCV.matched_score}
+                                    onChange={(e) => setEditCV({ ...editCV, matched_score: parseFloat(e.target.value) })}
+                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    required
+                                />
+                            </div>
+
+                            <div className={cx('edit-cv-modal-form-group')}>
+                                <label htmlFor="candidate-position" className={cx('edit-cv-modal-form-group__label')}>
+                                    Position
+                                </label>
+                                <input
+                                    id="candidate-position"
+                                    type="text"
+                                    value={editCV.position}
+                                    onChange={(e) => setEditCV({ ...editCV, position: e.target.value })}
+                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    required
+                                />
+                            </div>
+
+                            <div className={cx('edit-cv-modal-form-group')}>
+                                <label htmlFor="candidate-status" className={cx('edit-cv-modal-form-group__label')}>
+                                    Status
+                                </label>
+                                <select
+                                    id="candidate-status"
+                                    value={editCV.status}
+                                    onChange={(e) => setEditCV({ ...editCV, status: e.target.value as Status })}
+                                    className={cx('edit-cv-modal-form-group__entry')}
+                                >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+
+                            <button className={cx('edit-cv-modal-form-submit-btn')} type="submit">
+                                Save Changes
+                            </button>
+                        </form>
+                    </div>
                 )}
             </ReviewModal>
         </div>

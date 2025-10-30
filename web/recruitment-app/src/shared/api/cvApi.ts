@@ -27,3 +27,26 @@ export const fetchCVsByPosition = async (position: string = ''): Promise<Candida
 export const getCVPreviewUrl = (cvId: number): string => {
     return `${API_BASE_URL}/recruitment/cvs/${cvId}/preview`;
 };
+
+export const updateCV = async (updateData: CandidateCV): Promise<{ message: string }> => {
+    const url = `${API_BASE_URL}/recruitment/cvs/${updateData.id}`;
+    try {
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                ...authHeaders(),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData),
+        });
+
+        if (!response.ok) {
+            const message = HTTP_ERROR_CODE[response.status] || 'An unexpected error occurred.';
+            throw new Error(message);
+        }
+        return await response.json();
+    } catch (err) {
+        console.log(`[DEBUG updateCV] Failed to parse JSON: ${err}`);
+        return { message: `Failed to update candidate information: ${err}` };
+    }
+};

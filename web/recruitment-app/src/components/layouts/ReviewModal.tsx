@@ -9,14 +9,15 @@ interface ConfirmModalProps {
     open: boolean;
     onClose: () => void;
     children: React.ReactNode;
+    width?: number;
 }
 
-const ReviewModal = ({ title, open, children, onClose }: ConfirmModalProps) => {
+const ReviewModal = ({ title, open, children, onClose, width = 900 }: ConfirmModalProps) => {
     if (!open) return null;
 
     return (
         <div className={cx('modal-overlay')} onClick={onClose}>
-            <div className={cx('modal')} onClick={(e) => e.stopPropagation()}>
+            <div className={cx('modal')} onClick={(e) => e.stopPropagation()} style={{ width: `${width}px` }}>
                 <div className={cx('modal__header')}>
                     <h2>{title}</h2>
                     <button className={cx('modal__header-close-btn')} onClick={onClose}>
