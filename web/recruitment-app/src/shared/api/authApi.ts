@@ -54,19 +54,3 @@ export const logout = (): void => {
         console.error(`Logout failed: ${(err as Error).message || err}`);
     }
 };
-
-export const getToken = () => {
-    try {
-        const cookie = Cookies.get('profile');
-        if (!cookie) return null;
-
-        const parsed = JSON.parse(cookie);
-
-        const isValid = parsed.token && parsed.expiresAt && new Date(parsed.expiresAt).getTime() > Date.now();
-
-        return isValid ? parsed.token : null;
-    } catch (err) {
-        console.error(`Failed to get token: ${(err as Error).message || err}`);
-        return null;
-    }
-};

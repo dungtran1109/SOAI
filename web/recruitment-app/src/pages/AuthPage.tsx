@@ -2,13 +2,19 @@ import classNames from 'classnames/bind';
 import styles from '../assets/styles/auths/authPage.module.scss';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import React, { useReducer, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
 import { signin, signup } from '../shared/api/authApi';
 import type { SignInData, SignUpData, Role, DecodedToken } from '../shared/interfaces/authInterface';
 
 const cx = classNames.bind(styles);
+
+interface CookieJSONParsed {
+    token: string;
+    expiresAt: string;
+    tokenType: string;
+}
 
 interface AuthProps {
     isSignIn: boolean;
@@ -96,8 +102,30 @@ const reducer = (state: FormValues, action: ActionReducer): FormValues => {
 
 const AuthPage = ({ isSignIn = false }: AuthProps) => {
     const [formValue, dispatch] = useReducer(reducer, initFormValue);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const cookie = Cookies.get('profile');
+        if (cookie) {
+            try {
+                const parsed: CookieJSONParsed = JSON.parse(decodeURIComponent(cookie));
+                const token = parsed.token;
+                if (token) {
+                    const decoded: DecodedToken = jwtDecode(token);
+
+                    if (decoded.exp * 1000 > Date.now()) {
+                        navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
+                    } else {
+                        Cookies.remove('profile');
+                    }
+                }
+            } catch {
+                Cookies.remove('profile');
+            }
+        }
+        setLoading(false);
+    }, [navigate]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
@@ -131,13 +159,7 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
             });
 
             const decoded = jwtDecode<DecodedToken>(response.token);
-            const userRole = decoded.role ?? 'USER';
-
-            if (userRole === 'ADMIN') {
-                navigate('/admin/dashboard', { replace: true });
-            } else {
-                navigate('/', { replace: true });
-            }
+            navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
         } catch {
             dispatch({ type: 'ERROR', payload: isSignIn ? 'Invalid username or password.' : 'Signup failed. Please try again.' });
         } finally {
@@ -145,8 +167,12 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
         }
     };
 
+    if (loading) {
+        return null;
+    }
+
     return (
-        <div className={cx('wrapper')}>
+        <div className={cx('auth-wrapper')}>
             <div className={cx('auth')}>
                 <div className={cx('auth__header')}>
                     <h2>
@@ -229,7 +255,7 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
                             <div className={cx('form-group__wrapper')}>
                                 <input
                                     id="confirmPassword"
-                                    type={formValue.showPassword ? 'text' : 'password'}
+                                    type={formValue.showConfirmPassword ? 'text' : 'password'}
                                     autoComplete="off"
                                     value={formValue.confirmPassword}
                                     onChange={(e) => dispatch({ type: 'CONFIRM_PASSWORD', payload: e.target.value })}
