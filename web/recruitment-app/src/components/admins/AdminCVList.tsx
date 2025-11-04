@@ -290,10 +290,16 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                             <Badge type={cv.status} label={cv.status} />
                                         </td>
                                     )}
-                                    {!disableColumns.includes('Email') && <td className={cx('cv-list-table__value')}>{cv.email}</td>}
+                                    {!disableColumns.includes('Email') && (
+                                        <td className={cx('cv-list-table__value')}>
+                                            <a href="mailto:ngonhu159@gmail.com">{cv.email}</a>
+                                        </td>
+                                    )}
                                     {!disableColumns.includes('Score') && (
                                         <td className={cx('cv-list-table__value')}>
-                                            <a onClick={() => setShowCV({ ...cv })}>{cv.matched_score}</a>
+                                            <a onClick={() => setShowCV({ ...cv })} title="Review">
+                                                {cv.matched_score}
+                                            </a>
                                         </td>
                                     )}
                                     {!disableColumns.includes('Action') && (

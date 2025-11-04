@@ -30,7 +30,7 @@ const AdminDashBoardPage = () => {
                 </Row>
 
                 <div className={cx('admin-dashboard__item', 'admin-dashboard__candidate-cv')}>
-                    <AdminCVList disableColumns={['Action']} />
+                    <AdminCVList />
                 </div>
             </div>
         </AdminLayout>
