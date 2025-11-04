@@ -70,10 +70,12 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    margin-top: 20px;
 }
 
 .modal__footer-btn {
     padding: 6px 10px;
+    min-width: 60px;
     border-radius: 6px;
     user-select: none;
     border: none;

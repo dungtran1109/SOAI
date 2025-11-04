@@ -5,6 +5,7 @@ import AdminCVListPage from './pages/AdminCVListPage';
 import { useEffect, useState } from 'react';
 import { getUserRole, isAuthenticated } from './shared/utils/authUtils';
 import type { Role } from './shared/interfaces/authInterface';
+import { ToastContainer } from 'react-toastify';
 
 const AppRoutes = () => {
     const location = useLocation();
@@ -32,9 +33,12 @@ const AppRoutes = () => {
 
 const App = () => {
     return (
-        <Router>
-            <AppRoutes />
-        </Router>
+        <>
+            <Router>
+                <AppRoutes />
+            </Router>
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover theme="colored" />
+        </>
     );
 };
 

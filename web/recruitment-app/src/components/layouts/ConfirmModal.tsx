@@ -12,14 +12,15 @@ interface ConfirmModalProps {
     title?: string;
     cancelBtnName?: string;
     okBtnName?: string;
+    width?: number;
 }
 
-const ConfirmModal = ({ title, open, children, onOk, onCancel, cancelBtnName = 'Cancel', okBtnName = 'OK' }: ConfirmModalProps) => {
+const ConfirmModal = ({ title, open, children, onOk, onCancel, cancelBtnName = 'Cancel', okBtnName = 'OK', width = 900 }: ConfirmModalProps) => {
     if (!open) return null;
 
     return (
         <div className={cx('modal-overlay')} onClick={onCancel}>
-            <div className={cx('modal')} onClick={(e) => e.stopPropagation()}>
+            <div className={cx('modal')} onClick={(e) => e.stopPropagation()} style={{ width: `${width}px` }}>
                 <div className={cx('modal__header')}>
                     <h2>{title}</h2>
                     <button className={cx('modal__header-close-btn')} onClick={onCancel}>

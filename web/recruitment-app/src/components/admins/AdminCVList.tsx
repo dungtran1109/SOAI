@@ -1,9 +1,10 @@
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminCVList.module.scss';
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { toast } from 'react-toastify';
 import { FaFilter, FaPen, FaTrash } from 'react-icons/fa';
 import { Col, Row, Badge, ReviewModal } from '../layouts';
-import { fetchCVsByPosition, getCVPreviewUrl, updateCV } from '../../shared/api/cvApi';
+import { fetchCVsByPosition, getCVPreviewUrl, updateCV, deleteCV } from '../../shared/api/cvApi';
 import { STATUS, type CandidateCV, type Status } from '../../shared/interfaces/adminInterface';
 
 const cx = classNames.bind(styles);
@@ -89,21 +90,6 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         fetchCVs();
     }, [fetchCVs]);
 
-    // Support closing modal when pressing ESC key
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                setShowCV(null);
-                setEditCV(null);
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, []);
-
     const filteredCVs = useMemo<typeof cvs>(() => {
         const filteredCVs = cvs.filter(
             (cv) =>
@@ -128,14 +114,64 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         dispatchFilter({ type: 'POSITION', payload: uniquePositions });
     }, [uniquePositions]);
 
-    const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-        e.preventDefault();
+    const handleEditSubmit = useCallback(
+        async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+            e.preventDefault();
+            if (editCV) {
+                const cv = cvs.find((cv) => cv.id === editCV.id);
+                if (JSON.stringify(cv) === JSON.stringify(editCV)) {
+                    toast.warning('No changes detected!', {
+                        position: 'top-center',
+                        hideProgressBar: true,
+                    });
+                } else {
+                    await updateCV(editCV);
+                    fetchCVs();
+                    setEditCV(null);
+                    toast.success('Saved!', {
+                        position: 'top-center',
+                        hideProgressBar: true,
+                    });
+                }
+            }
+        },
+        [cvs, editCV, fetchCVs],
+    );
+
+    const handleEditClose = useCallback((): void => {
         if (editCV) {
-            await updateCV(editCV);
+            const cv = cvs.find((cv) => cv.id === editCV.id);
+            if (JSON.stringify(cv) !== JSON.stringify(editCV)) {
+                if (window.confirm('You have unsaved changes. Are you sure you want to leave without saving?')) {
+                    setEditCV(null);
+                }
+            } else {
+                setEditCV(null);
+            }
+        }
+    }, [cvs, editCV]);
+
+    const handleDeleteCV = async (cv: CandidateCV) => {
+        if (window.confirm(`Are you sure you want to delete the CV of ${cv.candidate_name}?`)) {
+            await deleteCV(cv.id);
             fetchCVs();
         }
-        setEditCV(null);
     };
+
+    // Support closing modal when pressing ESC key
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setShowCV(null);
+                handleEditClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleEditClose]);
 
     return (
         <>
@@ -268,7 +304,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                                 </button>
                                                 <button
                                                     className={cx('cv-list-table__action-btn', 'cv-list-table__action-btn--delete')}
-                                                    onClick={() => console.log('status')}
+                                                    onClick={() => handleDeleteCV(cv)}
                                                     title="Delete"
                                                 >
                                                     <FaTrash />
@@ -320,7 +356,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                 )}
             </ReviewModal>
 
-            <ReviewModal open={!!editCV} title="Edit Candidate Information" onClose={() => setEditCV(null)} width={500}>
+            <ReviewModal open={!!editCV} title="Edit Candidate Information" onClose={handleEditClose} width={500}>
                 {editCV && (
                     <div className={cx('edit-cv-modal')} onClick={(e) => e.stopPropagation()}>
                         <form onSubmit={handleEditSubmit}>
@@ -377,6 +413,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                     onChange={(e) => setEditCV({ ...editCV, position: e.target.value })}
                                     className={cx('edit-cv-modal-form-group__entry')}
                                     required
+                                    disabled
                                 />
                             </div>
 
