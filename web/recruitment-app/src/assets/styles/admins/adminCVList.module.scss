@@ -67,12 +67,8 @@
     position: relative;
     padding: 4px;
     font-size: 1rem;
-    color: #8f99a8;
+    color: #6b7280;
     transition: color 0.1s ease-in-out;
-
-    &:hover {
-        color: #c4cad3;
-    }
 
     &::before {
         content: '';
@@ -85,8 +81,14 @@
     }
 }
 
-.cv-list-table__filter-icon--filtered {
-    color: $primary-color;
+.cv-list-table__filter-icon:hover,
+.cv-list-table__filter-btn:hover {
+    color: #1d4ed8;
+}
+
+.cv-list-table__filter-icon--filtered,
+.cv-list-table__filter-btn--filtered {
+    color: #2563eb;
 }
 
 .cv-list-table__filter-section {
@@ -128,13 +130,8 @@
     outline: none;
     border: none;
     background: none;
-    color: $primary-color;
     padding: 2px 4px;
     transition: color 0.1s ease-in-out;
-
-    &:hover {
-        color: #c4cad3;
-    }
 }
 
 .cv-list-table__action {
@@ -153,11 +150,7 @@
 }
 
 .cv-list-table__action-btn.cv-list-table__action-btn--delete {
-    color: grey;
-
-    &:hover {
-        color: $error-color;
-    }
+    color: $error-color;
 }
 
 // Show CV modals

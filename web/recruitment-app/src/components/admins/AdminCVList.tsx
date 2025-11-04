@@ -2,7 +2,8 @@ import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminCVList.module.scss';
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import { FaFilter, FaPen, FaTrash } from 'react-icons/fa';
+import { FiTrash2 } from 'react-icons/fi';
+import { FaFilter, FaPen } from 'react-icons/fa';
 import { Col, Row, Badge, ReviewModal } from '../layouts';
 import { fetchCVsByPosition, getCVPreviewUrl, updateCV, deleteCV } from '../../shared/api/cvApi';
 import { STATUS, type CandidateCV, type Status } from '../../shared/interfaces/adminInterface';
@@ -128,7 +129,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                     await updateCV(editCV);
                     fetchCVs();
                     setEditCV(null);
-                    toast.success('Saved!', {
+                    toast.success('Saved', {
                         position: 'top-center',
                         hideProgressBar: true,
                     });
@@ -266,7 +267,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                         Score
                                         <section className={cx('cv-list-table__filter')}>
                                             <button
-                                                className={cx('cv-list-table__filter-btn')}
+                                                className={cx('cv-list-table__filter-btn', 'cv-list-table__filter-btn--filtered')}
                                                 onClick={() =>
                                                     dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })
                                                 }
@@ -313,7 +314,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                                     onClick={() => handleDeleteCV(cv)}
                                                     title="Delete"
                                                 >
-                                                    <FaTrash />
+                                                    <FiTrash2 size={18} />
                                                 </button>
                                             </div>
                                         </td>
