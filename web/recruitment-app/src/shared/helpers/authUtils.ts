@@ -1,9 +1,10 @@
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import type { DecodedToken, Role } from '../types/authTypes';
+import type { TokenDecoded, Role } from '../types/authTypes';
+import { COOKIE_TOKEN_NAME } from '../constants/browserStorages';
 
 export const getToken = (): string | null => {
-    const cookie = Cookies.get('profile');
+    const cookie = Cookies.get(COOKIE_TOKEN_NAME);
     if (!cookie) return null;
 
     try {
@@ -19,21 +20,21 @@ export const isAuthenticated = (): boolean => {
     if (!token) return false;
 
     try {
-        const decoded: DecodedToken = jwtDecode(token);
+        const decoded: TokenDecoded = jwtDecode(token);
         return decoded.exp * 1000 > Date.now();
     } catch {
         return false;
     }
 };
 
-export const getUserRole = (): Role | null => {
+export const getUserRole = (): Role => {
     const token = getToken();
-    if (!token) return null;
+    if (!token) return 'USER';
 
     try {
-        const decoded: DecodedToken = jwtDecode(token);
-        return decoded.role || null;
+        const decoded: TokenDecoded = jwtDecode(token);
+        return decoded.role || 'USER';
     } catch {
-        return null;
+        return 'USER';
     }
 };

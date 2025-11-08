@@ -1,14 +1,15 @@
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminCVList.module.scss';
+import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { FiTrash2 } from 'react-icons/fi';
 import { FaFilter, FaPen } from 'react-icons/fa';
 import { Col, Row, Badge, ReviewModal } from '../layouts';
-import { fetchCVsByPosition, getCVPreviewUrl, updateCV, deleteCV } from '../../shared/apis/cvApis';
+import { getCVByPosition, getCVPreviewUrl, updateCV, deleteCV } from '../../shared/apis/cvApis';
 import { STATUS, type CandidateCV, type Status } from '../../shared/types/adminTypes';
 
-const cx = classNames.bind(styles);
+const cx = classNames.bind({ ...frameStyles, ...styles });
 
 type ColumnName = 'Candidate Name' | 'Position' | 'Status' | 'Email' | 'Score' | 'Action';
 
@@ -80,7 +81,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
 
     const fetchCVs = useCallback(async (position: string = '') => {
         try {
-            const data: typeof cvs = await fetchCVsByPosition(position);
+            const data: typeof cvs = await getCVByPosition(position);
             setCVs(data);
         } catch (error) {
             console.error('Failed to fetch candidate application:', error);
@@ -176,19 +177,19 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
 
     return (
         <>
-            <div className={cx('admin-cv-list')}>
-                <div className={cx('cv-list-header')}>
-                    <h2 className={cx('cv-list-header__title')}>CV List</h2>
-                    <p className={cx('cv-list-header__subtitle')}>Manage all candidate CVs submitted to the system.</p>
+            <div className={cx('admin-frame')}>
+                <div className={cx('admin-frame-header')}>
+                    <h2 className={cx('admin-frame-header__title')}>CV List</h2>
+                    <p className={cx('admin-frame-header__subtitle')}>Manage all candidate CVs submitted to the system.</p>
                 </div>
 
-                <div className={cx('cv-list-body')}>
-                    <Row space={10} className={cx('cv-list-filter')}>
+                <div>
+                    <Row space={10} className={cx('admin-filter')}>
                         <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
                             <input
                                 type="text"
                                 placeholder="Search by candidate name"
-                                className={cx('cv-list-filter__input')}
+                                className={cx('admin-filter__entry')}
                                 onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
                             />
                         </Col>
@@ -196,32 +197,32 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                             <input
                                 type="number"
                                 placeholder="Minimum Score"
-                                className={cx('cv-list-filter__input')}
+                                className={cx('admin-filter__entry')}
                                 min={0}
                                 onChange={(e) => dispatchFilter({ type: 'MINIMUM_SCORE', payload: Number(e.target.value) })}
                             />
                         </Col>
                     </Row>
 
-                    <table className={cx('cv-list-table')}>
+                    <table className={cx('admin-table')}>
                         <thead>
                             <tr>
-                                {!disableColumns.includes('Candidate Name') && <th className={cx('cv-list-table__title')}>Candidate Name</th>}
+                                {!disableColumns.includes('Candidate Name') && <th className={cx('admin-table__column-title')}>Candidate Name</th>}
                                 {!disableColumns.includes('Position') && (
-                                    <th className={cx('cv-list-table__title')}>
+                                    <th className={cx('admin-table__column-title')}>
                                         Position
-                                        <section className={cx('cv-list-table__filter')}>
+                                        <section className={cx('admin-table__filter')}>
                                             <span
-                                                className={cx('cv-list-table__filter-icon', {
-                                                    'cv-list-table__filter-icon--filtered': filter.positions.length > 0,
+                                                className={cx('admin-table__filter-icon', {
+                                                    'admin-table__filter-icon--filtered': filter.positions.length > 0,
                                                 })}
                                             >
                                                 <FaFilter />
                                             </span>
 
-                                            <div className={cx('cv-list-table__filter-section')}>
+                                            <div className={cx('admin-table__filter-section')}>
                                                 {uniquePositions.map((pos) => (
-                                                    <label key={pos} className={cx('cv-list-table__filter-section-option')}>
+                                                    <label key={pos} className={cx('admin-table__filter-section-option')}>
                                                         <input
                                                             type="checkbox"
                                                             checked={filter.positions.includes(pos)}
@@ -235,20 +236,20 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                     </th>
                                 )}
                                 {!disableColumns.includes('Status') && (
-                                    <th className={cx('cv-list-table__title')}>
+                                    <th className={cx('admin-table__column-title')}>
                                         Status
-                                        <section className={cx('cv-list-table__filter')}>
+                                        <section className={cx('admin-table__filter')}>
                                             <span
-                                                className={cx('cv-list-table__filter-icon', {
-                                                    'cv-list-table__filter-icon--filtered': filter.status.length > 0,
+                                                className={cx('admin-table__filter-icon', {
+                                                    'admin-table__filter-icon--filtered': filter.status.length > 0,
                                                 })}
                                             >
                                                 <FaFilter />
                                             </span>
 
-                                            <div className={cx('cv-list-table__filter-section')}>
+                                            <div className={cx('admin-table__filter-section')}>
                                                 {STATUS.map((status) => (
-                                                    <label key={status} className={cx('cv-list-table__filter-section-option')}>
+                                                    <label key={status} className={cx('admin-table__filter-section-option')}>
                                                         <input
                                                             type="checkbox"
                                                             checked={filter.status.includes(status)}
@@ -261,13 +262,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                         </section>
                                     </th>
                                 )}
-                                {!disableColumns.includes('Email') && <th className={cx('cv-list-table__title')}>Email</th>}
+                                {!disableColumns.includes('Email') && <th className={cx('admin-table__column-title')}>Email</th>}
                                 {!disableColumns.includes('Score') && (
-                                    <th className={cx('cv-list-table__title')}>
+                                    <th className={cx('admin-table__column-title')}>
                                         Score
-                                        <section className={cx('cv-list-table__filter')}>
+                                        <section className={cx('admin-table__filter')}>
                                             <button
-                                                className={cx('cv-list-table__filter-btn', 'cv-list-table__filter-btn--filtered')}
+                                                className={cx('admin-table__filter-btn', 'admin-table__filter-btn--filtered')}
                                                 onClick={() =>
                                                     dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })
                                                 }
@@ -278,39 +279,39 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                         </section>
                                     </th>
                                 )}
-                                {!disableColumns.includes('Action') && <th className={cx('cv-list-table__title')}>Action</th>}
+                                {!disableColumns.includes('Action') && <th className={cx('admin-table__column-title')}>Action</th>}
                             </tr>
                         </thead>
                         <tbody>
                             {filteredCVs.map((cv) => (
                                 <tr key={cv.id}>
-                                    {!disableColumns.includes('Candidate Name') && <td className={cx('cv-list-table__value')}>{cv.candidate_name}</td>}
-                                    {!disableColumns.includes('Position') && <td className={cx('cv-list-table__value')}>{cv.position}</td>}
+                                    {!disableColumns.includes('Candidate Name') && <td className={cx('admin-table__column-value')}>{cv.candidate_name}</td>}
+                                    {!disableColumns.includes('Position') && <td className={cx('admin-table__column-value')}>{cv.position}</td>}
                                     {!disableColumns.includes('Status') && (
-                                        <td className={cx('cv-list-table__value')}>
+                                        <td className={cx('admin-table__column-value')}>
                                             <Badge type={cv.status} label={cv.status} />
                                         </td>
                                     )}
                                     {!disableColumns.includes('Email') && (
-                                        <td className={cx('cv-list-table__value')}>
-                                            <a href="mailto:ngonhu159@gmail.com">{cv.email}</a>
+                                        <td className={cx('admin-table__column-value')}>
+                                            <a href={`mailto:${cv.email}`}>{cv.email}</a>
                                         </td>
                                     )}
                                     {!disableColumns.includes('Score') && (
-                                        <td className={cx('cv-list-table__value')}>
+                                        <td className={cx('admin-table__column-value')}>
                                             <a onClick={() => setShowCV({ ...cv })} title="Review">
                                                 {cv.matched_score}
                                             </a>
                                         </td>
                                     )}
                                     {!disableColumns.includes('Action') && (
-                                        <td className={cx('cv-list-table__value')}>
-                                            <div className={cx('cv-list-table__action')}>
-                                                <button className={cx('cv-list-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
+                                        <td className={cx('admin-table__column-value')}>
+                                            <div className={cx('admin-table__action')}>
+                                                <button className={cx('admin-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
                                                     <FaPen />
                                                 </button>
                                                 <button
-                                                    className={cx('cv-list-table__action-btn', 'cv-list-table__action-btn--delete')}
+                                                    className={cx('admin-table__action-btn', 'admin-table__action-btn--delete')}
                                                     onClick={() => handleDeleteCV(cv)}
                                                     title="Delete"
                                                 >
@@ -345,9 +346,9 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                             </p>
                         </div>
                         <hr />
-                        <div className={cx('show-cv-modal-review')}>
+                        <div className={cx('show-cv-modal-ai-review')}>
                             <h3>Reviewed by AI</h3>
-                            <div className={cx('show-cv-modal-review__assessment')}>
+                            <div className={cx('show-cv-modal-ai-review__assessment')}>
                                 {showCV.justification.split('\n').map((line, idx) => (
                                     <span key={idx}>
                                         {line}
@@ -365,10 +366,10 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
 
             <ReviewModal open={!!editCV} title="Edit Candidate Information" onClose={handleEditClose} width={500}>
                 {editCV && (
-                    <div className={cx('edit-cv-modal')} onClick={(e) => e.stopPropagation()}>
+                    <div onClick={(e) => e.stopPropagation()}>
                         <form onSubmit={handleEditSubmit}>
-                            <div className={cx('edit-cv-modal-form-group')}>
-                                <label htmlFor="candidate-name" className={cx('edit-cv-modal-form-group__label')}>
+                            <div className={cx('edit-modal-form-group')}>
+                                <label htmlFor="candidate-name" className={cx('edit-modal-form-group__label')}>
                                     Name
                                 </label>
                                 <input
@@ -376,13 +377,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                     type="text"
                                     value={editCV.candidate_name}
                                     onChange={(e) => setEditCV({ ...editCV, candidate_name: e.target.value })}
-                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    className={cx('edit-modal-form-group__entry')}
                                     required
                                 />
                             </div>
 
-                            <div className={cx('edit-cv-modal-form-group')}>
-                                <label htmlFor="candidate-email" className={cx('edit-cv-modal-form-group__label')}>
+                            <div className={cx('edit-modal-form-group')}>
+                                <label htmlFor="candidate-email" className={cx('edit-modal-form-group__label')}>
                                     Email
                                 </label>
                                 <input
@@ -390,13 +391,13 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                     type="email"
                                     value={editCV.email}
                                     onChange={(e) => setEditCV({ ...editCV, email: e.target.value })}
-                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    className={cx('edit-modal-form-group__entry')}
                                     required
                                 />
                             </div>
 
-                            <div className={cx('edit-cv-modal-form-group')}>
-                                <label htmlFor="candidate-score" className={cx('edit-cv-modal-form-group__label')}>
+                            <div className={cx('edit-modal-form-group')}>
+                                <label htmlFor="candidate-score" className={cx('edit-modal-form-group__label')}>
                                     Score
                                 </label>
                                 <input
@@ -404,13 +405,15 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                     type="number"
                                     value={editCV.matched_score}
                                     onChange={(e) => setEditCV({ ...editCV, matched_score: parseFloat(e.target.value) })}
-                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    min={0}
+                                    max={100}
+                                    className={cx('edit-modal-form-group__entry')}
                                     required
                                 />
                             </div>
 
-                            <div className={cx('edit-cv-modal-form-group')}>
-                                <label htmlFor="candidate-position" className={cx('edit-cv-modal-form-group__label')}>
+                            <div className={cx('edit-modal-form-group')}>
+                                <label htmlFor="candidate-position" className={cx('edit-modal-form-group__label')}>
                                     Position
                                 </label>
                                 <input
@@ -418,25 +421,27 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                     type="text"
                                     value={editCV.position}
                                     onChange={(e) => setEditCV({ ...editCV, position: e.target.value })}
-                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    className={cx('edit-modal-form-group__entry')}
                                     required
                                     disabled
                                 />
                             </div>
 
-                            <div className={cx('edit-cv-modal-form-group')}>
-                                <label htmlFor="candidate-status" className={cx('edit-cv-modal-form-group__label')}>
+                            <div className={cx('edit-modal-form-group')}>
+                                <label htmlFor="candidate-status" className={cx('edit-modal-form-group__label')}>
                                     Status
                                 </label>
                                 <select
                                     id="candidate-status"
                                     value={editCV.status}
                                     onChange={(e) => setEditCV({ ...editCV, status: e.target.value as Status })}
-                                    className={cx('edit-cv-modal-form-group__entry')}
+                                    className={cx('edit-modal-form-group__entry')}
                                 >
-                                    <option value="Pending">Pending</option>
-                                    <option value="Accepted">Accepted</option>
-                                    <option value="Rejected">Rejected</option>
+                                    {STATUS.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 

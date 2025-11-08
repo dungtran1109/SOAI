@@ -4,15 +4,16 @@ import SmartRecruitmentLogo from '../../assets/images/smart-recruitment-admin-lo
 import { FiLogOut } from 'react-icons/fi';
 import { logout } from '../../shared/apis/authApis';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../../shared/constants/routes';
 
 const cx = classNames.bind(styles);
 
 const menu = [
-    { label: 'Home', path: '/admin/dashboard' },
-    { label: 'All Users', path: '/admin/dashboard/users' },
-    { label: 'All CVs', path: '/admin/dashboard/cv-candidate' },
-    { label: 'All Interviews', path: '/admin/dashboard/interviews' },
-    { label: 'All Job Descriptions', path: '/admin/dashboard/jds' },
+    { label: 'Home', path: PRIVATE_ADMIN_ROUTE.dashboard },
+    { label: 'All Users', path: PRIVATE_ADMIN_ROUTE.user },
+    { label: 'All CVs', path: PRIVATE_ADMIN_ROUTE.candidateCV },
+    { label: 'All Interviews', path: PRIVATE_ADMIN_ROUTE.candidateInterview },
+    { label: 'All Job Descriptions', path: PRIVATE_ADMIN_ROUTE.job },
 ];
 
 interface AdminSidebarProps {
@@ -24,7 +25,7 @@ const AdminSidebar = ({ className }: AdminSidebarProps) => {
 
     const handleLogout = () => {
         logout();
-        navigate('/signin');
+        navigate(PUBLIC_ROUTE.signin);
     };
 
     return (
@@ -38,7 +39,6 @@ const AdminSidebar = ({ className }: AdminSidebarProps) => {
                         to={`${item.path}`}
                         end={item.label === 'Home'}
                         className={({ isActive }) => {
-                            console.log(isActive);
                             return cx('sidebar__nav-link', { 'sidebar__nav-link--active': isActive });
                         }}
                     >

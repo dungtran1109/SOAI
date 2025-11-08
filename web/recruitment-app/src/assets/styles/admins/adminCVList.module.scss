@@ -1,27 +1,10 @@
 @use '../variables' as *;
 
-.admin-cv-list {
-    padding: 24px;
-    border-radius: 16px;
-    background-color: #fff;
-    box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
-}
-
-.cv-list-header__title {
-    font-weight: 600;
-}
-
-.cv-list-header__subtitle {
-    color: #6b7280;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-.cv-list-filter {
+.admin-filter {
     justify-content: right;
 }
 
-.cv-list-filter__input {
+.admin-filter__entry {
     padding: 12px 16px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
@@ -32,125 +15,6 @@
         background: #fff;
         outline: none;
     }
-}
-
-.cv-list-table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-}
-
-.cv-list-table__title,
-.cv-list-table__value {
-    padding: 12px 14px;
-    text-align: left;
-    color: $text-black-color;
-    border-bottom: 1px solid #d1d5db;
-}
-
-.cv-list-table__title {
-    font-weight: 600;
-    color: #374151;
-    background-color: #f9fafb;
-    white-space: nowrap;
-}
-
-// Filter sections inside table column's title
-.cv-list-table__filter {
-    position: relative;
-    display: inline-block;
-    margin-left: 6px;
-    white-space: wrap;
-}
-
-.cv-list-table__filter-icon {
-    position: relative;
-    padding: 4px;
-    font-size: 1rem;
-    color: #6b7280;
-    transition: color 0.1s ease-in-out;
-
-    &::before {
-        content: '';
-        position: absolute;
-        top: 16px;
-        right: -10px;
-        width: 130px;
-        height: 20px;
-        background-color: transparent;
-    }
-}
-
-.cv-list-table__filter-icon:hover,
-.cv-list-table__filter-btn:hover {
-    color: #1d4ed8;
-}
-
-.cv-list-table__filter-icon--filtered,
-.cv-list-table__filter-btn--filtered {
-    color: #2563eb;
-}
-
-.cv-list-table__filter-section {
-    display: none;
-    position: absolute;
-    top: 30px;
-    right: -10px;
-    min-width: 130px;
-    z-index: 1;
-    padding: 6px;
-    border-radius: 8px;
-    border: 1px solid rgb(240, 235, 235);
-    background-color: #f9fafb;
-    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
-
-    &:hover {
-        display: block;
-    }
-}
-
-.cv-list-table__filter-icon:hover ~ .cv-list-table__filter-section {
-    display: block;
-}
-
-.cv-list-table__filter-section-option {
-    display: inline-flex;
-    justify-content: left;
-    align-items: center;
-    margin: 6px 10px;
-    white-space: nowrap;
-    user-select: none;
-}
-
-.cv-list-table__filter-section-option input[type='checkbox'] {
-    margin-right: 10px;
-}
-
-.cv-list-table__filter-btn {
-    outline: none;
-    border: none;
-    background: none;
-    padding: 2px 4px;
-    transition: color 0.1s ease-in-out;
-}
-
-.cv-list-table__action {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-    gap: 10px;
-}
-
-.cv-list-table__action-btn {
-    padding: 8px;
-    border: none;
-    color: $primary-color;
-    background-color: transparent;
-    cursor: pointer;
-}
-
-.cv-list-table__action-btn.cv-list-table__action-btn--delete {
-    color: $error-color;
 }
 
 // Show CV modals
@@ -167,12 +31,12 @@
     margin-bottom: 8px;
 }
 
-.show-cv-modal-review {
+.show-cv-modal-ai-review {
     margin-top: 10px;
     margin-bottom: 20px;
 }
 
-.show-cv-modal-review__assessment {
+.show-cv-modal-ai-review__assessment {
     padding: 12px 15px;
     margin-top: 8px;
     border-radius: 6px;
@@ -189,19 +53,19 @@
 }
 
 // Edit CV modals
-.edit-cv-modal-form-group {
+.edit-modal-form-group {
     margin-top: 10px;
     margin-bottom: 10px;
 }
 
-.edit-cv-modal-form-group__label {
+.edit-modal-form-group__label {
     display: inline-block;
     margin-bottom: 6px;
     font-weight: 600;
     color: #374151;
 }
 
-.edit-cv-modal-form-group__entry {
+.edit-modal-form-group__entry {
     width: 100%;
     padding: 10px;
     outline: none;
@@ -215,13 +79,12 @@
     margin-top: 12px;
     padding: 12px 16px;
     border-radius: 8px;
-    font-size: $font-small-size;
     font-weight: 500;
     white-space: nowrap;
     cursor: pointer;
     border: none;
     color: $text-white-color;
-    background-color: #10b981;
+    background-color: $success-color;
     transition: background-color 0.2s ease;
 
     &:hover {
