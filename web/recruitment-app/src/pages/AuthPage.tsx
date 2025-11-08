@@ -6,7 +6,8 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
 import { signin, signup } from '../shared/apis/authApis';
-import type { SignInData, SignUpData, Role, DecodedToken } from '../shared/types/authTypes';
+import type { SignInData, SignUpData, Role, TokenDecoded } from '../shared/types/authTypes';
+import { COOKIE_TOKEN_NAME } from '../shared/constants/browserStorages';
 
 const cx = classNames.bind(styles);
 
@@ -106,22 +107,22 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const cookie = Cookies.get('profile');
+        const cookie = Cookies.get(COOKIE_TOKEN_NAME);
         if (cookie) {
             try {
                 const parsed: CookieJSONParsed = JSON.parse(decodeURIComponent(cookie));
                 const token = parsed.token;
                 if (token) {
-                    const decoded: DecodedToken = jwtDecode(token);
+                    const decoded: TokenDecoded = jwtDecode(token);
 
                     if (decoded.exp * 1000 > Date.now()) {
                         navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
                     } else {
-                        Cookies.remove('profile');
+                        Cookies.remove(COOKIE_TOKEN_NAME);
                     }
                 }
             } catch {
-                Cookies.remove('profile');
+                Cookies.remove(COOKIE_TOKEN_NAME);
             }
         }
         setLoading(false);
@@ -152,13 +153,13 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
         try {
             const response = isSignIn ? await signin(signInPayload) : await signup(signUpPayload);
 
-            Cookies.set('profile', JSON.stringify(response), {
+            Cookies.set(COOKIE_TOKEN_NAME, JSON.stringify(response), {
                 expires: formValue.rememberMe ? 7 : 1,
                 secure: true,
                 sameSite: 'Strict',
             });
 
-            const decoded = jwtDecode<DecodedToken>(response.token);
+            const decoded = jwtDecode<TokenDecoded>(response.token);
             navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
         } catch {
             dispatch({ type: 'ERROR', payload: isSignIn ? 'Invalid username or password.' : 'Signup failed. Please try again.' });

@@ -10,7 +10,7 @@ export interface SignUpData extends SignInData {
     role: Role;
 }
 
-export interface DecodedToken {
+export interface TokenDecoded {
     exp: number;
     iat: number;
     sub: number;
