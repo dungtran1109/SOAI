@@ -2,9 +2,9 @@
 
 .badge {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 4px 10px;
     min-width: 80px;
-    border-radius: 12px;
+    border-radius: 6px;
     font-weight: 500;
     text-align: center;
     text-transform: capitalize;
@@ -13,7 +13,7 @@
 
 .badge-accepted {
     color: $success-color;
-    background-color: #d0f8e9;
+    background-color: #aaeed5;
 }
 
 .badge-pending {

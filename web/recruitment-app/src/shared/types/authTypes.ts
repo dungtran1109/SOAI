@@ -1,4 +1,5 @@
-export type Role = 'USER' | 'ADMIN';
+export const ROLES = ['ADMIN', 'USER'] as const;
+export type Role = (typeof ROLES)[number];
 
 export interface SignInData {
     userName: string;

@@ -41,6 +41,23 @@
 }
 
 // Filters
+.admin-frame-filter {
+    justify-content: right;
+}
+
+.admin-frame-filter__entry {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    width: 100%;
+
+    &:focus {
+        border-color: $primary-color;
+        background: #fff;
+        outline: none;
+    }
+}
+
 .admin-table__filter {
     position: relative;
     display: inline-block;

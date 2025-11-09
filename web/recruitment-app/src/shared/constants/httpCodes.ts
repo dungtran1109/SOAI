@@ -10,4 +10,4 @@ export const HTTP_ERROR_CODE: Record<number, string> = {
     502: 'Bad gateway, please try again later.',
     503: 'Service unavailable, please try again later.',
     504: 'Gateway timeout, please try again later.',
-};
+} as const;

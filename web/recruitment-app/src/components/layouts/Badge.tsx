@@ -1,11 +1,12 @@
+import type React from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/layouts/badge.module.scss';
-import type React from 'react';
+import type { Status } from '../../shared/types/adminTypes';
 
 const cx = classNames.bind(styles);
 
 interface BadgeProps {
-    type?: 'Accepted' | 'Rejected' | 'Pending';
+    type?: Status;
     label: string | React.ReactNode;
     className?: string;
 }

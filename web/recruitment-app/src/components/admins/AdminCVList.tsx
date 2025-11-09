@@ -183,148 +183,150 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                     <p className={cx('admin-frame-header__subtitle')}>Manage all candidate CVs submitted to the system.</p>
                 </div>
 
-                <div>
-                    <Row space={10} className={cx('admin-filter')}>
+                <Row space={10} className={cx('admin-frame-filter')}>
+                    {!disableColumns.includes('Candidate Name') && (
                         <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
                             <input
                                 type="text"
                                 placeholder="Search by candidate name"
-                                className={cx('admin-filter__entry')}
+                                className={cx('admin-frame-filter__entry')}
                                 onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
                             />
                         </Col>
+                    )}
+                    {!disableColumns.includes('Score') && (
                         <Col size={{ sm: 5, md: 3, lg: 2, xl: 2 }}>
                             <input
                                 type="number"
                                 placeholder="Minimum Score"
-                                className={cx('admin-filter__entry')}
+                                className={cx('admin-frame-filter__entry')}
                                 min={0}
                                 onChange={(e) => dispatchFilter({ type: 'MINIMUM_SCORE', payload: Number(e.target.value) })}
                             />
                         </Col>
-                    </Row>
+                    )}
+                </Row>
 
-                    <table className={cx('admin-table')}>
-                        <thead>
-                            <tr>
-                                {!disableColumns.includes('Candidate Name') && <th className={cx('admin-table__column-title')}>Candidate Name</th>}
-                                {!disableColumns.includes('Position') && (
-                                    <th className={cx('admin-table__column-title')}>
-                                        Position
-                                        <section className={cx('admin-table__filter')}>
-                                            <span
-                                                className={cx('admin-table__filter-icon', {
-                                                    'admin-table__filter-icon--filtered': filter.positions.length > 0,
-                                                })}
-                                            >
-                                                <FaFilter />
-                                            </span>
+                <table className={cx('admin-table')}>
+                    <thead>
+                        <tr>
+                            {!disableColumns.includes('Candidate Name') && <th className={cx('admin-table__column-title')}>Candidate Name</th>}
+                            {!disableColumns.includes('Position') && (
+                                <th className={cx('admin-table__column-title')}>
+                                    Position
+                                    <section className={cx('admin-table__filter')}>
+                                        <span
+                                            className={cx('admin-table__filter-icon', {
+                                                'admin-table__filter-icon--filtered': filter.positions.length > 0,
+                                            })}
+                                        >
+                                            <FaFilter />
+                                        </span>
 
-                                            <div className={cx('admin-table__filter-section')}>
-                                                {uniquePositions.map((pos) => (
-                                                    <label key={pos} className={cx('admin-table__filter-section-option')}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={filter.positions.includes(pos)}
-                                                            onChange={() => dispatchFilter({ type: 'POSITION', payload: pos })}
-                                                        />
-                                                        {pos}
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </section>
-                                    </th>
-                                )}
+                                        <div className={cx('admin-table__filter-section')}>
+                                            {uniquePositions.map((pos) => (
+                                                <label key={pos} className={cx('admin-table__filter-section-option')}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filter.positions.includes(pos)}
+                                                        onChange={() => dispatchFilter({ type: 'POSITION', payload: pos })}
+                                                    />
+                                                    {pos}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </section>
+                                </th>
+                            )}
+                            {!disableColumns.includes('Status') && (
+                                <th className={cx('admin-table__column-title')}>
+                                    Status
+                                    <section className={cx('admin-table__filter')}>
+                                        <span
+                                            className={cx('admin-table__filter-icon', {
+                                                'admin-table__filter-icon--filtered': filter.status.length > 0,
+                                            })}
+                                        >
+                                            <FaFilter />
+                                        </span>
+
+                                        <div className={cx('admin-table__filter-section')}>
+                                            {STATUS.map((status) => (
+                                                <label key={status} className={cx('admin-table__filter-section-option')}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filter.status.includes(status)}
+                                                        onChange={() => dispatchFilter({ type: 'STATUS', payload: status })}
+                                                    />
+                                                    {status}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </section>
+                                </th>
+                            )}
+                            {!disableColumns.includes('Email') && <th className={cx('admin-table__column-title')}>Email</th>}
+                            {!disableColumns.includes('Score') && (
+                                <th className={cx('admin-table__column-title')}>
+                                    Score
+                                    <section className={cx('admin-table__filter')}>
+                                        <button
+                                            className={cx('admin-table__filter-btn', 'admin-table__filter-btn--filtered')}
+                                            onClick={() =>
+                                                dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })
+                                            }
+                                            title={filter.sortBy === 'ASCENDING' ? 'Sort Ascending' : 'Sort Descending'}
+                                        >
+                                            {filter.sortBy === 'ASCENDING' ? '▲' : '▼'}
+                                        </button>
+                                    </section>
+                                </th>
+                            )}
+                            {!disableColumns.includes('Action') && <th className={cx('admin-table__column-title')}>Action</th>}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredCVs.map((cv) => (
+                            <tr key={cv.id}>
+                                {!disableColumns.includes('Candidate Name') && <td className={cx('admin-table__column-value')}>{cv.candidate_name}</td>}
+                                {!disableColumns.includes('Position') && <td className={cx('admin-table__column-value')}>{cv.position}</td>}
                                 {!disableColumns.includes('Status') && (
-                                    <th className={cx('admin-table__column-title')}>
-                                        Status
-                                        <section className={cx('admin-table__filter')}>
-                                            <span
-                                                className={cx('admin-table__filter-icon', {
-                                                    'admin-table__filter-icon--filtered': filter.status.length > 0,
-                                                })}
-                                            >
-                                                <FaFilter />
-                                            </span>
-
-                                            <div className={cx('admin-table__filter-section')}>
-                                                {STATUS.map((status) => (
-                                                    <label key={status} className={cx('admin-table__filter-section-option')}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={filter.status.includes(status)}
-                                                            onChange={() => dispatchFilter({ type: 'STATUS', payload: status })}
-                                                        />
-                                                        {status}
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </section>
-                                    </th>
+                                    <td className={cx('admin-table__column-value')}>
+                                        <Badge type={cv.status} label={cv.status} />
+                                    </td>
                                 )}
-                                {!disableColumns.includes('Email') && <th className={cx('admin-table__column-title')}>Email</th>}
+                                {!disableColumns.includes('Email') && (
+                                    <td className={cx('admin-table__column-value')}>
+                                        <a href={`mailto:${cv.email}`}>{cv.email}</a>
+                                    </td>
+                                )}
                                 {!disableColumns.includes('Score') && (
-                                    <th className={cx('admin-table__column-title')}>
-                                        Score
-                                        <section className={cx('admin-table__filter')}>
-                                            <button
-                                                className={cx('admin-table__filter-btn', 'admin-table__filter-btn--filtered')}
-                                                onClick={() =>
-                                                    dispatchFilter({ type: 'SORT_BY', payload: filter.sortBy === 'ASCENDING' ? 'DESCENDING' : 'ASCENDING' })
-                                                }
-                                                title={filter.sortBy === 'ASCENDING' ? 'Sort Ascending' : 'Sort Descending'}
-                                            >
-                                                {filter.sortBy === 'ASCENDING' ? '▲' : '▼'}
-                                            </button>
-                                        </section>
-                                    </th>
+                                    <td className={cx('admin-table__column-value')}>
+                                        <a onClick={() => setShowCV({ ...cv })} title="Review">
+                                            {cv.matched_score}
+                                        </a>
+                                    </td>
                                 )}
-                                {!disableColumns.includes('Action') && <th className={cx('admin-table__column-title')}>Action</th>}
+                                {!disableColumns.includes('Action') && (
+                                    <td className={cx('admin-table__column-value')}>
+                                        <div className={cx('admin-table__action')}>
+                                            <button className={cx('admin-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
+                                                <FaPen />
+                                            </button>
+                                            <button
+                                                className={cx('admin-table__action-btn', 'admin-table__action-btn--delete')}
+                                                onClick={() => handleDeleteCV(cv)}
+                                                title="Delete"
+                                            >
+                                                <FiTrash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
-                        </thead>
-                        <tbody>
-                            {filteredCVs.map((cv) => (
-                                <tr key={cv.id}>
-                                    {!disableColumns.includes('Candidate Name') && <td className={cx('admin-table__column-value')}>{cv.candidate_name}</td>}
-                                    {!disableColumns.includes('Position') && <td className={cx('admin-table__column-value')}>{cv.position}</td>}
-                                    {!disableColumns.includes('Status') && (
-                                        <td className={cx('admin-table__column-value')}>
-                                            <Badge type={cv.status} label={cv.status} />
-                                        </td>
-                                    )}
-                                    {!disableColumns.includes('Email') && (
-                                        <td className={cx('admin-table__column-value')}>
-                                            <a href={`mailto:${cv.email}`}>{cv.email}</a>
-                                        </td>
-                                    )}
-                                    {!disableColumns.includes('Score') && (
-                                        <td className={cx('admin-table__column-value')}>
-                                            <a onClick={() => setShowCV({ ...cv })} title="Review">
-                                                {cv.matched_score}
-                                            </a>
-                                        </td>
-                                    )}
-                                    {!disableColumns.includes('Action') && (
-                                        <td className={cx('admin-table__column-value')}>
-                                            <div className={cx('admin-table__action')}>
-                                                <button className={cx('admin-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
-                                                    <FaPen />
-                                                </button>
-                                                <button
-                                                    className={cx('admin-table__action-btn', 'admin-table__action-btn--delete')}
-                                                    onClick={() => handleDeleteCV(cv)}
-                                                    title="Delete"
-                                                >
-                                                    <FiTrash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
             {/* Candidate modals */}
