@@ -1,0 +1,85 @@
+@use '../variables' as *;
+
+.jd:not(:last-child) {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1.5px solid #e5ecf5;
+}
+
+.jd__title {
+    position: relative;
+    font-size: $font-large-size;
+    cursor: pointer;
+}
+
+.jd__title strong {
+    font-weight: 600;
+}
+
+.jd__title-action {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    gap: 10px;
+}
+
+.jd__title-action-btn {
+    width: 30px;
+    height: 30px;
+    outline: none;
+    border: none;
+    border-radius: 4px;
+    background-color: unset;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #eff1f3;
+    }
+}
+
+.jd__title-action-btn.jd__title-action-btn--edit {
+    color: $primary-color;
+
+    &:hover {
+        color: #1364e7;
+    }
+}
+
+.jd__title-action-btn.jd__title-action-btn--delete {
+    color: $error-color;
+
+    &:hover {
+        color: #f70c0c;
+    }
+}
+
+.jd__title-action-btn.jd__title-action-btn--download {
+    color: $text-black-color;
+
+    &:hover {
+        color: #1f1e1e;
+    }
+}
+
+.jd__require {
+    padding-top: 20px;
+}
+
+.jd__require-title {
+    color: #868686;
+}
+
+.jd__require-frame {
+    padding: 14px;
+    margin-top: 8px;
+    border-radius: 6px;
+    border: 1px solid #d7e3f1;
+    background-color: $background-white-color;
+    white-space: pre-line;
+}
+
+.jd__require-frame-item {
+    margin-left: 14px;
+}

@@ -8,6 +8,7 @@ import cvIcon from '../assets/icons/file-text.png';
 import userIcon from '../assets/icons/user.png';
 import jdIcon from '../assets/icons/briefcase.png';
 import AdminUserList from '../components/admins/AdminUserList';
+import AdminJDList from '../components/admins/AdminJDList';
 
 const cx = classNames.bind(styles);
 
@@ -36,6 +37,10 @@ const AdminDashBoardPage = () => {
 
                 <div className={cx('admin-dashboard__item')}>
                     <AdminUserList />
+                </div>
+
+                <div className={cx('admin-dashboard__item')}>
+                    <AdminJDList />
                 </div>
             </div>
         </AdminLayout>

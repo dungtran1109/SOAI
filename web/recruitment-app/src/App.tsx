@@ -8,6 +8,7 @@ import type { Role } from './shared/types/authTypes';
 import { ToastContainer } from 'react-toastify';
 import AdminUserListPage from './pages/AdminUserListPage';
 import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from './shared/constants/routes';
+import AdminJDListPage from './pages/AdminJDListPage';
 
 const AppRoutes = () => {
     const location = useLocation();
@@ -30,6 +31,7 @@ const AppRoutes = () => {
             <Route path={PRIVATE_ADMIN_ROUTE.dashboard} element={isAuth && role === 'ADMIN' ? <AdminDashBoardPage /> : <Navigate to="/" replace />} />
             <Route path={PRIVATE_ADMIN_ROUTE.candidateCV} element={isAuth && role === 'ADMIN' ? <AdminCVListPage /> : <Navigate to="/" replace />} />
             <Route path={PRIVATE_ADMIN_ROUTE.user} element={isAuth && role === 'ADMIN' ? <AdminUserListPage /> : <Navigate to="/" replace />} />
+            <Route path={PRIVATE_ADMIN_ROUTE.job} element={isAuth && role === 'ADMIN' ? <AdminJDListPage /> : <Navigate to="/" replace />} />
         </Routes>
     );
 };

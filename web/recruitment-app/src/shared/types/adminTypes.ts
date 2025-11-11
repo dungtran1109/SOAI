@@ -25,3 +25,22 @@ export interface Account {
     userName: string;
     users: null;
 }
+
+export interface JD {
+    id: number;
+    job_description: string;
+    level: string;
+    position: string;
+    location: string;
+    qualifications: string[];
+    recruiter: string;
+    referral: boolean;
+    referral_code: string;
+    responsibilities: string[];
+    skills_required: string[];
+    datetime: string;
+    experience_required: number;
+    hiring_manager: number;
+    company_description: string;
+    additional_information: string;
+}
