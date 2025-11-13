@@ -40,7 +40,7 @@ export interface JD {
     skills_required: string[];
     datetime: string;
     experience_required: number;
-    hiring_manager: number;
+    hiring_manager: string;
     company_description: string;
     additional_information: string;
 }

@@ -135,22 +135,3 @@
 .admin-table__filter-section-option input[type='checkbox'] {
     margin-right: 10px;
 }
-
-.admin-table__action {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-    gap: 10px;
-}
-
-.admin-table__action-btn {
-    padding: 8px;
-    border: none;
-    color: $primary-color;
-    background-color: transparent;
-    cursor: pointer;
-}
-
-.admin-table__action-btn.admin-table__action-btn--delete {
-    color: $error-color;
-}

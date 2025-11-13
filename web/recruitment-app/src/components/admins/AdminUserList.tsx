@@ -3,10 +3,9 @@ import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminUserList.module.scss';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import { HiUser } from 'react-icons/hi';
-import { FiTrash2 } from 'react-icons/fi';
 import { MdAdminPanelSettings } from 'react-icons/md';
 import { FaFilter, FaUserCircle } from 'react-icons/fa';
-import { Badge, Col, Row } from '../layouts';
+import { Badge, Button, Col, Row } from '../layouts';
 import { deleteAccount, getAccounts } from '../../shared/apis/authApis';
 import { ROLES, type Role } from '../../shared/types/authTypes';
 import type { Account } from '../../shared/types/adminTypes';
@@ -95,6 +94,7 @@ const AdminUserList = ({ disableColumns = [] }: AdminUserListProps) => {
                 {!disableColumns.includes('User Info') && (
                     <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
                         <input
+                            id="accounts"
                             type="text"
                             placeholder="Search by account name"
                             className={cx('admin-frame-filter__entry')}
@@ -177,15 +177,7 @@ const AdminUserList = ({ disableColumns = [] }: AdminUserListProps) => {
                             )}
                             {!disableColumns.includes('Action') && (
                                 <td className={cx('admin-table__column-value')}>
-                                    <div className={cx('admin-table__action')}>
-                                        <button
-                                            className={cx('admin-table__action-btn', 'admin-table__action-btn--delete')}
-                                            onClick={() => handleDeleteAccount(account)}
-                                            title="Delete"
-                                        >
-                                            <FiTrash2 size={18} />
-                                        </button>
-                                    </div>
+                                    <Button type="delete" onClick={() => handleDeleteAccount(account)} />
                                 </td>
                             )}
                         </tr>

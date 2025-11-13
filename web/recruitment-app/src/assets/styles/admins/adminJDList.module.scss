@@ -1,9 +1,22 @@
 @use '../variables' as *;
 
+.jd {
+    position: relative;
+}
+
 .jd:not(:last-child) {
+    margin-top: 30px;
     margin-bottom: 30px;
     padding-bottom: 30px;
     border-bottom: 1.5px solid #e5ecf5;
+}
+
+.jd__action {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    gap: 10px;
 }
 
 .jd__title {
@@ -16,51 +29,12 @@
     font-weight: 600;
 }
 
-.jd__title-action {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: flex;
-    gap: 10px;
+.jd__title-label-status-closed {
+    color: $warning-color;
 }
 
-.jd__title-action-btn {
-    width: 30px;
-    height: 30px;
-    outline: none;
-    border: none;
-    border-radius: 4px;
-    background-color: unset;
-    transition: all 0.2s ease-in-out;
-    cursor: pointer;
-
-    &:hover {
-        background-color: #eff1f3;
-    }
-}
-
-.jd__title-action-btn.jd__title-action-btn--edit {
-    color: $primary-color;
-
-    &:hover {
-        color: #1364e7;
-    }
-}
-
-.jd__title-action-btn.jd__title-action-btn--delete {
-    color: $error-color;
-
-    &:hover {
-        color: #f70c0c;
-    }
-}
-
-.jd__title-action-btn.jd__title-action-btn--download {
-    color: $text-black-color;
-
-    &:hover {
-        color: #1f1e1e;
-    }
+.jd__title-label-status-opening {
+    color: $success-color;
 }
 
 .jd__require {
@@ -82,4 +56,69 @@
 
 .jd__require-frame-item {
     margin-left: 14px;
+}
+
+// form
+.edit-jd-form__group-label {
+    display: inline-block;
+    color: #868686;
+    margin: 10px 0;
+}
+
+.edit-jd-form__group-entry {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    width: 100%;
+
+    &:focus {
+        border-color: $primary-color;
+        background: #fff;
+        outline: none;
+    }
+}
+
+.form-action {
+    display: flex;
+    justify-content: right;
+    align-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-action__btn {
+    font-weight: 500;
+    height: 30px;
+    width: 80px;
+    border: none;
+    outline: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.form-action__btn--submit {
+    color: $text-white-color;
+    background-color: $success-color;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
+}
+
+.form-action__btn--cancel {
+    border: 1px solid #dadadb;
+    background-color: $background-white-color;
+
+    &:hover {
+        background-color: #e5e5e6;
+    }
+
+    &:active {
+        background-color: #dcdfe4;
+    }
 }

@@ -3,9 +3,8 @@ import styles from '../../assets/styles/admins/adminCVList.module.scss';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import { FiTrash2 } from 'react-icons/fi';
-import { FaFilter, FaPen } from 'react-icons/fa';
-import { Col, Row, Badge, ReviewModal } from '../layouts';
+import { FaFilter } from 'react-icons/fa';
+import { Col, Row, Badge, Button, ReviewModal } from '../layouts';
 import { getCVByPosition, getCVPreviewUrl, updateCV, deleteCV } from '../../shared/apis/cvApis';
 import { STATUS, type CandidateCV, type Status } from '../../shared/types/adminTypes';
 
@@ -187,6 +186,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                     {!disableColumns.includes('Candidate Name') && (
                         <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
                             <input
+                                id="candidate-name"
                                 type="text"
                                 placeholder="Search by candidate name"
                                 className={cx('admin-frame-filter__entry')}
@@ -197,6 +197,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                     {!disableColumns.includes('Score') && (
                         <Col size={{ sm: 5, md: 3, lg: 2, xl: 2 }}>
                             <input
+                                id="candidate-score"
                                 type="number"
                                 placeholder="Minimum Score"
                                 className={cx('admin-frame-filter__entry')}
@@ -309,17 +310,9 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                 )}
                                 {!disableColumns.includes('Action') && (
                                     <td className={cx('admin-table__column-value')}>
-                                        <div className={cx('admin-table__action')}>
-                                            <button className={cx('admin-table__action-btn')} onClick={() => setEditCV({ ...cv })} title="Edit">
-                                                <FaPen />
-                                            </button>
-                                            <button
-                                                className={cx('admin-table__action-btn', 'admin-table__action-btn--delete')}
-                                                onClick={() => handleDeleteCV(cv)}
-                                                title="Delete"
-                                            >
-                                                <FiTrash2 size={18} />
-                                            </button>
+                                        <div className={cx('cv-list-action')}>
+                                            <Button type="edit" onClick={() => setEditCV({ ...cv })} />
+                                            <Button type="delete" onClick={() => handleDeleteCV(cv)} />
                                         </div>
                                     </td>
                                 )}

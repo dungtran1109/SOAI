@@ -1,5 +1,12 @@
 @use '../variables' as *;
 
+.cv-list-action {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 10px;
+}
+
 // Show CV modals
 .show-cv-modal-info {
     display: flex;
