@@ -63,3 +63,27 @@ export const updateJD = async (updatedJD: JD): Promise<{ message: string }> => {
         return { message: `Failed to update JD information: ${err}` };
     }
 };
+
+/**
+ * Delete a JD by ID (admin only).
+ * @param {string|number} jdId - The ID of the JD to delete.
+ * @returns {Promise<Object>} The server's response.
+ */
+export const deleteJD = async (jdId: number): Promise<{ message: string }> => {
+    const url = `${API_BASE_URL}/recruitment/jds/${jdId}`;
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: authHeaders(false),
+        });
+
+        if (!response.ok) {
+            const message = HTTP_ERROR_CODE[response.status] || 'An unexpected error occurred.';
+            throw new Error(message);
+        }
+        return await response.json();
+    } catch (err) {
+        console.error(`[DEBUG deleteJD] Failed to parse JSON: ${err}`);
+        return { message: `Failed to delete a job description: ${err}` };
+    }
+};

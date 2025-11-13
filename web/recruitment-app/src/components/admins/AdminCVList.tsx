@@ -115,7 +115,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         dispatchFilter({ type: 'POSITION', payload: uniquePositions });
     }, [uniquePositions]);
 
-    const handleEditSubmit = useCallback(
+    const handleSubmitEditCV = useCallback(
         async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
             e.preventDefault();
             if (editCV) {
@@ -139,7 +139,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         [cvs, editCV, fetchCVs],
     );
 
-    const handleEditClose = useCallback((): void => {
+    const handleCancelEditCV = useCallback((): void => {
         if (editCV) {
             const cv = cvs.find((cv) => cv.id === editCV.id);
             if (JSON.stringify(cv) !== JSON.stringify(editCV)) {
@@ -164,7 +164,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setShowCV(null);
-                handleEditClose();
+                handleCancelEditCV();
             }
         };
 
@@ -172,7 +172,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [handleEditClose]);
+    }, [handleCancelEditCV]);
 
     return (
         <>
@@ -359,10 +359,10 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                 )}
             </ReviewModal>
 
-            <ReviewModal open={!!editCV} title="Edit Candidate Information" onClose={handleEditClose} width={500}>
+            <ReviewModal open={!!editCV} title="Edit Candidate Information" onClose={handleCancelEditCV} width={500}>
                 {editCV && (
                     <div onClick={(e) => e.stopPropagation()}>
-                        <form onSubmit={handleEditSubmit}>
+                        <form onSubmit={handleSubmitEditCV}>
                             <div className={cx('edit-modal-form-group')}>
                                 <label htmlFor="candidate-name" className={cx('edit-modal-form-group__label')}>
                                     Name

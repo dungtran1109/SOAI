@@ -3,7 +3,7 @@ import styles from '../../assets/styles/admins/adminJDList.module.scss';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { compareDateWithToday } from '../../shared/helpers/commonUntils';
-import { getJDByPosition, updateJD } from '../../shared/apis/jdApis';
+import { deleteJD, getJDByPosition, updateJD } from '../../shared/apis/jdApis';
 import type { JD } from '../../shared/types/adminTypes';
 import { Button, Col, Row } from '../layouts';
 import { toast } from 'react-toastify';
@@ -154,7 +154,7 @@ const AdminJDList = () => {
         return filterJDs;
     }, [filter.jd_title, jds]);
 
-    const handleCancelEdit = () => {
+    const handleCancelEditJD = () => {
         const jd = jds.find((jd) => jd.id === editJD.id);
         if (
             JSON.stringify(jd) === JSON.stringify(editJD) ||
@@ -164,7 +164,7 @@ const AdminJDList = () => {
         }
     };
 
-    const handleSubmitEdit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmitEditJD = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (editJD) {
             const jd = jds.find((jd) => jd.id === editJD.id);
@@ -184,6 +184,15 @@ const AdminJDList = () => {
             }
         }
     };
+
+    const handleDeleteJD = async (jd: JD) => {
+        if (window.confirm('Are you sure you want to delete this JD?')) {
+            await deleteJD(jd.id);
+            fetchJDs();
+        }
+    };
+
+    console.log(jds);
 
     return (
         <div className={cx('admin-frame')}>
@@ -209,7 +218,7 @@ const AdminJDList = () => {
                     <div className={cx('jd__action')}>
                         <Button type="edit" onClick={() => dispatchEditJD({ type: 'SET_EDIT_JD', payload: jd })} />
                         <Button type="download" onClick={() => dispatchEditJD({ type: 'SET_EDIT_JD', payload: jd })} />
-                        <Button type="delete" onClick={() => dispatchEditJD({ type: 'SET_EDIT_JD', payload: jd })} />
+                        <Button type="delete" onClick={() => handleDeleteJD(jd)} />
                     </div>
 
                     <summary className={cx('jd__title')}>
@@ -225,7 +234,7 @@ const AdminJDList = () => {
                     </summary>
 
                     {editJD.id === jd.id ? (
-                        <form className={cx('edit-jd-form')} onSubmit={handleSubmitEdit}>
+                        <form className={cx('edit-jd-form')} onSubmit={handleSubmitEditJD}>
                             <Row space={20}>
                                 <Col size={{ md: 6, lg: 6, xl: 6 }}>
                                     <div className={cx('edit-jd-form__group')}>
@@ -396,7 +405,7 @@ const AdminJDList = () => {
                                 <button type="submit" className={cx('form-action__btn', 'form-action__btn--submit')}>
                                     Submit
                                 </button>
-                                <button type="reset" className={cx('form-action__btn', 'form-action__btn--cancel')} onClick={handleCancelEdit}>
+                                <button type="reset" className={cx('form-action__btn', 'form-action__btn--cancel')} onClick={handleCancelEditJD}>
                                     Cancel
                                 </button>
                             </div>
