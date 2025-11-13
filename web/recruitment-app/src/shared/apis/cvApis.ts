@@ -12,15 +12,6 @@ const authHeaders = (): HeadersInit => ({
 });
 
 /**
- * Get a preview URL for a CV (admin).
- * @param {number} cvId - The ID of the CV to preview.
- * @returns {string} The URL to access the CV preview.
- */
-export const getCVPreviewUrl = (cvId: number): string => {
-    return `${API_BASE_URL}/recruitment/cvs/${cvId}/preview`;
-};
-
-/**
  * Get all CVs based on position (admin).
  * @param {string} position - (optional) Position to filter CVs by.
  * @returns {Promise<Array>} List of CVs.
@@ -92,4 +83,13 @@ export const deleteCV = async (cvId: number): Promise<{ message: string }> => {
         console.error(`[DEBUG deleteCV] Failed to parse JSON: ${err}`);
         return { message: `Failed to delete candidate information: ${err}` };
     }
+};
+
+/**
+ * Get a preview URL for a CV (admin).
+ * @param {number} cvId - The ID of the CV to preview.
+ * @returns {string} The URL to access the CV preview.
+ */
+export const getCVPreviewUrl = (cvId: number): string => {
+    return `${API_BASE_URL}/recruitment/cvs/${cvId}/preview`;
 };

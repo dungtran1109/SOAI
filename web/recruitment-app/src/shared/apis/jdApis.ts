@@ -87,3 +87,12 @@ export const deleteJD = async (jdId: number): Promise<{ message: string }> => {
         return { message: `Failed to delete a job description: ${err}` };
     }
 };
+
+/**
+ * Get a JD preview URL (admin only).
+ * @param {number} jdId - The ID of the JD to preview.
+ * @returns {string} The URL to access the JD preview.
+ */
+export const getJDPreviewUrl = (jdId: number): string => {
+    return `${API_BASE_URL}/recruitment/jds/${jdId}/preview`;
+};

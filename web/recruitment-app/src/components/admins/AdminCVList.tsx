@@ -74,8 +74,8 @@ const filterReducer = (state: Filter, action: FilterAction): Filter => {
 
 const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     const [cvs, setCVs] = useState<CandidateCV[]>([]);
-    const [showCV, setShowCV] = useState<CandidateCV | null>(null);
     const [editCV, setEditCV] = useState<CandidateCV | null>(null);
+    const [previewCV, setPreviewCV] = useState<CandidateCV | null>(null);
     const [filter, dispatchFilter] = useReducer(filterReducer, initFilterValue);
 
     const fetchCVs = useCallback(async (position: string = '') => {
@@ -163,7 +163,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                setShowCV(null);
+                setPreviewCV(null);
                 handleCancelEditCV();
             }
         };
@@ -303,7 +303,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                                 )}
                                 {!disableColumns.includes('Score') && (
                                     <td className={cx('admin-table__column-value')}>
-                                        <a onClick={() => setShowCV({ ...cv })} title="Review">
+                                        <a onClick={() => setPreviewCV({ ...cv })} title="Review">
                                             {cv.matched_score}
                                         </a>
                                     </td>
@@ -323,28 +323,28 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
             </div>
 
             {/* Candidate modals */}
-            <ReviewModal open={!!showCV} title="Candidate Details" onClose={() => setShowCV(null)}>
-                {showCV && (
+            <ReviewModal open={!!previewCV} title="Candidate Details" onClose={() => setPreviewCV(null)}>
+                {previewCV && (
                     <>
                         <div className={cx('show-cv-modal-info')}>
                             <p className={cx('show-cv-modal-info__personal-data')}>
-                                <strong>Name:</strong> {showCV.candidate_name}
+                                <strong>Name:</strong> {previewCV.candidate_name}
                             </p>
                             <p className={cx('show-cv-modal-info__personal-data')}>
-                                <strong>Email:</strong> {showCV.email}
+                                <strong>Email:</strong> {previewCV.email}
                             </p>
                             <p className={cx('show-cv-modal-info__personal-data')}>
-                                <strong>Position:</strong> {showCV.position}
+                                <strong>Position:</strong> {previewCV.position}
                             </p>
                             <p className={cx('show-cv-modal-info__personal-data')}>
-                                <strong>Score:</strong> {showCV.matched_score}
+                                <strong>Score:</strong> {previewCV.matched_score}
                             </p>
                         </div>
                         <hr />
                         <div className={cx('show-cv-modal-ai-review')}>
                             <h3>Reviewed by AI</h3>
                             <div className={cx('show-cv-modal-ai-review__assessment')}>
-                                {showCV.justification.split('\n').map((line, idx) => (
+                                {previewCV.justification.split('\n').map((line, idx) => (
                                     <span key={idx}>
                                         {line}
                                         <br />
@@ -353,7 +353,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
                             </div>
                         </div>
                         <div className={cx('show-cv-modal-iframe-container')} style={{ marginTop: '1rem' }}>
-                            <iframe src={getCVPreviewUrl(showCV.id)} title="CV Preview" width="100%" height="600px" style={{ border: '1px solid #ccc' }} />
+                            <iframe src={getCVPreviewUrl(previewCV.id)} title="CV Preview" width="100%" height="600px" style={{ border: '1px solid #ccc' }} />
                         </div>
                     </>
                 )}
