@@ -96,3 +96,31 @@ export const deleteJD = async (jdId: number): Promise<{ message: string }> => {
 export const getJDPreviewUrl = (jdId: number): string => {
     return `${API_BASE_URL}/recruitment/jds/${jdId}/preview`;
 };
+
+/**
+ * Upload a new JD file (admin only).
+ * Uses FormData, so Content-Type is not set manually.
+ * @param {File} file - The JD file to upload.
+ * @returns {Promise<Object>} The uploaded JD info.
+ */
+export const uploadJDFile = async (file: File): Promise<{ message: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const url = `${API_BASE_URL}/recruitment/jds/upload`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${getToken()}` }, // Don't set Content-Type for FormData
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const message = HTTP_ERROR_CODE[response.status] || 'An unexpected error occurred.';
+            throw new Error(message);
+        }
+        return await response.json();
+    } catch (err) {
+        console.error(`[DEBUG deleteJD] Failed to parse JSON: ${err}`);
+        return { message: `Failed to delete a job description: ${err}` };
+    }
+};
