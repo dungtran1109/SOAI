@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
-import { uploadJDFile } from '../shared/apis/jdApis';
+import { createJD, uploadJDFile } from '../shared/apis/jdApis';
+import type { JD } from '../shared/types/adminTypes';
 import AdminLayout from '../components/admins/AdminLayout';
 import AdminJDList from '../components/admins/AdminJDList';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/admins/adminJDListPage.module.scss';
+import AdminJDForm from '../components/admins/AdminJDForm';
 
 const cx = classNames.bind(styles);
 
 const AdminJDListPage = () => {
     const [loading, setLoading] = useState<boolean>(false);
+    const [addCV, setAddCV] = useState<boolean>(false);
 
     const handleUploadJSONFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
         const file = e.target.files?.[0];
@@ -30,6 +33,17 @@ const AdminJDListPage = () => {
         setLoading(false);
     };
 
+    const handleAddJD = useCallback(async (jd: JD): Promise<void> => {
+        if (Object.keys(jd).length > 0) {
+            await createJD(jd);
+            setAddCV(false);
+            toast.success('Saved', {
+                position: 'top-center',
+                hideProgressBar: true,
+            });
+        }
+    }, []);
+
     if (loading) {
         return null;
     }
@@ -42,10 +56,12 @@ const AdminJDListPage = () => {
                     <label htmlFor="jd-upload-input" className={cx('add-jd__btn', 'add-jd__btn--json')}>
                         Upload JSON
                     </label>
-                    <button className={cx('add-jd__btn', 'add-jd__btn--ui')}>+ Add JD</button>
+                    <button className={cx('add-jd__btn', 'add-jd__btn--ui')} onClick={() => setAddCV(true)}>
+                        + Add JD
+                    </button>
                 </section>
             </div>
-            <AdminJDList />
+            {addCV ? <AdminJDForm onSubmit={handleAddJD} onCancel={() => setAddCV(false)} /> : <AdminJDList />}
         </AdminLayout>
     );
 };

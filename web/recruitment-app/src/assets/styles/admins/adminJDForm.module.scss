@@ -1,0 +1,64 @@
+@use '../variables' as *;
+
+.edit-jd-form__group-label {
+    display: inline-block;
+    color: #868686;
+    margin: 10px 0;
+}
+
+.edit-jd-form__group-entry {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    width: 100%;
+
+    &:focus {
+        border-color: $primary-color;
+        background: #fff;
+        outline: none;
+    }
+}
+
+.form-action {
+    display: flex;
+    justify-content: right;
+    align-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-action__btn {
+    font-weight: 500;
+    padding: 8px 20px;
+    border: none;
+    outline: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.form-action__btn--submit {
+    color: $text-white-color;
+    background-color: $success-color;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
+}
+
+.form-action__btn--cancel {
+    border: 1px solid #dadadb;
+    background-color: $background-white-color;
+
+    &:hover {
+        background-color: #e5e5e6;
+    }
+
+    &:active {
+        background-color: #dcdfe4;
+    }
+}

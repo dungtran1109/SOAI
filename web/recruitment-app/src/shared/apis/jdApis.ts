@@ -41,6 +41,34 @@ export const getJDByPosition = async (position: string = ''): Promise<JD[]> => {
 };
 
 /**
+ * Create a new JD (admin only, JSON body).
+ * @param {Object} jd - The JD data.
+ * @returns {Promise<Object>} The created JD info.
+ */
+export const createJD = async (jd: JD): Promise<{ message: string }> => {
+    const url = `${API_BASE_URL}/recruitment/jds`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify(jd),
+        });
+
+        if (!response.ok) {
+            const message = HTTP_ERROR_CODE[response.status] || 'An unexpected error occurred.';
+            throw new Error(message);
+        }
+        return await response.json();
+    } catch (err) {
+        console.error(`[DEBUG createJD] Failed to parse JSON: ${err}`);
+        return { message: `Failed to create a job description: ${err}` };
+    }
+};
+
+/**
  * update an existing JD (admin only).
  * @param {Object} updatedJD - The JD data is updated by new information.
  * @returns {Promise<Object>} The updated JD info.
@@ -120,7 +148,7 @@ export const uploadJDFile = async (file: File): Promise<{ message: string }> => 
         }
         return await response.json();
     } catch (err) {
-        console.error(`[DEBUG deleteJD] Failed to parse JSON: ${err}`);
-        return { message: `Failed to delete a job description: ${err}` };
+        console.error(`[DEBUG uploadJDFile] Failed to parse JSON: ${err}`);
+        return { message: `Failed to upload a file of job description: ${err}` };
     }
 };
