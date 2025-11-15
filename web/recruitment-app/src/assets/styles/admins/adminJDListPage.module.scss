@@ -1,0 +1,48 @@
+@use '../variables' as *;
+
+.add-jd {
+    display: flex;
+    justify-content: right;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+
+.add-jd__btn {
+    font-weight: 500;
+    padding: 8px 20px;
+    border: none;
+    outline: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-jd__btn.add-jd__btn--ui {
+    color: $text-white-color;
+    background-color: $primary-color;
+
+    &:hover {
+        background-color: #3675da;
+    }
+
+    &:active {
+        background-color: #4b82db;
+    }
+}
+
+.add-jd__btn.add-jd__btn--json {
+    color: $primary-color;
+    border: 1px solid #82adf1;
+
+    &:hover {
+        background-color: #ececfa;
+    }
+
+    &:active {
+        background-color: #e1e5ec;
+    }
+}
+
+.add-jd input[type='file'] {
+    display: none;
+}
