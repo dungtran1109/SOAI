@@ -1,12 +1,12 @@
 @use '../variables' as *;
 
-.edit-jd-form__group-label {
+.form-group__label {
     display: inline-block;
     color: #868686;
     margin: 10px 0;
 }
 
-.edit-jd-form__group-entry {
+.form-group__entry {
     padding: 8px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
@@ -17,6 +17,11 @@
         background: #fff;
         outline: none;
     }
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .form-action {

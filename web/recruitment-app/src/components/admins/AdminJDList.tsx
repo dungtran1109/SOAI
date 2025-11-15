@@ -80,7 +80,7 @@ const AdminJDList = () => {
         <>
             <div className={cx('admin-frame')}>
                 <div className={cx('admin-frame-header')}>
-                    <h2 className={cx('admin-frame-header__title')}>Job Descriptions</h2>
+                    <h2 className={cx('admin-frame-header__title')}>Job Management</h2>
                     <p className={cx('admin-frame-header__subtitle')}>Manage all job descriptions (JD) from the system.</p>
                 </div>
 
