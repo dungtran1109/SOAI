@@ -9,14 +9,14 @@ import { deleteAccount, getAccounts } from '../../shared/apis/authApis';
 import { ROLES, type Role } from '../../shared/types/authTypes';
 import type { Account } from '../../shared/types/adminTypes';
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/admins/adminUserList.module.scss';
+import styles from '../../assets/styles/admins/adminAccountList.module.scss';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 
 const cx = classNames.bind({ ...frameStyles, ...styles });
 
 type ColumnName = 'User Info' | 'Role' | 'Date Joined' | 'Contact' | 'Action';
 
-interface AdminUserListProps {
+interface AdminAccountListProps {
     disableColumns?: ColumnName[];
 }
 
@@ -49,7 +49,7 @@ const filterReducer = (state: Filter, action: FilterAction): Filter => {
     }
 };
 
-const AdminUserList = ({ disableColumns = [] }: AdminUserListProps) => {
+const AdminAccountList = ({ disableColumns = [] }: AdminAccountListProps) => {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [filter, dispatchFilter] = useReducer(filterReducer, initFilterValue);
     const dispatch = useDispatch();
@@ -91,7 +91,7 @@ const AdminUserList = ({ disableColumns = [] }: AdminUserListProps) => {
         <div className={cx('admin-frame')}>
             <div className={cx('admin-frame-header')}>
                 <h2 className={cx('admin-frame-header__title')}>Account Management</h2>
-                <p className={cx('admin-frame-header__subtitle')}>Manage all user accounts.</p>
+                <p className={cx('admin-frame-header__subtitle')}>Manage all accounts that were registered with the system.</p>
             </div>
 
             <Row space={10} className={cx('admin-frame-filter')}>
@@ -192,4 +192,4 @@ const AdminUserList = ({ disableColumns = [] }: AdminUserListProps) => {
     );
 };
 
-export default AdminUserList;
+export default AdminAccountList;

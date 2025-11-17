@@ -1,7 +1,7 @@
 import AdminLayout from '../components/admins/AdminLayout';
-import AdminUserList from '../components/admins/AdminUserList';
+import AdminUserList from '../components/admins/AdminAccountList';
 
-const AdminUserListPage = () => {
+const AdminAccountPage = () => {
     return (
         <AdminLayout>
             <AdminUserList />
@@ -9,4 +9,4 @@ const AdminUserListPage = () => {
     );
 };
 
-export default AdminUserListPage;
+export default AdminAccountPage;

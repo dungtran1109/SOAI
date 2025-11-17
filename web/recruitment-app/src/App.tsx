@@ -6,9 +6,9 @@ import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from './shared/constants/routes';
 import type { Role } from './shared/types/authTypes';
 import AuthPage from './pages/AuthPage';
 import AdminDashBoardPage from './pages/AdminDashBoardPage';
-import AdminCVListPage from './pages/AdminCVListPage';
-import AdminUserListPage from './pages/AdminUserListPage';
-import AdminJDListPage from './pages/AdminJDListPage';
+import AdminCVPage from './pages/AdminCVPage';
+import AdminAccountPage from './pages/AdminAccountPage';
+import AdminJDPage from './pages/AdminJDPage';
 
 const AppRoutes = () => {
     const location = useLocation();
@@ -29,9 +29,9 @@ const AppRoutes = () => {
             <Route path={PUBLIC_ROUTE.signup} element={<AuthPage isSignIn={false} />} />
 
             <Route path={PRIVATE_ADMIN_ROUTE.dashboard} element={isAuth && role === 'ADMIN' ? <AdminDashBoardPage /> : <Navigate to="/" replace />} />
-            <Route path={PRIVATE_ADMIN_ROUTE.candidateCV} element={isAuth && role === 'ADMIN' ? <AdminCVListPage /> : <Navigate to="/" replace />} />
-            <Route path={PRIVATE_ADMIN_ROUTE.user} element={isAuth && role === 'ADMIN' ? <AdminUserListPage /> : <Navigate to="/" replace />} />
-            <Route path={PRIVATE_ADMIN_ROUTE.job} element={isAuth && role === 'ADMIN' ? <AdminJDListPage /> : <Navigate to="/" replace />} />
+            <Route path={PRIVATE_ADMIN_ROUTE.candidateCV} element={isAuth && role === 'ADMIN' ? <AdminCVPage /> : <Navigate to="/" replace />} />
+            <Route path={PRIVATE_ADMIN_ROUTE.user} element={isAuth && role === 'ADMIN' ? <AdminAccountPage /> : <Navigate to="/" replace />} />
+            <Route path={PRIVATE_ADMIN_ROUTE.job} element={isAuth && role === 'ADMIN' ? <AdminJDPage /> : <Navigate to="/" replace />} />
         </Routes>
     );
 };

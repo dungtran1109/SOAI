@@ -1,6 +1,6 @@
 @use '../variables' as *;
 
-.admin-stat-card {
+.admin-statistic-card {
     flex: 1;
     padding: 20px;
     min-width: 200px;
@@ -10,32 +10,32 @@
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
-.admin-stat-card__icon img {
+.admin-statistic-card__icon img {
     width: 28px;
     height: 28px;
 }
 
-.admin-stat-card__count {
+.admin-statistic-card__count {
     font-size: 28px;
     font-weight: 700;
     color: #111827;
     margin: 20px auto;
 }
 
-.admin-stat-card__label {
+.admin-statistic-card__label {
     color: #6b7280;
 }
 
-.admin-stat-card__indicator {
+.admin-statistic-card__indicator {
     margin: 20px auto;
     font-size: $font-small-size;
     font-weight: 600;
 }
 
-.admin-stat-card__indicator--up {
+.admin-statistic-card__indicator--up {
     color: $success-color;
 }
 
-.admin-stat-card__indicator--down {
+.admin-statistic-card__indicator--down {
     color: $error-color;
 }
