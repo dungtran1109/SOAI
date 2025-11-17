@@ -1,16 +1,16 @@
 import { useSelector } from 'react-redux';
 import type { RootState } from '../services/redux/store';
+import { Col, Row } from '../components/layouts';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/admins/adminDashBoardPage.module.scss';
-import { Col, Row } from '../components/layouts';
-import AdminStatCard from '../components/admins/AdminStatCard';
-import AdminCVList from '../components/admins/AdminCVList';
 import AdminLayout from '../components/admins/AdminLayout';
+import AdminStatisticCard from '../components/admins/AdminStatisticCard';
+import AdminCVList from '../components/admins/AdminCVList';
+import AdminJDList from '../components/admins/AdminJDList';
+import AdminAccountList from '../components/admins/AdminAccountList';
 import cvIcon from '../assets/icons/file-text.png';
 import userIcon from '../assets/icons/user.png';
 import jdIcon from '../assets/icons/briefcase.png';
-import AdminUserList from '../components/admins/AdminUserList';
-import AdminJDList from '../components/admins/AdminJDList';
 
 const cx = classNames.bind(styles);
 
@@ -25,13 +25,13 @@ const AdminDashBoardPage = () => {
 
                 <Row space={10} className={cx('admin-dashboard__item', 'admin-dashboard__stats')}>
                     <Col size={{ lg: 4, xl: 4 }} className={cx('admin-dashboard__stats-card')}>
-                        <AdminStatCard label="Total CVs" count={statistic.cvCount} icon={cvIcon} />
+                        <AdminStatisticCard label="Total CVs" count={statistic.cvCount} icon={cvIcon} />
                     </Col>
                     <Col size={{ lg: 4, xl: 4 }} className={cx('admin-dashboard__stats-card')}>
-                        <AdminStatCard label="Total Users" count={statistic.accountCount} icon={userIcon} />
+                        <AdminStatisticCard label="Total Users" count={statistic.accountCount} icon={userIcon} />
                     </Col>
                     <Col size={{ lg: 4, xl: 4 }} className={cx('admin-dashboard__stats-card')}>
-                        <AdminStatCard label="Job Descriptions" count={statistic.jobCount} icon={jdIcon} />
+                        <AdminStatisticCard label="Job Descriptions" count={statistic.jobCount} icon={jdIcon} />
                     </Col>
                 </Row>
 
@@ -40,7 +40,7 @@ const AdminDashBoardPage = () => {
                 </div>
 
                 <div className={cx('admin-dashboard__item')}>
-                    <AdminUserList />
+                    <AdminAccountList />
                 </div>
 
                 <div className={cx('admin-dashboard__item')}>

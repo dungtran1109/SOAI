@@ -1,7 +1,7 @@
-import AdminCVList from '../components/admins/AdminCVList';
 import AdminLayout from '../components/admins/AdminLayout';
+import AdminCVList from '../components/admins/AdminCVList';
 
-const AdminCVListPage = () => {
+const AdminCVPage = () => {
     return (
         <AdminLayout>
             <AdminCVList />
@@ -9,4 +9,4 @@ const AdminCVListPage = () => {
     );
 };
 
-export default AdminCVListPage;
+export default AdminCVPage;

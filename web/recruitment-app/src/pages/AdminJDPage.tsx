@@ -6,12 +6,12 @@ import AdminLayout from '../components/admins/AdminLayout';
 import AdminJDList from '../components/admins/AdminJDList';
 import classNames from 'classnames/bind';
 import frameStyles from '../assets/styles/admins/adminFrame.module.scss';
-import styles from '../assets/styles/admins/adminJDListPage.module.scss';
+import styles from '../assets/styles/admins/adminJDPage.module.scss';
 import AdminJDForm from '../components/admins/AdminJDForm';
 
 const cx = classNames.bind({ ...frameStyles, ...styles });
 
-const AdminJDListPage = () => {
+const AdminJDPage = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [addCV, setAddCV] = useState<boolean>(false);
 
@@ -68,4 +68,4 @@ const AdminJDListPage = () => {
     );
 };
 
-export default AdminJDListPage;
+export default AdminJDPage;

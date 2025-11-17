@@ -27,12 +27,12 @@
     padding: 10px;
     color: #d1d5db;
     border-radius: 8px;
-    text-decoration: none;
     transition: background-color 0.2s, color 0.2s;
     font-size: 15px;
     font-weight: 500;
 
     &:hover {
+        text-decoration: none;
         color: $text-white-color;
         background-color: #1f2937;
     }

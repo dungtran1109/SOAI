@@ -10,10 +10,10 @@ const cx = classNames.bind(styles);
 
 const menu = [
     { label: 'Home', path: PRIVATE_ADMIN_ROUTE.dashboard },
-    { label: 'All Users', path: PRIVATE_ADMIN_ROUTE.user },
     { label: 'All CVs', path: PRIVATE_ADMIN_ROUTE.candidateCV },
     { label: 'All Interviews', path: PRIVATE_ADMIN_ROUTE.candidateInterview },
     { label: 'All Job Descriptions', path: PRIVATE_ADMIN_ROUTE.job },
+    { label: 'All Accounts', path: PRIVATE_ADMIN_ROUTE.user },
 ];
 
 interface AdminSidebarProps {
