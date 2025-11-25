@@ -1,4 +1,4 @@
-.admin-statistic-card {
+.stats-card {
     flex: 1;
     padding: 20px;
     min-width: 200px;
@@ -8,18 +8,18 @@
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
-.admin-statistic-card__icon img {
+.stats-card__icon img {
     width: 28px;
     height: 28px;
 }
 
-.admin-statistic-card__count {
+.stats-card__count {
     font-size: 28px;
     font-weight: 700;
     color: #111827;
     margin: 20px auto;
 }
 
-.admin-statistic-card__label {
+.stats-card__label {
     color: #6b7280;
 }

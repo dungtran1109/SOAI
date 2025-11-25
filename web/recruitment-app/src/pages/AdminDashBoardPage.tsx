@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
+import { Col, Row, StatsCard } from '../components/layouts';
 import type { RootState } from '../services/redux/store';
-import { Col, Row } from '../components/layouts';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/admins/adminDashBoardPage.module.scss';
 import userIcon from '../assets/icons/user.png';
@@ -10,13 +10,12 @@ import AdminLayout from '../components/admins/AdminLayout';
 import AdminCVList from '../components/admins/AdminCVList';
 import AdminJDList from '../components/admins/AdminJDList';
 import AdminAccountList from '../components/admins/AdminAccountList';
-import AdminStatisticsCard from '../components/admins/AdminStatisticsCard';
 import AdminInterviewList from '../components/admins/AdminInterviewList';
 
 const cx = classNames.bind(styles);
 
 const AdminDashBoardPage = () => {
-    const statistic = useSelector((state: RootState) => state.adminStatistics);
+    const statistics = useSelector((state: RootState) => state.adminStatistics);
 
     return (
         <AdminLayout>
@@ -26,13 +25,13 @@ const AdminDashBoardPage = () => {
 
                 <Row space={10} className={cx('admin-dashboard__item')}>
                     <Col size={{ lg: 4, xl: 4 }}>
-                        <AdminStatisticsCard label="Total CVs" count={statistic.cvCount} icon={cvIcon} />
+                        <StatsCard label="Total CVs" count={statistics.cvCount} icon={cvIcon} />
                     </Col>
                     <Col size={{ lg: 4, xl: 4 }}>
-                        <AdminStatisticsCard label="Total Users" count={statistic.accountCount} icon={userIcon} />
+                        <StatsCard label="Total Users" count={statistics.accountCount} icon={userIcon} />
                     </Col>
                     <Col size={{ lg: 4, xl: 4 }}>
-                        <AdminStatisticsCard label="Job Descriptions" count={statistic.jobCount} icon={jdIcon} />
+                        <StatsCard label="Job Descriptions" count={statistics.jobCount} icon={jdIcon} />
                     </Col>
                 </Row>
 
