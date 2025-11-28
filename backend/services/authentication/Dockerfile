@@ -10,7 +10,7 @@ RUN mvn dependency:go-offline
 COPY --chmod=0755 --chown=${USER_ID}:0 src ./src
 RUN mvn clean package -DskipTests
 
-FROM openjdk:17-jdk-slim
+FROM openjdk:26-ea-17-jdk-slim
 
 ARG USER_ID=1001
 ARG COMMIT

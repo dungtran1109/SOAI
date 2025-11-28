@@ -263,7 +263,7 @@ class RecruitmentService:
                 logger.warn("JD level is not set. Defaulting to 'Mid'.")
                 jd_validated.level = "Mid"
 
-            normalized_skills = json.dumps(sorted(jd_validated.skills_required))
+            normalized_skills = sorted(jd_validated.skills_required)
             existing = (
                 db.query(JobDescription)
                 .filter_by(
