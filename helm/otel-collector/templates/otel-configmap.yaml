@@ -42,6 +42,10 @@ data:
     exporters:
       debug:
         verbosity: normal
+      prometheusremotewrite:
+        endpoint: "http://prometheus:9090/api/v1/write"
+        tls:
+          insecure: true
 {{- if .Values.otel.clickHouse.enabled }}
       clickhouse:
         endpoint: tcp://clickhouse:9000
@@ -145,7 +149,9 @@ data:
             - prometheus
             {{- end }}
           processors: [memory_limiter, k8sattributes, resource, transform, batch]
-          exporters: [{{ include "otel-collector.exporter" . }}]
+          exporters:
+            - prometheusremotewrite
+            - {{ include "otel-collector.exporter" . }}
         traces:
           receivers: [otlp]
           processors: [k8sattributes, batch]

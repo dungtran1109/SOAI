@@ -16,7 +16,7 @@ otel:
           enabled: true
         endpoint:
           enabled: true
-  resource:
+  resources:
     requests:
       cpu: "200m"
       memory: "256Mi"

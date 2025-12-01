@@ -19,10 +19,16 @@ dependencies:
     repository: "file://../grafana"
     tags:
       - grafana
-    condition: global.otel.enabled
+    condition: global.grafana.enabled
   - name: clickhouse
     version: ">0.0.0-0"
     repository: "file://../clickhouse"
     tags:
       - clickHouse
     condition: global.clickHouse.enabled
+  - name: prometheus
+    version: ">0.0.0-0"
+    repository: "file://../prometheus"
+    tags:
+      - prometheus
+    condition: global.prometheus.enabled

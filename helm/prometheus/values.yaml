@@ -1,0 +1,12 @@
+prometheus:
+  image: prom/prometheus:v3.7.3
+  persistentVolume:
+    enabled: true
+    size: 8Gi
+  resources:
+    limits:
+      cpu: "2"
+      memory: "2048Mi"
+    requests:
+      cpu: "250m"
+      memory: "512Mi"

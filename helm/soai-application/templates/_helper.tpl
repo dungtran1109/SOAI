@@ -695,10 +695,16 @@ Define metrics annotations
 {{- $root := index . 0 -}}
 {{- $metricPath := index . 1 -}}
 {{- $metricPort := index . 2 -}}
+{{- $g := fromJson (include "soai-application.global" $root) -}}
 prometheus.io/scrape-role: "pod"
 prometheus.io/path: {{ $metricPath | quote }}
 prometheus.io/port: {{ $metricPort | quote }}
 prometheus.io/scrape-interval: "15s"
+{{- if $g.security.tls.enabled }}
+prometheus.io/scheme: "https"
+{{- else }}
+prometheus.io/scheme: "http"
+{{- end }}
 {{- end }}
 
 {{/*
