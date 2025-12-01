@@ -39,29 +39,34 @@ const AdminInterviewList = () => {
     const [filter, dispatchFilter] = useReducer(filterReducer, initFilterValue);
 
     const [schedule, setSchedule] = useState<ScheduleInterviewForm | null>(null);
+    const [session, setSession] = useState<Interview | null>(null);
 
-    const fetchInterviews = useCallback(async () => {
-        try {
-            const result = await getInterviews();
-            setInterviews(result);
-        } catch (error) {
-            console.error('Failed to fetch interview session:', error);
-        }
-    }, []);
+    const fetchApprovedCVsAndInterviews = useCallback(() => {
+        const fetchApprovedCVs = async () => {
+            try {
+                const result = await getApprovedCVs();
+                setApprovedCVs(result);
+            } catch (error) {
+                console.error('Failed to fetch approved CVs:', error);
+            }
+        };
 
-    const fetchApprovedCVs = useCallback(async () => {
-        try {
-            const result = await getApprovedCVs();
-            setApprovedCVs(result);
-        } catch (error) {
-            console.error('Failed to fetch approved CVs:', error);
-        }
+        const fetchInterviews = async () => {
+            try {
+                const result = await getInterviews();
+                setInterviews(result);
+            } catch (error) {
+                console.error('Failed to fetch interview session:', error);
+            }
+        };
+
+        fetchApprovedCVs();
+        fetchInterviews();
     }, []);
 
     useEffect(() => {
-        fetchInterviews();
-        fetchApprovedCVs();
-    }, [fetchApprovedCVs, fetchInterviews]);
+        fetchApprovedCVsAndInterviews();
+    }, [fetchApprovedCVsAndInterviews]);
 
     const filteredInterviews = useMemo<typeof interviews>(() => {
         const filteredInterviews = interviews.filter((interview) => interview.candidate_name.toLowerCase().includes(filter.candidateName.toLowerCase()));
@@ -100,8 +105,7 @@ const AdminInterviewList = () => {
             e.preventDefault();
             if (schedule) {
                 const response = await scheduleInterview(schedule.formData);
-                fetchApprovedCVs();
-                fetchInterviews();
+                fetchApprovedCVsAndInterviews();
                 setSchedule(null);
                 toast.success(response.message, {
                     position: 'top-center',
@@ -109,8 +113,10 @@ const AdminInterviewList = () => {
                 });
             }
         },
-        [fetchApprovedCVs, fetchInterviews, schedule],
+        [fetchApprovedCVsAndInterviews, schedule],
     );
+
+    console.log(session);
 
     return (
         <>
@@ -164,7 +170,7 @@ const AdminInterviewList = () => {
                             {filteredInterviews.map(
                                 (interview) =>
                                     interview.status === 'Pending' && (
-                                        <div key={interview.id} className={cx('interview-col__card')}>
+                                        <div key={interview.id} className={cx('interview-col__card')} onClick={() => setSession(interview)}>
                                             <h3>{interview.candidate_name.toUpperCase()}</h3>
 
                                             <div className={cx('interview-col__card-content')}>
