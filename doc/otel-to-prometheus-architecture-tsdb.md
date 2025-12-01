@@ -17,6 +17,67 @@ The purpose of this design is to:
 
 The following sections break down the end-to-end metrics flow from services to Prometheus TSDB.
 
+                          ┌────────────────────────────────────────┐
+                          │             Applications               │
+                          │                                        │
+                          │  • Spring Boot (Authentication)        │
+                          │  • FastAPI (Recruitment)               │
+                          │  • FastAPI (GenAI)                     │
+                          │                                        │
+                          │  Expose HTTPS/HTTP metrics endpoints:  │
+                          │   - /actuator/prometheus               │
+                          │   - /api/v1/recruitment/metrics        │
+                          │   - /api/v1/gen-ai/metrics             │
+                          └───────────────┬────────────────────────┘
+                                          │ HTTPS/HTTP Scrape
+                                          │
+                                          ▼
+                          ┌────────────────────────────────────────┐
+                          │           OTel Collector               │
+                          │────────────────────────────────────────│
+                          │ Receivers:                             │
+                          │   - prometheus (scrape K8s pods)       │
+                          │   - otlp (instrumented apps)           │
+                          │   - hostmetrics                        │
+                          │                                        │
+                          │ Processors:                            │
+                          │   - k8sattributes                      │
+                          │   - resource                           │
+                          │   - batch                              │
+                          │   - memory_limiter                     │
+                          │                                        │
+                          │ Exporters:                             │
+                          │   - prometheusremotewrite              │
+                          │         → http://prometheus:9090       │
+                          │           /api/v1/write                │
+                          └───────────────┬────────────────────────┘
+                                          │ Remote Write (Push)
+                                          │
+                                          ▼
+                          ┌────────────────────────────────────────┐
+                          │         Prometheus (TSDB Only)         │
+                          │────────────────────────────────────────│
+                          │ • No scraping                          │
+                          │ • No alerting rules                    │
+                          │ • No evaluation                        │
+                          │ • Only stores metrics pushed via       │
+                          │    remote_write                        │
+                          │                                        │
+                          │ Required flags:                        │
+                          │  --web.enable-remote-write-receiver    │
+                          │  --storage.tsdb.path=/prometheus       │
+                          └───────────────┬────────────────────────┘
+                                          │ Query via HTTP API
+                                          │
+                                          ▼
+                          ┌────────────────────────────────────────┐
+                          │                 Grafana                │
+                          │────────────────────────────────────────│
+                          │ • Queries Prometheus TSDB              │
+                          │ • Visualizes dashboards                │
+                          │ • Observability layer for operators    │
+                          └────────────────────────────────────────┘
+
 ### 1. Application Metric Exposure Layer
 
 Each application must expose a valid Prometheus metrics endpoint. The metrics endpoint must return metrics in Prometheus text format.
