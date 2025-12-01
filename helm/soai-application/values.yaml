@@ -3,6 +3,10 @@ global:
     enabled: true
   clickHouse:
     enabled: true
+  grafana:
+    enabled: true
+  prometheus:
+    enabled: true
 # security:
 #   tls:
 #     enabled: true

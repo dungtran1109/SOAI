@@ -33,7 +33,7 @@ spec:
             - containerPort: 4317
             - containerPort: 4318
             - containerPort: 8888
-          {{- with .Values.otel.resource }}
+          {{- with .Values.otel.resources }}
           resources: {{ toYaml . | nindent 16 }}
           {{- end }}
           volumeMounts:

@@ -17,7 +17,7 @@ spec:
           ports:
             - containerPort: 8123
             - containerPort: 9000
-          {{- with .Values.clickhouse.resource }}
+          {{- with .Values.clickhouse.resources }}
           resources: {{ toYaml . | nindent 16 }}
           {{- end }}
           volumeMounts:

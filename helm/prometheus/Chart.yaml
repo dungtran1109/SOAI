@@ -1,0 +1,6 @@
+apiVersion: v2
+name: prometheus
+description: Prometheus - open-source systems monitoring and alerting toolkit.
+type: application
+version: 1.0.0
+appVersion: "2.37.0"
