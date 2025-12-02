@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { getApprovedCVs, getInterviews, scheduleInterview } from '../../services/api/interviewApis';
+import { toast } from 'react-toastify';
+import { FiMoreVertical } from 'react-icons/fi';
+import { FaCommentDots, FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
+import { getApprovedCVs, getInterviews, scheduleInterview, generateInterviewQuestions, getAvailableInterviewQuestions } from '../../services/api/interviewApis';
 import { Button, Col, ReviewModal, Row } from '../layouts';
-import { STATUS, type CV, type Interview, type InterviewSession, type ScheduleInterview, type Status } from '../../shared/types/adminTypes';
+import { STATUS } from '../../shared/types/adminTypes';
+import type { CV, Interview, InterviewQuestion, InterviewSession, ScheduleInterview, Status } from '../../shared/types/adminTypes';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminInterviewList.module.scss';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
-import { toast } from 'react-toastify';
-import { FiMoreVertical } from 'react-icons/fi';
-import { FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
+import dataEmpty from '../../assets/images/data-empty.png';
+import Spinner from '../layouts/Spinner';
 
 const cx = classNames.bind({ ...frameStyles, ...styles });
 
@@ -40,6 +43,12 @@ interface InterviewSessionForm {
     formConfirm: boolean;
 }
 
+interface Question {
+    interviewSession: Interview;
+    interviewQuestions?: InterviewQuestion[];
+    loading: boolean;
+}
+
 const AdminInterviewList = () => {
     const [interviews, setInterviews] = useState<Interview[]>([]);
     const [approvedCVs, setApprovedCVs] = useState<CV[]>([]);
@@ -48,6 +57,7 @@ const AdminInterviewList = () => {
     // States of Modals
     const [schedule, setSchedule] = useState<ScheduleInterviewForm | null>(null);
     const [session, setSession] = useState<InterviewSessionForm | null>(null);
+    const [questions, setQuestions] = useState<Question | null>(null);
 
     const fetchApprovedCVsAndInterviews = useCallback(() => {
         const fetchApprovedCVs = async () => {
@@ -152,7 +162,38 @@ const AdminInterviewList = () => {
         });
     }, []);
 
-    console.log(session);
+    const openInterviewQuestionModal = async (interviewSession: Interview): Promise<void> => {
+        setQuestions({ interviewQuestions: [], interviewSession: interviewSession, loading: true });
+        let questions = await getAvailableInterviewQuestions(interviewSession.cv_application_id);
+        if (questions.length === 0) {
+            questions = await generateInterviewQuestions(interviewSession.cv_application_id);
+        }
+        setQuestions({ interviewQuestions: questions, interviewSession: interviewSession, loading: false });
+    };
+
+    const closeQuestionModal = () => {
+        if (questions) {
+            if (questions.loading) {
+                toast.warning('Cannot close dialog while generating interview question.', {
+                    position: 'top-center',
+                    hideProgressBar: true,
+                });
+            } else {
+                setQuestions(null);
+            }
+        }
+    };
+
+    const regenerateInterviewQuestions = async () => {
+        if (questions?.interviewSession) {
+            if (!questions.interviewQuestions || window.confirm('Do you want to regenerate questions?')) {
+                setQuestions({ ...questions, loading: true });
+                const response = await generateInterviewQuestions(questions.interviewSession.cv_application_id);
+                setQuestions({ ...questions, interviewQuestions: response, loading: false });
+                toast.success('Questions are generated successfully.');
+            }
+        }
+    };
 
     return (
         <>
@@ -226,7 +267,10 @@ const AdminInterviewList = () => {
                                                             />
                                                             Edit session
                                                         </p>
-                                                        <p className={cx('card-header-popup__selection-option')}>
+                                                        <p
+                                                            className={cx('card-header-popup__selection-option')}
+                                                            onClick={() => openInterviewQuestionModal(interview)}
+                                                        >
                                                             <FaQuestionCircle
                                                                 size={12}
                                                                 className={cx(
@@ -389,7 +433,7 @@ const AdminInterviewList = () => {
                                     <strong>Interviewer:</strong> {session.formData.interviewer_name}
                                 </p>
                                 <p className={cx('common-info__personal-data')}>
-                                    <strong>Datetime:</strong> {session.formData.interview_datetime}
+                                    <strong>Datetime:</strong> {new Date(session.formData.interview_datetime).toLocaleString()}
                                 </p>
                             </div>
                             <hr style={{ margin: '20px 0 30px' }} />
@@ -440,6 +484,61 @@ const AdminInterviewList = () => {
                                     Send
                                 </button>
                             </form>
+                        </>
+                    )}
+                </ReviewModal>
+
+                {/* Interview questions - Upcoming Interviews column */}
+                <ReviewModal title={`Available Questions`} open={!!questions} onClose={closeQuestionModal}>
+                    {questions && (
+                        <>
+                            <div className={cx('common-info')}>
+                                <p className={cx('common-info__personal-data')}>
+                                    <strong>Name:</strong> {questions.interviewSession.candidate_name}
+                                </p>
+                                <p className={cx('common-info__personal-data')}>
+                                    {/* TODO: Should show position instead of cv_application_id */}
+                                    <strong>Position:</strong> {questions.interviewSession.cv_application_id}
+                                </p>
+                                <p className={cx('common-info__personal-data')}>
+                                    <strong>Interviewer:</strong> {questions.interviewSession.interviewer_name}
+                                </p>
+                                <p className={cx('common-info__personal-data')}>
+                                    <strong>Datetime:</strong> {new Date(questions.interviewSession.interview_datetime).toLocaleString()}
+                                </p>
+                            </div>
+                            <hr style={{ margin: '20px 0 30px' }} />
+
+                            {questions?.loading ? (
+                                <Spinner label="Generating interview questions, please wait for some times!" />
+                            ) : (
+                                <div>
+                                    <div className={cx('generation-question')}>
+                                        <Button type="question" onClick={regenerateInterviewQuestions} />
+                                        <span>Regenerate Questions</span>
+                                    </div>
+
+                                    {!questions.interviewQuestions ? (
+                                        <div className={cx('no-question')}>
+                                            <img src={dataEmpty} alt="There are no question available." width={80} />
+                                        </div>
+                                    ) : (
+                                        questions.interviewQuestions?.map((question, index) => (
+                                            <div key={question.id} className={cx('question')}>
+                                                <p className={cx('question__item', 'question__item--ask')}>
+                                                    <FaQuestionCircle className={cx('question__icon', 'question__icon--ask')} />
+                                                    <strong>
+                                                        Question {index + 1}: {question.original_question}
+                                                    </strong>
+                                                </p>
+                                                <p className={cx('question__item')}>
+                                                    <FaCommentDots className={cx('question__icon', 'question__icon--answer')} /> {question.answer}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
                         </>
                     )}
                 </ReviewModal>

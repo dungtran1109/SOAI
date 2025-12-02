@@ -63,3 +63,13 @@ export interface ScheduleInterview extends CV {
 export interface InterviewSession extends Interview {
     interview_comment: string;
 }
+
+export interface InterviewQuestion {
+    id: number;
+    cv_application_id: number;
+    answer: string;
+    edited_question: string | null;
+    is_edited: boolean;
+    original_question: string;
+    source: string;
+}
