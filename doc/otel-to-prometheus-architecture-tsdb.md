@@ -26,8 +26,7 @@ The following sections break down the end-to-end metrics flow from services to P
                           │                                        │
                           │  Expose HTTPS/HTTP metrics endpoints:  │
                           │   - /actuator/prometheus               │
-                          │   - /api/v1/recruitment/metrics        │
-                          │   - /api/v1/gen-ai/metrics             │
+                          │   - /metrics                           │
                           └───────────────┬────────────────────────┘
                                           │ HTTPS/HTTP Scrape
                                           │
