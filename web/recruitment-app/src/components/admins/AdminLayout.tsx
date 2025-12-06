@@ -1,7 +1,8 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { FiLogOut } from 'react-icons/fi';
-import { logout } from '../../services/api/authApis';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { logout } from '../../services/api/authApi';
 import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../../shared/constants/routes';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminLayout.module.scss';
@@ -24,9 +25,20 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate(PUBLIC_ROUTE.signin);
+    const handleLogout = (): void => {
+        const response = logout();
+        if (response.ok) {
+            navigate(PUBLIC_ROUTE.signin);
+            toast.success(`Goodbye 👋, See you later.`, {
+                position: 'top-center',
+                hideProgressBar: true,
+            });
+        } else {
+            toast.error(response.message, {
+                position: 'top-center',
+                hideProgressBar: true,
+            });
+        }
     };
 
     return (

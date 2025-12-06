@@ -2,16 +2,16 @@ import React, { useCallback, useEffect, useMemo, useReducer, useState } from 're
 import { toast } from 'react-toastify';
 import { FiMoreVertical, FiTrash2 } from 'react-icons/fi';
 import { FaCalendarAlt, FaCommentDots, FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
+import { getApprovedCVs } from '../../services/api/cvApi';
 import {
-    getApprovedCVs,
     getInterviews,
     scheduleInterview,
-    generateInterviewQuestions,
-    getAvailableInterviewQuestions,
     acceptInterview,
     cancelInterview,
     deleteInterview,
-} from '../../services/api/interviewApis';
+    generateInterviewQuestions,
+    getAvailableInterviewQuestions,
+} from '../../services/api/interviewApi';
 import { Button, ReviewModal, Spinner, Row, Col } from '../layouts';
 import { STATUS } from '../../shared/types/adminTypes';
 import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status } from '../../shared/types/adminTypes';

@@ -5,7 +5,7 @@ import { HiUser } from 'react-icons/hi';
 import { MdAdminPanelSettings } from 'react-icons/md';
 import { FaFilter, FaUserCircle } from 'react-icons/fa';
 import { Badge, Button, Col, Row } from '../layouts';
-import { deleteAccount, getAccounts } from '../../services/api/authApis';
+import { getAccounts, deleteAccount } from '../../services/api/authApi';
 import { ROLES, type Role } from '../../shared/types/authTypes';
 import type { Account } from '../../shared/types/adminTypes';
 import classNames from 'classnames/bind';

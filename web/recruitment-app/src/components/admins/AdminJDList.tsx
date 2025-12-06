@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { setNumberOfJob } from '../../services/redux/adminSlices/adminStatisticsSlice';
-import { compareDateWithToday } from '../../shared/helpers/commonUntils';
-import { deleteJD, getJDByPosition, getJDPreviewUrl, updateJD } from '../../services/api/jdApis';
+import { isFutureDate } from '../../shared/helpers/commonUntils';
+import { getJDs, updateJD, deleteJD, getJDPreviewUrl } from '../../services/api/jdApi';
 import { Button, Col, ReviewModal, Row } from '../layouts';
 import type { JD } from '../../shared/types/adminTypes';
 import classNames from 'classnames/bind';
@@ -45,7 +45,7 @@ const AdminJDList = () => {
     const fetchJDs = useCallback(
         async (position: string = ''): Promise<void> => {
             try {
-                const results = await getJDByPosition(position);
+                const results = await getJDs(position);
                 setJds(results);
                 dispatch(setNumberOfJob(results.length));
             } catch (error) {
@@ -115,7 +115,7 @@ const AdminJDList = () => {
                             <i className={cx('jd__title-label')}>
                                 {/* TODO: Use jd.expire_datetime instead of jd.datetime */}
                                 <strong>{jd.position}</strong> - Status:
-                                {compareDateWithToday(jd.datetime) ? (
+                                {isFutureDate(jd.datetime) ? (
                                     <span className={cx('jd__title-label-status-closed')}> Closed</span>
                                 ) : (
                                     <span className={cx('jd__title-label-status-opening')}> Opening</span>

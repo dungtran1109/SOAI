@@ -2,9 +2,9 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
-import { signin, signup } from '../services/api/authApis';
+import { signin, signup } from '../services/api/authApi';
 import { COOKIE_TOKEN_NAME } from '../shared/constants/browserStorages';
-import type { SignInData, SignUpData, Role, TokenDecoded } from '../shared/types/authTypes';
+import type { SigninData, SignupData, Role, TokenDecoded } from '../shared/types/authTypes';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/auths/authPage.module.scss';
 import Cookies from 'js-cookie';
@@ -18,10 +18,10 @@ interface CookieJSONParsed {
 }
 
 interface AuthProps {
-    isSignIn: boolean;
+    isSignin: boolean;
 }
 
-interface FormValues extends SignUpData {
+interface FormValues extends SignupData {
     confirmPassword: string;
     rememberMe: boolean;
     showPassword: boolean;
@@ -101,7 +101,7 @@ const reducer = (state: FormValues, action: ActionReducer): FormValues => {
     }
 };
 
-const AuthPage = ({ isSignIn = false }: AuthProps) => {
+const AuthPage = ({ isSignin = false }: AuthProps) => {
     const [formValue, dispatch] = useReducer(reducer, initFormValue);
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
@@ -131,46 +131,50 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
 
-        const signInPayload: SignInData = {
+        const signInPayload: SigninData = {
             userName: formValue.userName,
             password: formValue.password,
         };
 
-        const signUpPayload: SignUpData = {
+        const signUpPayload: SignupData = {
             ...signInPayload,
             email: formValue.email,
             role: formValue.role,
         };
 
-        if (!isSignIn && formValue.password !== formValue.confirmPassword) {
-            dispatch({ type: 'ERROR', payload: 'Your confirmed password unmatched.' });
-            return;
-        }
-
         dispatch({ type: 'ERROR', payload: '' });
-        setLoading(true);
 
-        try {
-            const response = isSignIn ? await signin(signInPayload) : await signup(signUpPayload);
+        if (!isSignin && formValue.password !== formValue.confirmPassword) {
+            dispatch({ type: 'ERROR', payload: 'Your confirmed password unmatched.' });
+        } else {
+            setLoading(true);
+            try {
+                if (isSignin) {
+                    const response = await signin(signInPayload);
 
-            Cookies.set(COOKIE_TOKEN_NAME, JSON.stringify(response), {
-                expires: formValue.rememberMe ? 7 : 1,
-                secure: true,
-                sameSite: 'Strict',
-            });
+                    Cookies.set(COOKIE_TOKEN_NAME, JSON.stringify(response), {
+                        expires: formValue.rememberMe ? 7 : 1,
+                        secure: true,
+                        sameSite: 'Strict',
+                    });
 
-            const decoded = jwtDecode<TokenDecoded>(response.token);
-            navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
-        } catch {
-            dispatch({ type: 'ERROR', payload: isSignIn ? 'Invalid username or password.' : 'Signup failed. Please try again.' });
-        } finally {
-            setLoading(false);
+                    const decoded = jwtDecode<TokenDecoded>(response.token);
+                    navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
+                } else {
+                    await signup(signUpPayload);
+                    dispatch({ type: 'RESET' });
+                    navigate('/signin');
+                }
+            } catch {
+                dispatch({
+                    type: 'ERROR',
+                    payload: isSignin ? 'Login failed, username or password is incorrect.' : 'Signup failed, please check again.',
+                });
+            } finally {
+                setLoading(false);
+            }
         }
     };
-
-    if (loading) {
-        return null;
-    }
 
     return (
         <div className={cx('auth-wrapper')}>
@@ -179,11 +183,11 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
                     <h2>
                         Welcome back <span className="wave-icon">👋</span>
                     </h2>
-                    <p className={cx('auth__header-subtitle')}>{isSignIn ? 'Sign in to continue' : 'Sign up to get started'}</p>
+                    <p className={cx('auth__header-subtitle')}>{isSignin ? 'Sign in to continue' : 'Sign up to get started'}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className={cx('auth__body')}>
-                    {!isSignIn && (
+                    {!isSignin && (
                         <div className={cx('form-group')}>
                             <label htmlFor="email" className={cx('form-group__label')}>
                                 Email
@@ -248,7 +252,7 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
                         </div>
                     </div>
 
-                    {!isSignIn && (
+                    {!isSignin && (
                         <div className={cx('form-group')}>
                             <label htmlFor="confirmPassword" className={cx('form-group__label')}>
                                 Confirm password
@@ -281,7 +285,7 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
                         </div>
                     )}
 
-                    {!isSignIn && (
+                    {!isSignin && (
                         <div className={cx('form-group')}>
                             <label htmlFor="role" className={cx('form-group__label')}>
                                 Select role
@@ -304,7 +308,7 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
                         </div>
                     )}
 
-                    {isSignIn && (
+                    {isSignin && (
                         <div className={cx('form-check')}>
                             <input
                                 id="rememberMe"
@@ -319,12 +323,12 @@ const AuthPage = ({ isSignIn = false }: AuthProps) => {
                     {formValue.error && <p className={cx('form-error-message')}>{formValue.error}</p>}
 
                     <button type="submit" className={cx('form-submit')} disabled={loading}>
-                        {loading ? 'Processing...' : isSignIn ? 'Sign in' : 'Sign up'}
+                        {loading ? 'Processing...' : isSignin ? 'Sign in' : 'Sign up'}
                     </button>
                 </form>
 
                 <div className={cx('auth__footer')}>
-                    {isSignIn ? (
+                    {isSignin ? (
                         <p>
                             Don't have an account?{' '}
                             <Link to="/signup" onClick={() => dispatch({ type: 'RESET' })} className={cx('auth__footer-link')}>

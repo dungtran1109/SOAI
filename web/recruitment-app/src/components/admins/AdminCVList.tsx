@@ -4,7 +4,7 @@ import { FaFilter } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { setNumberOfCV } from '../../services/redux/adminSlices/adminStatisticsSlice';
 import { Col, Row, Badge, Button, ReviewModal } from '../layouts';
-import { getCVByPosition, getCVPreviewUrl, updateCV, deleteCV } from '../../services/api/cvApis';
+import { getCVs, updateCV, deleteCV, getCVPreviewUrl } from '../../services/api/cvApi';
 import { STATUS, type CV, type Status } from '../../shared/types/adminTypes';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminCVList.module.scss';
@@ -84,7 +84,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
     const fetchCVs = useCallback(
         async (position: string = '') => {
             try {
-                const results: typeof cvs = await getCVByPosition(position);
+                const results: typeof cvs = await getCVs(position);
                 setCVs(results);
                 dispatch(setNumberOfCV(results.length));
             } catch (error) {

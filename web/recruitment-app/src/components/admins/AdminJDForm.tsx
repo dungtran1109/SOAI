@@ -13,6 +13,7 @@ interface AdminJDFormProps {
     onCancel: () => void;
 }
 
+// TODO: Add initital properties & set values to avoid the uncontrolled input issue
 const initEditJDValue: JD = {} as JD;
 
 type EditJDFormAction =
@@ -115,7 +116,7 @@ const editJDReducer = (state: JD, action: EditJDFormAction): JD => {
 const AdminJDForm = ({ jd = initEditJDValue, onSubmit, onCancel }: AdminJDFormProps) => {
     const [editJD, dispatchEditJD] = useReducer(editJDReducer, JSON.parse(JSON.stringify(jd)));
 
-    const handleSubmitEditJD = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmitEditJD = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
         if (JSON.stringify(jd) === JSON.stringify(editJD)) {
             toast.warning('No changes detected!', {
@@ -128,7 +129,7 @@ const AdminJDForm = ({ jd = initEditJDValue, onSubmit, onCancel }: AdminJDFormPr
         }
     };
 
-    const handleCancelEditJD = () => {
+    const handleCancelEditJD = (): void => {
         if (JSON.stringify(jd) === JSON.stringify(editJD) || window.confirm('Do you want to leave without saving the changes?')) {
             dispatchEditJD({ type: 'RESET_EDIT' });
             onCancel();

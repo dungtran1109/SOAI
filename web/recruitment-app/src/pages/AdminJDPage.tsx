@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
-import { createJD, uploadJDFile } from '../services/api/jdApis';
+import { createJD, uploadJDFile } from '../services/api/jdApi';
 import type { JD } from '../shared/types/adminTypes';
 import AdminLayout from '../components/admins/AdminLayout';
 import AdminJDList from '../components/admins/AdminJDList';
