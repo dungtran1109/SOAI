@@ -1,0 +1,49 @@
+.user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user__avatar {
+    color: #6b7280;
+}
+
+.user__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.user__info-name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.user__info-id {
+    font-size: 1.2rem;
+    margin-top: 2px;
+    color: #6b7280;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.3rem;
+    color: #374151;
+    background-color: #f3f4f6;
+}
+
+.role-badge-admin {
+    color: #0369a1;
+    background-color: #e0f2fe;
+}
+
+.role-badge-user {
+    color: #92400e;
+    background-color: #fef3c7;
+}
+
+.role-badge-icon {
+    font-size: 1.6rem;
+}

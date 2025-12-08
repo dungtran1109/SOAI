@@ -1,0 +1,14 @@
+.admin-dashboard__item {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.admin-dashboard__item.admin-dashboard__item--title {
+    font-weight: 700;
+    margin-top: unset;
+    margin-bottom: unset;
+}
+
+.admin-dashboard__item.admin-dashboard__item--subtitle {
+    color: #6b7280;
+}

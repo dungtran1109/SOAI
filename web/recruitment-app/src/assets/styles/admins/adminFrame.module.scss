@@ -1,0 +1,137 @@
+@use '../variables' as *;
+
+// Common frame for CV list, User list, Upcoming Interview list
+.admin-frame {
+    padding: 24px;
+    border-radius: 16px;
+    background-color: #fff;
+    box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+}
+
+.admin-frame-header__title {
+    font-weight: 600;
+}
+
+.admin-frame-header__subtitle {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: #6b7280;
+}
+
+// Table
+.admin-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+.admin-table__column-title {
+    font-weight: 600;
+    color: #374151;
+    background-color: #f9fafb;
+    white-space: nowrap;
+}
+
+.admin-table__column-title,
+.admin-table__column-value {
+    padding: 12px 14px;
+    text-align: left;
+    color: $text-black-color;
+    border-bottom: 1px solid #d1d5db;
+}
+
+// Filters
+.admin-frame-filter {
+    justify-content: right;
+}
+
+.admin-frame-filter__entry {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    width: 100%;
+
+    &:focus {
+        border-color: $primary-color;
+        background: #fff;
+        outline: none;
+    }
+}
+
+.admin-table__filter {
+    position: relative;
+    display: inline-block;
+    margin-left: 6px;
+    white-space: wrap;
+}
+
+.admin-table__filter-icon {
+    position: relative;
+    padding: 4px;
+    font-size: 1rem;
+    color: #6b7280;
+    transition: color 0.1s ease-in-out;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 16px;
+        right: -10px;
+        width: 60px;
+        height: 20px;
+        background-color: transparent;
+    }
+}
+
+.admin-table__filter-icon:hover ~ .admin-table__filter-section {
+    display: block;
+}
+
+.admin-table__filter-icon.admin-table__filter-icon--filtered,
+.admin-table__filter-btn.admin-table__filter-btn--filtered {
+    color: $primary-color;
+}
+
+.admin-table__filter-icon:hover,
+.admin-table__filter-btn:hover {
+    color: #5575dd;
+}
+
+.admin-table__filter-btn {
+    outline: none;
+    border: none;
+    background: none;
+    padding: 2px 4px;
+    transition: color 0.1s ease-in-out;
+}
+
+.admin-table__filter-section {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: -10px;
+    min-width: 130px;
+    z-index: 1;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid rgb(240, 235, 235);
+    background-color: #f9fafb;
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        display: block;
+    }
+}
+
+.admin-table__filter-section-option {
+    display: inline-flex;
+    justify-content: left;
+    align-items: center;
+    margin: 6px 10px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.admin-table__filter-section-option input[type='checkbox'] {
+    margin-right: 10px;
+}

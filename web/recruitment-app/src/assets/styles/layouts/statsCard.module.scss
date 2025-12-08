@@ -1,0 +1,25 @@
+.stats-card {
+    flex: 1;
+    padding: 20px;
+    min-width: 200px;
+    border-radius: 16px;
+    text-align: center;
+    background-color: #ffffff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.stats-card__icon img {
+    width: 28px;
+    height: 28px;
+}
+
+.stats-card__count {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin: 20px auto;
+}
+
+.stats-card__label {
+    color: #6b7280;
+}

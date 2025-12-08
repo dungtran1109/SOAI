@@ -1,0 +1,261 @@
+@use '../variables' as *;
+
+.interview {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.interview-col__title {
+    margin-bottom: 20px;
+    padding: 16px 10px;
+    border-radius: 8px;
+}
+
+.interview-col__title--pending {
+    border: 1px solid $warning-color;
+    background-color: #fffbf1fd;
+}
+
+.interview-col__title--accepted {
+    border: 1px solid $primary-color;
+    background-color: #f2f7ff;
+}
+
+.interview-col__title--result {
+    border: 1px solid $success-color;
+    background-color: #f2fffb;
+}
+
+.interview-col__card {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 16px 10px;
+    border-radius: 8px;
+    border: 1px solid #eff0f3;
+    background-color: $background-white-color;
+    box-shadow: 3px 3px 3px 2px rgb(219, 219, 219);
+    transition: box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+        box-shadow: 3px 3px 3px 3px rgb(185, 185, 185);
+    }
+}
+
+.interview-col__card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header-popup {
+    position: relative;
+}
+
+.card-header-popup__icon {
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        right: 0px;
+        width: 60px;
+        height: 20px;
+        background-color: transparent;
+    }
+}
+
+.card-header-popup__icon:hover ~ .card-header-popup__selection {
+    display: block;
+}
+
+.card-header-popup__selection {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 4px;
+    z-index: 2;
+    width: 160px;
+    border-radius: 8px;
+    border: 1px solid rgb(214, 214, 214);
+    background-color: white;
+    overflow: hidden;
+
+    &:hover {
+        display: block;
+    }
+}
+
+.card-header-popup__selection-option {
+    padding: 6px 8px;
+    &:hover {
+        background-color: $background-white-color;
+    }
+}
+
+.card-header-popup__selection-option-icon {
+    margin-right: 6px;
+}
+
+.card-header-popup__selection-option-icon--schedule {
+    color: $primary-color;
+}
+
+.card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--edit {
+    color: $primary-color;
+}
+
+.card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--question {
+    color: $warning-color;
+}
+
+.card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--assessment {
+    color: $success-color;
+}
+
+.card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--delete {
+    color: $error-color;
+}
+
+.interview-col__card-content {
+    margin-top: 10px;
+    margin-left: 2px;
+    padding-left: 10px;
+    border-left: 2px solid rgba(204, 204, 204, 0.6);
+}
+
+.interview-col__card-content-item {
+    font-style: italic;
+    margin-top: 10px;
+}
+
+// Styles of modals
+.common-info {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.common-info__personal-data {
+    flex: 0 0 50%;
+    min-width: 50%;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.form__group {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.form__group-label {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: #868686;
+}
+
+.form__group-entry {
+    width: 100%;
+    padding: 10px;
+    outline: none;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background-color: transparent;
+}
+
+.form__confirm {
+    display: inline-flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.form__confirm input[type='checkbox'] {
+    margin-right: 10px;
+}
+
+.form__submit-btn {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+    border: 1px solid $success-color;
+    color: $text-white-color;
+    background-color: $success-color;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
+}
+
+.form__submit-btn.form__submit-btn--disable {
+    color: grey;
+    background-color: $background-white-color;
+    border: 1px solid #dfdfdf;
+    cursor: not-allowed;
+}
+
+.generation-question {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: $font-large-size;
+}
+
+.no-question {
+    align-content: center;
+    text-align: center;
+}
+
+.no-question img {
+    opacity: 0.5;
+}
+
+.question {
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    border: 1px solid #e0e7ff;
+    border-left: 4px solid #3b82f6;
+    background-color: #f9fafb;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.06);
+    transition: box-shadow 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+    }
+}
+
+.question__item {
+    display: flex;
+    align-items: flex-start;
+}
+
+.question__item.question__item--ask {
+    color: #1e3a8a;
+    margin-bottom: 10px;
+}
+
+.question__icon {
+    margin-right: 14px;
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.question__icon.question__icon--ask {
+    color: #2563eb;
+}
+
+.question__icon.question__icon--answer {
+    color: #6b7280;
+}

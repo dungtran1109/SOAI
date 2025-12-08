@@ -1,0 +1,56 @@
+@use '../variables' as *;
+
+.btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    outline: none;
+    border: none;
+    border-radius: 4px;
+    background-color: unset;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #eff1f3;
+    }
+}
+
+.btn-disabled {
+    color: rgb(192, 192, 192) !important;
+    cursor: not-allowed;
+}
+
+.btn-edit {
+    color: $primary-color;
+
+    &:hover {
+        color: #1364e7;
+    }
+}
+
+.btn-delete {
+    color: $error-color;
+
+    &:hover {
+        color: #f70c0c;
+    }
+}
+
+.btn-download {
+    color: $text-black-color;
+
+    &:hover {
+        color: #1f1e1e;
+    }
+}
+
+.btn-question {
+    color: rgb(50, 179, 202);
+
+    &:hover {
+        color: rgb(54, 157, 175);
+    }
+}

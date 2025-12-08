@@ -1,0 +1,27 @@
+@use '../variables' as *;
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    min-width: 80px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.badge-accepted {
+    color: $success-color;
+    background-color: #aaeed5;
+}
+
+.badge-pending {
+    color: $warning-color;
+    background-color: #fff4d3;
+}
+
+.badge-rejected {
+    color: $error-color;
+    background-color: #ffe1e1;
+}
