@@ -1,0 +1,42 @@
+.chat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    margin: 12px 0;
+}
+
+.chat-row.role-assistant {
+    justify-content: flex-start;
+}
+
+.chat-row.role-user {
+    justify-content: flex-end;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.chat-row.role-assistant .chat-bubble {
+    background: #fff;
+    color: #222;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-row.role-user .chat-bubble {
+    background: #4a90e2;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}

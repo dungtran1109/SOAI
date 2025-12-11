@@ -181,11 +181,10 @@
     font-weight: 500;
     white-space: nowrap;
     cursor: pointer;
-    border: none;
     border: 1px solid $success-color;
     color: $text-white-color;
     background-color: $success-color;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.4s ease;
 
     &:hover {
         background-color: #059669;
@@ -198,7 +197,7 @@
 
 .form__submit-btn.form__submit-btn--disable {
     color: grey;
-    background-color: $background-white-color;
+    background-color: $background-white-color !important;
     border: 1px solid #dfdfdf;
     cursor: not-allowed;
 }
