@@ -6,21 +6,21 @@
     margin: 12px 0;
 }
 
-.chat-row.role-assistant {
+.perform-on-role-ai {
     justify-content: flex-start;
 }
 
-.chat-row.role-user {
+.perform-on-role-user {
     justify-content: flex-end;
 }
 
-.avatar {
+.chat-row__avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
 }
 
-.chat-bubble {
+.chat-row__bubble {
     max-width: 80%;
     padding: 10px 14px;
     border-radius: 14px;
@@ -29,13 +29,13 @@
     line-height: 1.4;
 }
 
-.chat-row.role-assistant .chat-bubble {
+.chat-row__bubble.chat-row__bubble--ai {
     background: #fff;
     color: #222;
     border-bottom-left-radius: 4px;
 }
 
-.chat-row.role-user .chat-bubble {
+.chat-row__bubble.chat-row__bubble--user {
     background: #4a90e2;
     color: #fff;
     border-bottom-right-radius: 4px;
