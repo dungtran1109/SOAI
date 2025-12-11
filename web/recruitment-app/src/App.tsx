@@ -10,6 +10,7 @@ import AdminJDPage from './pages/AdminJDPage';
 import AdminAccountPage from './pages/AdminAccountPage';
 import AdminInterviewPage from './pages/AdminInterviewPage';
 import AdminDashBoardPage from './pages/AdminDashBoardPage';
+import ChatboxPage from './pages/ChatboxPage';
 
 const AppRoutes = () => {
     const location = useLocation();
@@ -36,6 +37,7 @@ const AppRoutes = () => {
             <Route path={PRIVATE_ADMIN_ROUTE.job} element={isAuth && role === 'ADMIN' ? <AdminJDPage /> : <Navigate to="/" replace />} />
             <Route path={PRIVATE_ADMIN_ROUTE.interview} element={isAuth && role === 'ADMIN' ? <AdminInterviewPage /> : <Navigate to="/" replace />} />
             <Route path={PRIVATE_ADMIN_ROUTE.account} element={isAuth && role === 'ADMIN' ? <AdminAccountPage /> : <Navigate to="/" replace />} />
+            <Route path={PRIVATE_ADMIN_ROUTE.aiAssistant} element={isAuth && role === 'ADMIN' ? <ChatboxPage /> : <Navigate to="/" replace />} />
         </Routes>
     );
 };

@@ -4,6 +4,7 @@ export const PRIVATE_ADMIN_ROUTE = {
     cv: '/admin/candidate/cvs',
     job: '/admin/dashboard/job/descriptions',
     interview: '/admin/candidate/interviews',
+    aiAssistant: '/ai-support',
 } as const;
 
 export const PUBLIC_ROUTE = {

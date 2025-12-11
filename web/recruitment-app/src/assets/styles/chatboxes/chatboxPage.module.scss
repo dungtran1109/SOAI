@@ -1,0 +1,81 @@
+@use '../variables' as *;
+
+.chatbox {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 32px - 32px); // Default padding 32px in admin-layout__content
+}
+
+.chatbox__window {
+    flex: 1;
+    width: 100%;
+    padding: 10px;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgb(211, 211, 211);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgb(167, 167, 167);
+        }
+    }
+}
+
+.chatbox__user-action {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 20px;
+    border: 1px solid rgb(211, 211, 211);
+    background-color: #fff;
+    overflow: hidden;
+}
+
+.chatbox__user-action-input {
+    flex: 1;
+    height: 100%;
+    padding: 10px 20px;
+    border: none;
+    outline: none;
+    background-color: unset;
+}
+
+.chatbox__user-action-submit {
+    height: 30px;
+    width: 30px;
+    font-weight: 500;
+    margin: 8px 10px 8px 0px;
+    border-radius: 50%;
+    border: 1px solid $success-color;
+    color: $text-white-color;
+    background-color: $success-color;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
+}
+
+.chatbox__user-action-submit--disabled {
+    color: grey;
+    background-color: $background-white-color !important;
+    border: 1px solid #dfdfdf;
+    cursor: not-allowed;
+}
