@@ -66,10 +66,38 @@ $chat-header-height: 44px;
     align-items: center;
     border-radius: 50%;
     border: 1px solid rgb(211, 211, 211);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(85, 141, 224, 0.2);
+    cursor: pointer;
 
     &:hover {
-        background-color: #059669;
+        border: 1px solid #10b981;
+
+        &::before {
+            content: 'Hi 👋, chat to me';
+            text-wrap: nowrap;
+            padding: 5px 10px;
+            position: absolute;
+            top: -40px;
+            right: 90%;
+            z-index: 1;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid #10b981;
+            background-color: #f2fffb;
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 0;
+            z-index: 1;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            border: 1px solid #10b981;
+            background-color: #f2fffb;
+        }
     }
 }
 
