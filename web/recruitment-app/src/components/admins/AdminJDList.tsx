@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { setNumberOfJob } from '../../services/redux/adminSlices/adminStatisticsSlice';
-import { isFutureDate } from '../../shared/helpers/commonUntils';
+import { isFutureDate } from '../../shared/helpers/commonUtils';
 import { initJDFilterValue, jdFilterReducer } from '../../services/reducer/filterReducer/jdFilter';
 import { getJDs, updateJD, deleteJD, getJDPreviewUrl } from '../../services/api/jdApi';
 import { Button, Col, ReviewModal, Row } from '../layouts';
