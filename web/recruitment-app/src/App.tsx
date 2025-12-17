@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { getUserRole, isAuthenticated } from './shared/helpers/authUtils';
 import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from './shared/constants/routes';
 import type { Role } from './shared/types/authTypes';
@@ -10,6 +10,8 @@ import AdminJDPage from './pages/AdminJDPage';
 import AdminAccountPage from './pages/AdminAccountPage';
 import AdminInterviewPage from './pages/AdminInterviewPage';
 import AdminDashBoardPage from './pages/AdminDashBoardPage';
+import UserJobPage from './pages/UserJobPage';
+import UserHeader from './components/users/UserHeader';
 
 const AppRoutes = () => {
     const location = useLocation();
@@ -24,11 +26,15 @@ const AppRoutes = () => {
     return (
         <Routes>
             {/* Navigte to <AdminDashBoardPage /> is used for testing - will be removed later*/}
-            <Route path="/" element={isAuth && role === 'USER' ? <AdminDashBoardPage /> : <Navigate to={PUBLIC_ROUTE.signin} replace />} />
+            {/* <Route path="/" element={isAuth && role === 'USER' ? <AdminDashBoardPage /> : <Navigate to={PUBLIC_ROUTE.signin} replace />} /> */}
 
             {/* TOTO: Remove hard-code routes after adding user pages */}
             <Route path={PUBLIC_ROUTE.signin} element={<AuthPage isSignin={true} />} />
             <Route path={PUBLIC_ROUTE.signup} element={<AuthPage isSignin={false} />} />
+
+            <Route element={<UserHeader />}>
+                <Route path={PUBLIC_ROUTE.openJob} element={<UserJobPage />} />
+            </Route>
 
             {/* TOTO: Remove hard-code routes after adding user pages*/}
             <Route path={PRIVATE_ADMIN_ROUTE.dashboard} element={isAuth && role === 'ADMIN' ? <AdminDashBoardPage /> : <Navigate to="/" replace />} />
@@ -42,12 +48,10 @@ const AppRoutes = () => {
 
 const App = () => {
     return (
-        <>
-            <Router>
-                <AppRoutes />
-            </Router>
+        <BrowserRouter>
+            <AppRoutes />
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover theme="colored" />
-        </>
+        </BrowserRouter>
     );
 };
 

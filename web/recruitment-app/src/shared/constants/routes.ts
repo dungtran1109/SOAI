@@ -9,4 +9,5 @@ export const PRIVATE_ADMIN_ROUTE = {
 export const PUBLIC_ROUTE = {
     signin: '/signin',
     signup: '/signup',
+    openJob: '/open-job',
 } as const;
