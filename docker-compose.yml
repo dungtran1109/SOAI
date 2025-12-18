@@ -180,7 +180,6 @@ services:
       - CONSUL_HOST=consul:8500
       - GENAI_HOST=genai:8004
       - LOG_LEVEL=DEBUG
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: always
     ports:
       - "8005:8005"
@@ -199,7 +198,7 @@ services:
         condition: service_started
   redis:
     container_name: soai_redis
-    image: valkey/valkey-bundle:latest
+    image: redis/redis-stack-server:latest
     ports:
       - "6379:6379"
     restart: always
