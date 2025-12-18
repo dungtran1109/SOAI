@@ -172,11 +172,15 @@ services:
       context: ./backend/services/agent_controller
       dockerfile: ./Dockerfile
     environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - SERVICE_NAME=soai_agent_controller
       - SERVICE_PORT=8005
       - SOAI_RECRUITMENT_AGENT=soai_recruitment_agent
       - CONSUL_HOST=consul:8500
+      - GENAI_HOST=genai:8004
       - LOG_LEVEL=DEBUG
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: always
     ports:
       - "8005:8005"
@@ -195,7 +199,7 @@ services:
         condition: service_started
   redis:
     container_name: soai_redis
-    image: redis:7
+    image: valkey/valkey-bundle:latest
     ports:
       - "6379:6379"
     restart: always
