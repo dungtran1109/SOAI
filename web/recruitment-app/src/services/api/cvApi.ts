@@ -1,6 +1,6 @@
 import axiosClient from '../axios/axiosClient';
 import type { CV } from '../../shared/types/adminTypes';
-import { RECRUITMENT_API_URL_PREFIX } from '../../shared/constants/baseUrls';
+import { RECRUITMENT_API_BASE_URL } from '../../shared/constants/baseUrls';
 
 /**
  * Get all existing CVs (admin role).
@@ -75,5 +75,5 @@ export const deleteCV = async (cvId: number): Promise<{ message: string }> => {
  * @returns Preview URL of the CV.
  */
 export const getCVPreviewUrl = (cvId: number): string => {
-    return `${RECRUITMENT_API_URL_PREFIX}/cvs/${cvId}/preview`;
+    return `${RECRUITMENT_API_BASE_URL}/cvs/${cvId}/preview`;
 };

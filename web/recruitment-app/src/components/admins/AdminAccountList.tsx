@@ -29,7 +29,6 @@ const AdminAccountList = ({ disableColumns = [] }: AdminAccountListProps) => {
     const fetchAccounts = useCallback(async () => {
         try {
             const results = await getAccounts();
-            console.log('results:', results);
             setAccounts(results);
             dispatch(setNumberOfAccount(results.length));
         } catch (err) {

@@ -1,12 +1,15 @@
-// Vite React provide an environment variable called MODE
-// Start on local (MODE = "development"): npm run dev ->
-// Start on production (MODE = "production"): npm run build → npm run preview
-// In production, these exports used for calling the nginx proxy after docker built
-const AUTH_BASE_URL = import.meta.env.MODE === 'production' ? '/api/v1' : 'http://localhost:9090/api/v1';
-const CHAT_BASE_URL = import.meta.env.MODE === 'production' ? '/api/v1' : 'http://localhost:8005/api/v1';
-const API_BASE_URL = import.meta.env.MODE === 'production' ? '/api/v1' : 'http://localhost:8003/api/v1';
+// Vite React provide an environment variable called PROD
+//   + Start on local (import.meta.env.PROD = false): npm run dev
+//   + Start on production (import.meta.env.PROD = true): npm run build → npm run preview
 
-// Export API URL Prefixes
-export const AUTH_API_URL_PREFIX = `${AUTH_BASE_URL}/authentications`;
-export const CHAT_API_URL_PREFIX = `${CHAT_BASE_URL}/agent-controller`;
-export const RECRUITMENT_API_URL_PREFIX = `${API_BASE_URL}/recruitment`;
+const LOCATION_HOST = window.location.host;
+const HTTP_PROTOCOL = window.location.protocol.replace(':', '');
+const WS_PROTOCOL = HTTP_PROTOCOL === 'https' ? 'wss' : 'ws';
+
+export const AUTH_API_BASE_URL = `${HTTP_PROTOCOL}://${import.meta.env.PROD ? LOCATION_HOST : 'localhost:9090'}/api/v1/authentications`;
+
+export const RECRUITMENT_API_BASE_URL = `${HTTP_PROTOCOL}://${import.meta.env.PROD ? LOCATION_HOST : 'localhost:8003'}/api/v1/recruitment`;
+
+export const CHAT_API_BASE_URL = `${HTTP_PROTOCOL}://${import.meta.env.PROD ? LOCATION_HOST : 'localhost:8005'}/api/v1/agent-controller`;
+
+export const CHAT_WS_ENDPOINT = `${WS_PROTOCOL}://${import.meta.env.PROD ? LOCATION_HOST : 'localhost:8005'}/api/v1/agent-controller/conversations/realtime`;

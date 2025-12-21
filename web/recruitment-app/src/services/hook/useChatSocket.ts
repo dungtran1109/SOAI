@@ -29,7 +29,6 @@ const useChatSocket = (endpointURL: string) => {
 
     const getChatHistory = async (userId: number, chatId: string): Promise<SingleMgs[]> => {
         const response = await getChatHistories(userId, chatId);
-        console.log(response);
         return response?.data.history || [];
     };
 

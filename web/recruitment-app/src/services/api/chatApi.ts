@@ -1,5 +1,5 @@
 import axiosClient from '../axios/axiosClient';
-import { CHAT_API_URL_PREFIX } from '../../shared/constants/baseUrls';
+import { CHAT_API_BASE_URL } from '../../shared/constants/baseUrls';
 import type { ChatHistory, ChatID } from '../../shared/types/chatTypes';
 
 /**
@@ -10,7 +10,7 @@ import type { ChatHistory, ChatID } from '../../shared/types/chatTypes';
 export const getChatIds = async (userId: number): Promise<ChatID> => {
     try {
         return axiosClient.get(`/conversations/${userId}`, {
-            baseURL: CHAT_API_URL_PREFIX,
+            baseURL: CHAT_API_BASE_URL,
         });
     } catch (error) {
         console.error('[DEBUG getChatIds]', error);
@@ -27,7 +27,7 @@ export const getChatIds = async (userId: number): Promise<ChatID> => {
 export const getChatHistories = async (userId: number, chatId: string): Promise<ChatHistory> => {
     try {
         return axiosClient.get(`/conversations/${userId}/${chatId}`, {
-            baseURL: CHAT_API_URL_PREFIX,
+            baseURL: CHAT_API_BASE_URL,
         });
     } catch (error) {
         console.error('[DEBUG getChatHistories]', error);
@@ -46,7 +46,7 @@ export const createChatSession = async (userId: number) => {
             `/conversations/${userId}/create`,
             {},
             {
-                baseURL: CHAT_API_URL_PREFIX,
+                baseURL: CHAT_API_BASE_URL,
             },
         );
     } catch (error) {

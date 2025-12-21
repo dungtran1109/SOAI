@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { CHAT_WS_ENDPOINT } from '../../shared/constants/baseUrls';
 import { FaArrowUp } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../services/redux/store';
@@ -11,7 +12,7 @@ const cx = classNames.bind(styles);
 
 const ChatBox = () => {
     const [msg, setMsg] = useState<string>('');
-    const wsSendMsg = useChatSocket('ws://localhost:8005/api/v1/agent-controller/conversations/realtime');
+    const wsSendMsg = useChatSocket(CHAT_WS_ENDPOINT);
     const chatSession = useSelector((state: RootState) => state.chatSession);
     const scrollDownRef = useRef<HTMLDivElement>(null);
 

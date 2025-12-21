@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { RECRUITMENT_API_URL_PREFIX } from '../../shared/constants/baseUrls';
+import { RECRUITMENT_API_BASE_URL } from '../../shared/constants/baseUrls';
 import { getToken } from '../../shared/helpers/authUtils';
 
 const axiosClient = axios.create({
-    baseURL: RECRUITMENT_API_URL_PREFIX, // Set RECRUITMENT_API_URL_PREFIX by default
+    baseURL: RECRUITMENT_API_BASE_URL, // Set RECRUITMENT_API_BASE_URL by default
     headers: { 'Content-Type': 'application/json' },
 });
 
