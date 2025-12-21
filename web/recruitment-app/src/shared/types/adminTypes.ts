@@ -15,6 +15,16 @@ export interface CV {
     justification: string;
 }
 
+export interface User {
+    userId: number;
+    userName: string;
+    birthDate: string;
+    address: string;
+    gender: string;
+    createAt: string;
+    updateAt: string;
+}
+
 export interface Account {
     accId: number;
     password: string;
@@ -23,7 +33,7 @@ export interface Account {
     createAt: string;
     updateAt: string;
     userName: string;
-    users: null;
+    users: User[];
 }
 
 export interface JD {

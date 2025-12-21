@@ -10,23 +10,49 @@
     flex: 1;
     width: 100%;
     padding: 12px;
-    overflow-y: auto;
+    overflow: auto;
 
     &::-webkit-scrollbar {
         width: 4px;
+        height: 4px;
     }
 
     &::-webkit-scrollbar-track {
-        background: transparent;
+        background-color: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-        background: rgb(211, 211, 211);
+        background-color: rgb(211, 211, 211);
         border-radius: 4px;
 
         &:hover {
-            background: rgb(167, 167, 167);
+            background-color: rgb(167, 167, 167);
         }
+    }
+}
+
+.chat-pending {
+    margin-left: 14px;
+    color: #9aa0a6;
+}
+
+.chat-pending__dots::after {
+    content: '';
+    animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+    0% {
+        content: '';
+    }
+    33% {
+        content: '.';
+    }
+    66% {
+        content: '..';
+    }
+    100% {
+        content: '...';
     }
 }
 

@@ -5,7 +5,7 @@ import chatReducer from './chatSlices/chatSlice';
 export const store = configureStore({
     reducer: {
         adminStatistics: adminStatisticsReducer,
-        chat: chatReducer,
+        chatSession: chatReducer,
     },
 });
 

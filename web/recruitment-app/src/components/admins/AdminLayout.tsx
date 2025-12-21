@@ -7,7 +7,7 @@ import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../../shared/constants/routes
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminLayout.module.scss';
 import SmartRecruitmentLogo from '../../assets/images/smart-recruitment-admin-logo.png';
-import ChatPopup from '../chatBoxes/ChatPopup';
+import ChatPopup from '../chats/ChatPopup';
 
 const cx = classNames.bind(styles);
 

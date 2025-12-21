@@ -1,24 +1,51 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { Message } from '../../../shared/types/chatTypes';
+import type { SingleMgs } from '../../../shared/types/chatTypes';
 
-const initialState: Message[] = [
-    { role: 'AI', content: 'Good day 👋 How are you doing today?' },
-    { role: 'USER', content: "I'm doing well. How about you?" },
-    { role: 'AI', content: "I'm great, thank you! How can I help you?" },
-    { role: 'USER', content: 'Are you AI assistant?' },
-    { role: 'AI', content: 'Yes, I am an AI assistant.' },
-];
+interface Message {
+    status: 'Waiting' | 'Done';
+    msg: SingleMgs[];
+}
+
+const initialState: Message = {
+    status: 'Done',
+    msg: [],
+};
 
 export const aiChatSlices = createSlice({
     name: 'ai-chat',
     initialState,
     reducers: {
-        pushMessage: (state, action: PayloadAction<Message>): Message[] => {
-            return [...state, action.payload];
+        setMessages: (state, action: PayloadAction<SingleMgs[]>): Message => {
+            const histories = action.payload;
+            if (histories.length == 0) {
+                return initialState;
+            }
+            return {
+                ...state,
+                msg: action.payload,
+            };
+        },
+        pushMessage: (state, action: PayloadAction<SingleMgs>): Message => {
+            return {
+                ...state,
+                msg: [...state.msg, action.payload],
+            };
+        },
+        setWaitingResponse: (state): Message => {
+            return {
+                ...state,
+                status: 'Waiting',
+            };
+        },
+        setDoneResponse: (state): Message => {
+            return {
+                ...state,
+                status: 'Done',
+            };
         },
     },
 });
 
-export const { pushMessage } = aiChatSlices.actions;
+export const { setMessages, pushMessage, setWaitingResponse, setDoneResponse } = aiChatSlices.actions;
 
 export default aiChatSlices.reducer;

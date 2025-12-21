@@ -20,6 +20,6 @@ export interface SigninResponse {
 export interface TokenDecoded {
     exp: number;
     iat: number;
-    sub: number;
+    sub: string;
     role: Role;
 }

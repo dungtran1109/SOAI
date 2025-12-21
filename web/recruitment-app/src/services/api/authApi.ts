@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 import axiosClient from '../axios/axiosClient';
 import { AUTH_API_URL_PREFIX } from '../../shared/constants/baseUrls';
 import { COOKIE_TOKEN_NAME } from '../../shared/constants/browserStorages';
-import type { Account } from '../../shared/types/adminTypes';
+import type { Account, User } from '../../shared/types/adminTypes';
 import type { SigninData, SignupData, SigninResponse } from '../../shared/types/authTypes';
 
 /**
@@ -77,5 +77,20 @@ export const deleteAccount = async (accountId: number): Promise<{ message: strin
     } catch (error) {
         console.error('[DEBUG deleteAccount]:', error);
         return { message: `${error}` };
+    }
+};
+
+/**
+ * Get information of users based on username.
+ * @returns List of users.
+ */
+export const getUsers = async (userName: string): Promise<User[]> => {
+    try {
+        return axiosClient.get(`/users?userName=${userName}`, {
+            baseURL: AUTH_API_URL_PREFIX,
+        });
+    } catch (error) {
+        console.error('[DEBUG getUsers]:', error);
+        return [];
     }
 };

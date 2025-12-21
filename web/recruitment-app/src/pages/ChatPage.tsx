@@ -1,8 +1,8 @@
 import { Container } from '../components/layouts';
 import classNames from 'classnames/bind';
-import styles from '../assets/styles/chatBoxes/chatPage.module.scss';
+import styles from '../assets/styles/chats/chatPage.module.scss';
 import AdminLayout from '../components/admins/AdminLayout';
-import ChatBox from '../components/chatBoxes/ChatBox';
+import ChatBox from '../components/chats/ChatBox';
 
 const cx = classNames.bind(styles);
 

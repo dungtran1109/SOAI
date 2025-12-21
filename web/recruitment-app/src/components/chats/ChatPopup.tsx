@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CHAT_ROLE } from '../../shared/types/chatTypes';
 import { PRIVATE_ADMIN_ROUTE } from '../../shared/constants/routes';
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/chatboxes/chatPopup.module.scss';
+import styles from '../../assets/styles/chats/chatPopup.module.scss';
 import BotAI from '../../assets/images/ai.avif';
-import Chatbox from './ChatBox';
+import ChatBox from './ChatBox';
 
 const cx = classNames.bind(styles);
 
@@ -49,19 +50,19 @@ const ChatPopup = () => {
         <div ref={chatRef} className={cx('chat-frame')}>
             <div className={cx('chat-header')}>
                 <Link to={PRIVATE_ADMIN_ROUTE.aiAssistant} className={cx('chat-header__name')}>
-                    Endava AI
+                    AI Assistant
                 </Link>
                 <button className={cx('chat-header__close-btn')} onClick={() => setOpenChat(false)}>
                     ✕
                 </button>
             </div>
             <div className={cx('chat-body')}>
-                <Chatbox />
+                <ChatBox />
             </div>
         </div>
     ) : (
         <button className={cx('chat-popup-btn')} onClick={handleOpenChat}>
-            <img src={BotAI} alt="AI" className={cx('chat-popup-btn__img')} />
+            <img src={BotAI} alt={CHAT_ROLE.AI} className={cx('chat-popup-btn__img')} />
         </button>
     );
 };
