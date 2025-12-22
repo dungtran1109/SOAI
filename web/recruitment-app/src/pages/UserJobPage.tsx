@@ -7,6 +7,8 @@ import { getJDs } from '../services/api/jdApi';
 import type { JD } from '../shared/types/adminTypes';
 import logo from '../assets/images/logo.png';
 import { FiActivity, FiClock, FiDollarSign, FiMapPin } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import { uploadCV } from '../services/api/cvApi';
 
 const cx = classNames.bind(styles);
 
@@ -35,7 +37,29 @@ const UserJobPage = () => {
         console.log('Submitted');
     };
 
-    console.log(viewJob);
+    const handleUploadCVFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+        const file = e.target.files?.[0];
+        if (!file || !viewJob) return;
+        try {
+            const MAX_SIZE = 5 * 1024 * 1024; // Accept size 5 MB
+            if (file.size > MAX_SIZE) {
+                throw new Error('File size exceeds 5 MB limit.');
+            }
+            if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
+                throw new Error('Invalid file type. Only PDF and Word documents are allowed.');
+            }
+            await uploadCV(file, viewJob.position);
+            toast.success(`Succeed to apply CV to ${viewJob.position}`, {
+                position: 'top-center',
+                hideProgressBar: true,
+            });
+        } catch (err) {
+            toast.warning(`Failed to upload CV: ${(err as Error).message}`, {
+                position: 'top-center',
+                hideProgressBar: true,
+            });
+        }
+    };
 
     return (
         <>
@@ -73,21 +97,26 @@ const UserJobPage = () => {
                     {viewJob && (
                         <Col size={{ xs: 12, sm: 12, md: 12, lg: 7, xl: 7 }} className={cx('job-right')}>
                             <div className={cx('job')}>
-                                <div className={cx('job__header')}>
-                                    <div className={cx('job__header-left')}>
-                                        <img src={logo} alt="Logo" className={cx('job__header-left-img')} />
+                                <div className={cx('job-header')}>
+                                    <div className={cx('job-header__left')}>
+                                        <img src={logo} alt="Logo" className={cx('job-header__left-img')} />
                                     </div>
-                                    <div className={cx('job__header-right')}>
+                                    <div className={cx('job-header__right')}>
                                         <h1>{viewJob.position}</h1>
-                                        <p className={cx('job__header-right-header')}>WarmHouse Company Limited</p>
-                                        <p className={cx('job__header-right-salary')}>
+                                        <p className={cx('job-header__right-header')}>WarmHouse Company Limited</p>
+                                        <p className={cx('job-header__right-salary')}>
                                             <FiDollarSign />
                                             <span>You'll love it</span>
                                         </p>
                                     </div>
                                 </div>
 
-                                <button className={cx('job__submit-btn')}>Apply</button>
+                                <div className={cx('job__submit')}>
+                                    <input type="file" accept=".pdf,.doc,.docx" id="jd-upload-input" onChange={handleUploadCVFile} />
+                                    <label htmlFor="jd-upload-input" className={cx('job__submit-btn')}>
+                                        Apply
+                                    </label>
+                                </div>
 
                                 <hr style={{ margin: '10px 0' }} />
 
@@ -101,7 +130,9 @@ const UserJobPage = () => {
                                         <h2 className={cx('job__content-title')}>Responsibilities</h2>
                                         <ul>
                                             {viewJob.responsibilities.map((responsibility) => (
-                                                <li className={cx('job__content-detail')}>{responsibility}</li>
+                                                <li key={responsibility} className={cx('job__content-detail')}>
+                                                    {responsibility}
+                                                </li>
                                             ))}
                                         </ul>
                                     </section>
@@ -110,7 +141,9 @@ const UserJobPage = () => {
                                         <h2 className={cx('job__content-title')}>Your skills and experiences</h2>
                                         <ul>
                                             {viewJob.skills_required.map((skill) => (
-                                                <li className={cx('job__content-detail')}>{skill}</li>
+                                                <li key={skill} className={cx('job__content-detail')}>
+                                                    {skill}
+                                                </li>
                                             ))}
                                         </ul>
                                     </section>

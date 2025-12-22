@@ -61,12 +61,12 @@ $__padding-content: 10px;
     }
 }
 
-.job__header {
+.job-header {
     display: flex;
     gap: 10px;
 }
 
-.job__header-left {
+.job-header__left {
     padding: 10px;
     text-align: center;
     align-content: center;
@@ -75,12 +75,12 @@ $__padding-content: 10px;
     box-shadow: 0px 4px 16px 0px #0000001f;
 }
 
-.job__header-left-img {
+.job-header__left-img {
     display: block;
     width: 80px;
 }
 
-.job__header-right {
+.job-header__right {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -89,12 +89,12 @@ $__padding-content: 10px;
     padding: 10px;
 }
 
-.job__header-right-header {
+.job-header__right-header {
     font-weight: 500;
     font-size: $font-large-size;
 }
 
-.job__header-right-salary {
+.job-header__right-salary {
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -103,15 +103,23 @@ $__padding-content: 10px;
     color: $success-color;
 }
 
-.job__submit-btn {
-    width: 100%;
+.job__submit {
     margin: 20px 0;
+}
+
+.job__submit input[type='file'] {
+    display: none;
+}
+
+.job__submit-btn {
+    display: block;
+    width: 100%;
     padding: 12px 16px;
-    border-radius: 6px;
     font-weight: 500;
+    text-align: center;
     white-space: nowrap;
     cursor: pointer;
-    border: none;
+    border-radius: 6px;
     border: 1px solid $success-color;
     color: $text-white-color;
     background-color: $success-color;

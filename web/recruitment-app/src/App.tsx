@@ -26,7 +26,7 @@ const AppRoutes = () => {
     return (
         <Routes>
             {/* Navigte to <AdminDashBoardPage /> is used for testing - will be removed later*/}
-            {/* <Route path="/" element={isAuth && role === 'USER' ? <AdminDashBoardPage /> : <Navigate to={PUBLIC_ROUTE.signin} replace />} /> */}
+            <Route path="/" element={isAuth && role === 'ADMIN' ? <AdminDashBoardPage /> : <Navigate to={PUBLIC_ROUTE.signin} replace />} />
 
             {/* TOTO: Remove hard-code routes after adding user pages */}
             <Route path={PUBLIC_ROUTE.signin} element={<AuthPage isSignin={true} />} />

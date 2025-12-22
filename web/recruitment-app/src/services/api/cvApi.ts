@@ -77,3 +77,27 @@ export const deleteCV = async (cvId: number): Promise<{ message: string }> => {
 export const getCVPreviewUrl = (cvId: number): string => {
     return `${RECRUITMENT_API_URL_PREFIX}/cvs/${cvId}/preview`;
 };
+
+/**
+ * Upload a CV file (user role).
+ * @param file - The CV file to upload.
+ * @param position - The position that candidate applied.
+ * @param email - Override email address (optional).
+ * @returns Object includes a message after uploading CV.
+ */
+export const uploadCV = async (file: File, position: string, email: string | null = null) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('position_applied_for', position);
+        if (email) formData.append('override_email', email);
+        return axiosClient.post('/cvs/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    } catch (error) {
+        console.error('[DEBUG uploadJDFile]', error);
+        return { message: `${error}` };
+    }
+};
