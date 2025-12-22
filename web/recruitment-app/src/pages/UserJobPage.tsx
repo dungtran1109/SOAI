@@ -1,20 +1,22 @@
-import classNames from 'classnames/bind';
-import styles from '../assets/styles/users/userJobPage.module.scss';
 import { Col, Container, Row } from '../components/layouts';
-import UserJobCard from '../components/users/UserJobCard';
-import { useEffect, useState } from 'react';
-import { getJDs } from '../services/api/jdApi';
-import type { JD } from '../shared/types/adminTypes';
-import logo from '../assets/images/logo.png';
 import { FiActivity, FiClock, FiDollarSign, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { uploadCV } from '../services/api/cvApi';
+import { initJDFilterValue, jdFilterReducer } from '../services/reducer/filterReducer/jdFilter';
+import { useEffect, useMemo, useReducer, useState } from 'react';
+import { getJDs } from '../services/api/jdApi';
+import type { JD } from '../shared/types/adminTypes';
+import classNames from 'classnames/bind';
+import styles from '../assets/styles/users/userJobPage.module.scss';
+import logo from '../assets/images/logo.png';
+import UserJobCard from '../components/users/UserJobCard';
 
 const cx = classNames.bind(styles);
 
 const UserJobPage = () => {
     const [jds, setJds] = useState<JD[]>([]);
     const [viewJob, setViewJob] = useState<JD | null>(null);
+    const [filter, dispatchFilter] = useReducer(jdFilterReducer, initJDFilterValue);
 
     useEffect(() => {
         const fetchJobs = async (position: string = ''): Promise<void> => {
@@ -32,11 +34,14 @@ const UserJobPage = () => {
         fetchJobs();
     }, []);
 
-    const handleSubmitFilter = (e: React.FormEvent<HTMLFormElement>): void => {
-        e.preventDefault();
-        console.log('Submitted');
-    };
+    const filterJDs = useMemo(() => {
+        return jds.filter(
+            (jd) => jd.position.toLowerCase().includes(filter.title.toLowerCase()) && jd.location.toLowerCase().includes(filter.location.toLowerCase()),
+        );
+    }, [filter, jds]);
 
+    const uniqueLocations = useMemo<string[]>(() => [...new Set(jds.map((jd) => jd.location).filter(Boolean))], [jds]);
+    console.log(filter);
     const handleUploadCVFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
         const file = e.target.files?.[0];
         if (!file || !viewJob) return;
@@ -65,32 +70,37 @@ const UserJobPage = () => {
         <>
             <div className={cx('filter')}>
                 <Container>
-                    <form onSubmit={handleSubmitFilter} className={cx('filter-form')}>
-                        <Row space={10}>
-                            <Col size={{ xs: 12, sm: 12, md: 3, lg: 2, xl: 2 }}>
-                                <select className={cx('filter-form__item')}>
-                                    <option className={cx('filter__select-option')}>Ho Chi Minh</option>
-                                </select>
-                            </Col>
-                            <Col size={{ xs: 12, sm: 12, md: 9, xl: 10, lg: 10 }}>
-                                <input className={cx('filter-form__item')} placeholder="Entry any thing..." />
-                            </Col>
-                        </Row>
-                    </form>
+                    <Row space={10}>
+                        <Col size={{ xs: 12, sm: 12, md: 3, lg: 2, xl: 2 }}>
+                            <select className={cx('filter__item')} onChange={(e) => dispatchFilter({ type: 'JD_LOCATION', payload: e.target.value })}>
+                                <option className={cx('filter__select-option')}>-- All --</option>
+                                {uniqueLocations.map((location) => (
+                                    <option key={location} className={cx('filter__select-option')}>
+                                        {location}
+                                    </option>
+                                ))}
+                            </select>
+                        </Col>
+                        <Col size={{ xs: 12, sm: 12, md: 9, xl: 10, lg: 10 }}>
+                            <input
+                                value={filter.title}
+                                onChange={(e) => dispatchFilter({ type: 'JD_TITLE', payload: e.target.value })}
+                                className={cx('filter__item')}
+                                placeholder="Entry any thing..."
+                            />
+                        </Col>
+                    </Row>
                 </Container>
             </div>
 
             <Container>
                 <p className={cx('job_counter')}>
-                    <span>{jds.length} jobs</span> are opening 👇
+                    <span>{filterJDs.length} jobs</span> are opening 👇
                 </p>
 
                 <Row>
                     <Col size={{ xs: 12, sm: 12, md: 12, lg: 5, xl: 5 }} className={cx('job-left')}>
-                        {jds.map((jd) => (
-                            <UserJobCard key={jd.id} job={jd} onClick={() => setViewJob(jd)} highlight={viewJob?.id === jd.id} />
-                        ))}
-                        {jds.map((jd) => (
+                        {filterJDs.map((jd) => (
                             <UserJobCard key={jd.id} job={jd} onClick={() => setViewJob(jd)} highlight={viewJob?.id === jd.id} />
                         ))}
                     </Col>
@@ -154,15 +164,15 @@ const UserJobPage = () => {
                                 <Row space={10}>
                                     <Col size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} className={cx('job__footer-section')}>
                                         <FiActivity />
-                                        <span>Referral Code: {viewJob.referral_code}</span>
+                                        <p>Referral code: {viewJob.referral_code}</p>
                                     </Col>
                                     <Col size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} className={cx('job__footer-section')}>
                                         <FiClock />
-                                        <span>Posted Date: {new Date(viewJob.datetime).toLocaleString()}</span>
+                                        <p>Posted date: {new Date(viewJob.datetime).toLocaleString()}</p>
                                     </Col>
                                     <Col size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} className={cx('job__footer-section')}>
                                         <FiMapPin />
-                                        <span>{viewJob.location}</span>
+                                        <p>{viewJob.location}</p>
                                     </Col>
                                 </Row>
                             </div>

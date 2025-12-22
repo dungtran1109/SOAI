@@ -13,12 +13,17 @@ $__padding-content: 10px;
     background: linear-gradient(269.85deg, #54151c 0%, #121212 54.89%);
 }
 
-.filter-form__item {
+.filter__item {
     @include element-size;
     border-radius: 6px;
     padding: 10px;
     outline: none;
     border: none;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
 }
 
 .job_counter {
@@ -142,8 +147,12 @@ $__padding-content: 10px;
     margin-bottom: 14px;
 }
 
+.job__content-section ul {
+    list-style-position: inside;
+}
+
 .job__content-detail {
-    margin: 4px 20px;
+    margin: 4px 0;
 }
 
 .job__footer-section {
@@ -152,7 +161,7 @@ $__padding-content: 10px;
     align-items: center;
 }
 
-.job__footer-section span {
+.job__footer-section p {
     margin-left: 10px;
     font-style: normal;
     font-weight: 500;
