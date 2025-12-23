@@ -1,0 +1,105 @@
+@use '../variables' as *;
+
+.chat-frame {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chat-body {
+    flex: 1;
+    width: 100%;
+    padding: 12px;
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: rgb(211, 211, 211);
+        border-radius: 4px;
+
+        &:hover {
+            background-color: rgb(167, 167, 167);
+        }
+    }
+}
+
+.chat-pending {
+    margin-left: 14px;
+    color: #9aa0a6;
+}
+
+.chat-pending__dots::after {
+    content: '';
+    animation: dots 1.5s steps(3, end) infinite;
+}
+
+@keyframes dots {
+    0% {
+        content: '';
+    }
+    33% {
+        content: '.';
+    }
+    66% {
+        content: '..';
+    }
+    100% {
+        content: '...';
+    }
+}
+
+.chat-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px;
+    border-radius: 20px;
+    border: 1px solid rgb(211, 211, 211);
+    background-color: #fff;
+    overflow: hidden;
+}
+
+.chat-footer__input {
+    flex: 1;
+    height: 100%;
+    padding: 10px 20px;
+    border: none;
+    outline: none;
+    background-color: unset;
+}
+
+.chat-footer__submit-btn {
+    height: 30px;
+    width: 30px;
+    font-weight: 500;
+    margin: 8px 10px 8px 0px;
+    border-radius: 50%;
+    border: 1px solid $success-color;
+    color: $text-white-color;
+    background-color: $success-color;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
+}
+
+.chat-footer__submit-btn.chat-footer__submit-btn--disabled {
+    color: grey;
+    border: 1px solid #dfdfdf;
+    background-color: $background-white-color !important;
+    cursor: not-allowed;
+}

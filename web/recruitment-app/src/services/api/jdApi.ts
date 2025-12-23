@@ -1,4 +1,4 @@
-import { RECRUITMENT_API_URL_PREFIX } from '../../shared/constants/baseUrls';
+import { RECRUITMENT_API_BASE_URL } from '../../shared/constants/baseUrls';
 import type { JD } from '../../shared/types/adminTypes';
 import axiosClient from '../axios/axiosClient';
 
@@ -85,5 +85,5 @@ export const deleteJD = async (jdId: number): Promise<{ message: string }> => {
  * @returns Preview URL of the JD.
  */
 export const getJDPreviewUrl = (jdId: number): string => {
-    return `${RECRUITMENT_API_URL_PREFIX}/jds/${jdId}/preview`;
+    return `${RECRUITMENT_API_BASE_URL}/jds/${jdId}/preview`;
 };

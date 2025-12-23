@@ -1,0 +1,48 @@
+.chat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    margin: 16px 0;
+}
+
+.perform-on-role-assistant {
+    justify-content: flex-start;
+}
+
+.perform-on-role-user {
+    justify-content: flex-end;
+}
+
+.chat-row__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #fff;
+}
+
+.chat-row__bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.chat-row__bubble ul,
+.chat-row__bubble ol {
+    list-style-position: inside;
+}
+
+.chat-row__bubble.chat-row__bubble--assistant {
+    background: #fff;
+    color: #222;
+    border-top-left-radius: 4px;
+}
+
+.chat-row__bubble.chat-row__bubble--user {
+    background: #4a90e2;
+    color: #fff;
+    border-top-right-radius: 4px;
+}

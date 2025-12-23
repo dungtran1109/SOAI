@@ -38,14 +38,15 @@ class JWTService:
     ALGORITHM = "HS256"  # Matches Spring Boot's algorithm
     security = CustomHTTPBearer()
 
-    @classmethod
-    def verify_jwt(cls, credentials: HTTPAuthorizationCredentials = Security(security)):
+    @staticmethod
+    def verify_jwt_token(
+        token,
+    ) -> dict:
         """Verifies the JWT token and returns the payload if valid."""
-        token = credentials.credentials
         try:
             logger.info(f"Decoding token: {token}")
-            decoded_key = base64.b64decode(cls.SECRET_KEY_ENCODED)
-            payload = jwt.decode(token, decoded_key, algorithms=[cls.ALGORITHM])
+            decoded_key = base64.b64decode(JWTService.SECRET_KEY_ENCODED)
+            payload = jwt.decode(token, decoded_key, algorithms=[JWTService.ALGORITHM])
             logger.info(f"Payload: {payload}")
             username = payload.get("sub")
             role = payload.get("role")
@@ -54,12 +55,12 @@ class JWTService:
             return payload
         except JWTError as e:
             logger.error(f"[JWT ERROR] {e}")
-            response = make_standard_response(
-                success=False,
-                error="Invalid or expired token",
-                data=None,
-            )
-            raise HTTPException(status_code=401, detail=response)
+        return None
+
+    @classmethod
+    def verify_jwt(cls, credentials: HTTPAuthorizationCredentials = Security(security)):
+        """Verifies the JWT token and returns the payload if valid."""
+        return JWTService.verify_jwt_token(credentials.credentials)
 
     # Use when endpoints need to restrict RBAC for specific user
     # [ADMIN, USER]

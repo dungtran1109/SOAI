@@ -1,8 +1,8 @@
 import Cookies from 'js-cookie';
 import axiosClient from '../axios/axiosClient';
-import { AUTH_API_URL_PREFIX } from '../../shared/constants/baseUrls';
+import { AUTH_API_BASE_URL } from '../../shared/constants/baseUrls';
 import { COOKIE_TOKEN_NAME } from '../../shared/constants/browserStorages';
-import type { Account } from '../../shared/types/adminTypes';
+import type { Account, User } from '../../shared/types/adminTypes';
 import type { SigninData, SignupData, SigninResponse } from '../../shared/types/authTypes';
 
 /**
@@ -13,7 +13,7 @@ import type { SigninData, SignupData, SigninResponse } from '../../shared/types/
 export const signin = async (signinData: SigninData): Promise<SigninResponse> => {
     try {
         return axiosClient.post('/signin', signinData, {
-            baseURL: AUTH_API_URL_PREFIX,
+            baseURL: AUTH_API_BASE_URL,
         });
     } catch (error) {
         throw new Error(`Failed to login to system: ${error}`);
@@ -27,7 +27,7 @@ export const signin = async (signinData: SigninData): Promise<SigninResponse> =>
 export const signup = async (registerData: SignupData): Promise<void> => {
     try {
         return axiosClient.post('/signup', registerData, {
-            baseURL: AUTH_API_URL_PREFIX,
+            baseURL: AUTH_API_BASE_URL,
         });
     } catch (error) {
         throw new Error(`Failed to register a new account: ${error}`);
@@ -56,7 +56,7 @@ export const logout = (): { ok: boolean; message: string } => {
 export const getAccounts = async (): Promise<Account[]> => {
     try {
         return axiosClient.get('/accounts', {
-            baseURL: AUTH_API_URL_PREFIX,
+            baseURL: AUTH_API_BASE_URL,
         });
     } catch (error) {
         console.error('[DEBUG getAccounts]:', error);
@@ -72,10 +72,25 @@ export const getAccounts = async (): Promise<Account[]> => {
 export const deleteAccount = async (accountId: number): Promise<{ message: string }> => {
     try {
         return axiosClient.delete(`/accounts/${accountId}`, {
-            baseURL: AUTH_API_URL_PREFIX,
+            baseURL: AUTH_API_BASE_URL,
         });
     } catch (error) {
         console.error('[DEBUG deleteAccount]:', error);
         return { message: `${error}` };
+    }
+};
+
+/**
+ * Get information of users based on username.
+ * @returns List of users.
+ */
+export const getUsers = async (userName: string): Promise<User[]> => {
+    try {
+        return axiosClient.get(`/users?userName=${userName}`, {
+            baseURL: AUTH_API_BASE_URL,
+        });
+    } catch (error) {
+        console.error('[DEBUG getUsers]:', error);
+        return [];
     }
 };

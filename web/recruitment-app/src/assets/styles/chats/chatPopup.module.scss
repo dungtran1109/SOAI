@@ -1,0 +1,108 @@
+@use '../variables' as *;
+
+$chat-frame-height: 420px;
+$chat-header-height: 44px;
+
+@mixin bottom-right-position($bottom, $right, $zIndex: 1) {
+    position: fixed;
+    right: $right;
+    bottom: $bottom;
+    z-index: $zIndex;
+}
+
+.chat-frame {
+    @include bottom-right-position(30px, 30px);
+    width: 320px;
+    height: $chat-frame-height;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: popup 0.25s ease-out;
+}
+
+@keyframes popup {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 44px;
+    padding: 0 12px;
+    font-weight: bold;
+    color: $text-white-color;
+    background-color: #4a90e2;
+}
+
+.chat-header__name {
+    text-decoration: none !important;
+    color: $text-white-color;
+}
+
+.chat-header__close-btn {
+    font-size: $font-large-size;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.chat-body {
+    height: calc($chat-frame-height - $chat-header-height);
+}
+
+.chat-popup-btn {
+    @include bottom-right-position(30px, 30px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    border: 1px solid rgb(211, 211, 211);
+    box-shadow: 0 4px 10px rgba(85, 141, 224, 0.2);
+    cursor: pointer;
+
+    &:hover {
+        border: 1px solid #10b981;
+
+        &::before {
+            content: 'Hi 👋 chat to me';
+            text-wrap: nowrap;
+            padding: 5px 10px;
+            position: absolute;
+            top: -40px;
+            right: 90%;
+            z-index: 1;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid #10b981;
+            background-color: #f2fffb;
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 0;
+            z-index: 1;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            border: 1px solid #10b981;
+            background-color: #f2fffb;
+        }
+    }
+}
+
+.chat-popup-btn__img {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+}

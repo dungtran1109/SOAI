@@ -34,16 +34,27 @@ export const isAuthenticated = (): boolean => {
 };
 
 /**
- * Get current account role.
+ * Get current account role from token.
  * @returns Current account role.
  */
 export const getUserRole = (): Role => {
-    const token = getToken();
-    if (!token) return 'USER';
     try {
-        const decoded: TokenDecoded = jwtDecode(token);
+        const decoded: TokenDecoded = jwtDecode(getToken() || '');
         return decoded.role || 'USER';
     } catch {
         return 'USER';
+    }
+};
+
+/**
+ * Get username of account from token.
+ * @returns Current username.
+ */
+export const getUserName = (): string => {
+    try {
+        const decoded: TokenDecoded = jwtDecode(getToken() || '');
+        return decoded.sub;
+    } catch {
+        return '';
     }
 };
