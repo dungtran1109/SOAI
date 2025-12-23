@@ -49,10 +49,10 @@ const UserHeader = () => {
                     </div>
 
                     <nav className={cx('header__dropdown')}>
-                        <Link className={cx('header__dropdown-link')} to="#">
+                        <Link className={cx('header__dropdown-link')} to={PUBLIC_ROUTE.profile}>
                             <FiUser size={15} /> <span>My profile</span>
                         </Link>
-                        <Link className={cx('header__dropdown-link')} to="/signin" onClick={handleLogout}>
+                        <Link className={cx('header__dropdown-link')} to={PUBLIC_ROUTE.signin} onClick={handleLogout}>
                             <FiLogOut size={15} /> <span>Sign out</span>
                         </Link>
                     </nav>

@@ -10,4 +10,5 @@ export const PUBLIC_ROUTE = {
     signin: '/signin',
     signup: '/signup',
     openJob: '/open-job',
+    profile: 'user-profile',
 } as const;

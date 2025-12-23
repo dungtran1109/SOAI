@@ -41,8 +41,9 @@ const UserJobPage = () => {
     }, [filter, jds]);
 
     const uniqueLocations = useMemo<string[]>(() => [...new Set(jds.map((jd) => jd.location).filter(Boolean))], [jds]);
-    console.log(filter);
+
     const handleUploadCVFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+        // TODO: Check if user already auth or not
         const file = e.target.files?.[0];
         if (!file || !viewJob) return;
         try {

@@ -12,6 +12,7 @@ import AdminInterviewPage from './pages/AdminInterviewPage';
 import AdminDashBoardPage from './pages/AdminDashBoardPage';
 import UserJobPage from './pages/UserJobPage';
 import UserHeader from './components/users/UserHeader';
+import UserProfile from './pages/UserProfile';
 
 const AppRoutes = () => {
     const location = useLocation();
@@ -32,8 +33,10 @@ const AppRoutes = () => {
             <Route path={PUBLIC_ROUTE.signin} element={<AuthPage isSignin={true} />} />
             <Route path={PUBLIC_ROUTE.signup} element={<AuthPage isSignin={false} />} />
 
+            {/* TODO: Handle PUBLIC_ROUTE.profile as a private route*/}
             <Route element={<UserHeader />}>
                 <Route path={PUBLIC_ROUTE.openJob} element={<UserJobPage />} />
+                <Route path={PUBLIC_ROUTE.profile} element={<UserProfile />} />
             </Route>
 
             {/* TOTO: Remove hard-code routes after adding user pages*/}
