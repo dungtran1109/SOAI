@@ -29,6 +29,8 @@ from schemas.interview_question_schema import InterviewQuestionSchema
 from schemas.jd_schema import JobDescriptionUploadSchema
 from schemas.cv_schema import CVUploadResponseSchema
 from metrics.prometheus_metrics import *
+import requests
+from utils.utils import extract_text_from_pdf, chunk_text
 
 logger = AppLogger(__name__)
 
@@ -178,6 +180,15 @@ class RecruitmentService:
         db.add(cv)
         db.commit()
         logger.info("CV saved to database.")
+
+        # Index CV into Qdrant via Knowledge Base service
+        try:
+            self.index_cv_embeddings(
+                cv_application=cv,
+                cv_file_path=cv_file_path,
+            )
+        except Exception as e:
+            logger.error(f"Error indexing CV embeddings: {e}")
         return f"CV processed successfully for candidate name: {candidate_name}"
 
     def approve_cv(self, candidate_id: int, db: Session):
@@ -243,6 +254,45 @@ class RecruitmentService:
             f"CV status updated to {cv_application.status} for candidate: {cv_application.candidate_name}"
         )
         return f"CV approval result: {final_state.final_decision}"
+
+    def index_cv_embeddings(self, cv_application: CVApplication, cv_file_path: str):
+        """Extract text, chunk, and send to Knowledge Base for embedding/upsert."""
+        try:
+            text = extract_text_from_pdf(cv_file_path)
+            chunks = chunk_text(text)
+            if not chunks:
+                logger.warn("No chunks produced for CV; skipping RAG ingestion.")
+                return
+            payloads = [
+                {
+                    "candidate_id": cv_application.id,
+                    "email": cv_application.email,
+                    "position": cv_application.matched_position,
+                    "source_doc": os.path.basename(cv_file_path),
+                }
+                for _ in chunks
+            ]
+
+            request_body = {
+                "texts": chunks,
+                "collection_name": QDRANT_COLLECTION,
+                "embedding_model": EMBEDDING_MODEL,
+                "payloads": payloads,
+            }
+            url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
+            kwargs = {"url": url, "json": request_body, "headers": {"Content-Type": "application/json"}}
+            if TLS_ENABLED and CA_PATH:
+                kwargs["verify"] = CA_PATH
+            resp = requests.post(**kwargs)
+            if resp.status_code == 200:
+                rag_ingest_total.inc(len(chunks))
+                logger.info(
+                    f"Indexed {len(chunks)} chunks for CV ID={cv_application.id} into collection {QDRANT_COLLECTION}"
+                )
+            else:
+                logger.error(f"Failed to add documents to KB: {resp.text}")
+        except Exception as e:
+            logger.error(f"Error during RAG ingestion: {e}")
 
     def upload_jd(self, jd_data_list: list, db: Session):
         logger.info("Uploading JD list.")

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, Body, Query
+from fastapi import APIRouter, UploadFile, File, Form, Depends, Body, Query, HTTPException
 from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from config.database import DatabaseSession
@@ -14,6 +14,11 @@ from services.jwt_service import JWTService
 from config.log_config import AppLogger
 from schemas.interview_question_schema import InterviewQuestionSchema
 from celery_tasks.pipeline import *
+from schemas.rag_schema import RAGQueryRequest, RAGQueryResponse, Citation
+from config.constants import KNOWLEDGE_BASE_HOST, EMBEDDING_MODEL, QDRANT_COLLECTION, SCHEMA, TLS_ENABLED, CA_PATH, DEFAULT_MODEL
+from services.genai import GenAI
+from metrics.prometheus_metrics import rag_query_total, rag_query_failed_total
+import requests
 
 logger = AppLogger(__name__)
 router = APIRouter()
@@ -53,6 +58,85 @@ async def preview_cv_file(
 ):
     logger.debug(f"Fetching CV preview for CV ID: {cv_id}")
     return recruitment_service.preview_cv_file(cv_id, db)
+
+# === RAG Query API ===
+@router.post("/rag/query", response_model=RAGQueryResponse)
+async def rag_query(
+    request: RAGQueryRequest,
+    get_current_user: dict = Depends(JWTService.verify_jwt),
+):
+    """Answer a question grounded in CV content using Qdrant via Knowledge Base and GenAI provider."""
+    role = get_current_user.get("role")
+    if role not in ("ADMIN", "RECRUITER"):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # Build KB search request
+    filters = {}
+    if request.position:
+        filters["position"] = request.position
+
+    kb_body = {
+        "query": request.question,
+        "collection_name": request.collection_name or QDRANT_COLLECTION,
+        "embedding_model": EMBEDDING_MODEL,
+        "top_k": request.top_k,
+        "filters": filters or None,
+    }
+    url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/search/"
+    kwargs = {"url": url, "json": kb_body, "headers": {"Content-Type": "application/json"}}
+    if TLS_ENABLED and CA_PATH:
+        kwargs["verify"] = CA_PATH
+
+    try:
+        resp = requests.post(**kwargs)
+        resp.raise_for_status()
+        data = resp.json().get("data", [])
+    except Exception as e:
+        rag_query_failed_total.inc()
+        logger.error(f"RAG search failed: {e}")
+        raise HTTPException(status_code=500, detail="RAG search failed")
+
+    rag_query_total.inc()
+    # Build prompt with citations
+    contexts = []
+    citations: List[Citation] = []
+    for item in data:
+        text = item.get("page_content", "")
+        cid = str(item.get("id", ""))
+        score = float(item.get("score", 0.0))
+        payload = item.get("payload", {})
+        if text:
+            contexts.append(f"[Chunk {cid}]\n{text}")
+            citations.append(Citation(id=cid, text=text, score=score, payload=payload))
+
+    system_prompt = (
+        "You are an assistant answering recruitment questions grounded in provided CV excerpts. "
+        "Cite chunk IDs (e.g., [Chunk abc]) when you use information. If no relevant context, say so."
+    )
+    context_block = "\n\n".join(contexts)
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": f"Context:\n{context_block}"},
+        {"role": "user", "content": request.question},
+    ]
+
+    # Call GenAI provider via existing GenAI service wrapper
+    try:
+        genai = GenAI(model=DEFAULT_MODEL)
+        answer = await genai.invoke(messages)
+    except Exception as e:
+        logger.error(f"GenAI invocation failed: {e}")
+        raise HTTPException(status_code=500, detail="Generation failed")
+
+    return RAGQueryResponse(
+        answer=answer or "",
+        citations=citations,
+        metadata={
+            "filters_applied": filters,
+            "top_k": request.top_k,
+            "collection": kb_body["collection_name"],
+        },
+    )
 
 # === JD edit/delete ===
 # Only administrator can get the Job Description preview

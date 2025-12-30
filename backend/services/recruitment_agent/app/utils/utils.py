@@ -130,3 +130,20 @@ def extract_text_from_pdf(file_path: str) -> str:
         logger.info(f"[pdf] empty content: {file_path}")
     logger.debug(f"[pdf] chars: {len(text)}")
     return text
+
+def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
+    """Simple character-based chunker with overlap for RAG ingestion."""
+    s = ensure_text(text)
+    if not s:
+        return []
+    chunks: List[str] = []
+    start = 0
+    n = len(s)
+    while start < n:
+        end = min(start + chunk_size, n)
+        chunk = s[start:end]
+        chunks.append(chunk)
+        if end >= n:
+            break
+        start = max(0, end - overlap)
+    return [c.strip() for c in chunks if c.strip()]

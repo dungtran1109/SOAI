@@ -1,8 +1,14 @@
 import uuid
-import os
 import logging
 import qdrant_client
-from qdrant_client.http.models import Distance, VectorParams, PointStruct
+from qdrant_client.http.models import (
+    Distance,
+    VectorParams,
+    PointStruct,
+    Filter,
+    FieldCondition,
+    MatchValue,
+)
 from services.embedding import Embedding
 from config.constants import DEFAULT_COLLECTION_NAME
 
@@ -51,30 +57,52 @@ class QdrantDB:
 
         return {"documents": documents, "next_offset": None}
 
-    def search(self, query: str, embedding_model: str, top_k=3):
-        """Performs a similarity search in Qdrant."""
+    def search(self, query: str, embedding_model: str, top_k=3, filters=None):
+        """Performs a similarity search in Qdrant with optional payload filters."""
         try:
             embedding = Embedding(embedding_model).get_embedding_model()
             query_embedding = embedding.embed_query(query)
+
+            query_filter = None
+            if isinstance(filters, dict) and filters:
+                must_conditions = []
+                for key, value in filters.items():
+                    if value is None:
+                        continue
+                    try:
+                        must_conditions.append(
+                            FieldCondition(key=key, match=MatchValue(value=value))
+                        )
+                    except Exception:
+                        continue
+                if must_conditions:
+                    query_filter = Filter(must=must_conditions)
 
             search_results = self.client.search(
                 collection_name=self.collection_name,
                 query_vector=query_embedding,
                 limit=top_k,
                 with_payload=True,
+                query_filter=query_filter,
             )
-
-            return [
-                {"page_content": point.payload["page_content"], "score": point.score}
-                for point in search_results
-            ]
+            results = []
+            for point in search_results:
+                results.append(
+                    {
+                        "id": point.id,
+                        "page_content": point.payload.get("page_content", ""),
+                        "score": point.score,
+                        "payload": {k: v for k, v in point.payload.items() if k != "page_content"},
+                    }
+                )
+            return results
 
         except Exception as e:
             logger.error(f"Error searching Qdrant: {e}")
             return []
 
-    def add(self, texts: list[str], embedding_model: str):
-        """Adds multiple documents into Qdrant with embeddings."""
+    def add(self, texts: list[str], embedding_model: str, payloads: list[dict] | None = None):
+        """Adds multiple documents into Qdrant with embeddings and optional payloads per text."""
         if not texts or not any(text.strip() for text in texts):
             logger.error("No text found in the request.")
             return False
@@ -82,14 +110,19 @@ class QdrantDB:
         try:
             embedding = Embedding(embedding_model).get_embedding_model()
             embeddings = embedding.embed_documents(texts)
-            points = [
-                PointStruct(
-                    id=str(uuid.uuid4()),
-                    vector=embedding_vector,
-                    payload={"page_content": text},
+            points = []
+            for idx, (text, embedding_vector) in enumerate(zip(texts, embeddings)):
+                payload = {"page_content": text}
+                if payloads and idx < len(payloads) and isinstance(payloads[idx], dict):
+                    # Merge metadata while keeping page_content separate
+                    payload.update(payloads[idx])
+                points.append(
+                    PointStruct(
+                        id=str(uuid.uuid4()),
+                        vector=embedding_vector,
+                        payload=payload,
+                    )
                 )
-                for text, embedding_vector in zip(texts, embeddings)
-            ]
 
             self.client.upsert(collection_name=self.collection_name, points=points)
             return True

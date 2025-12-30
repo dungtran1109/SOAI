@@ -22,3 +22,8 @@ interview_questions_regenerated_total = Counter("interview_questions_regenerated
 # Auth / JWT Counters
 jwt_verification_total = Counter("jwt_verification_total", "Total number of JWT verifications")
 jwt_verification_failed_total = Counter("jwt_verification_failed_total", "Total number of failed JWT verifications")
+
+# RAG Counters
+rag_ingest_total = Counter("rag_ingest_total", "Total number of CV chunks ingested into Qdrant")
+rag_query_total = Counter("rag_query_total", "Total number of RAG queries executed")
+rag_query_failed_total = Counter("rag_query_failed_total", "Total number of failed RAG queries")
