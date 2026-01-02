@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
 import { signin, signup } from '../services/api/authApi';
 import { COOKIE_TOKEN_NAME } from '../shared/constants/browserStorages';
+import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../shared/constants/routes';
 import { authFormReducer, initAuthFormValue } from '../services/reducer/formReducer/authForm';
 import type { SigninData, SignupData, TokenDecoded } from '../shared/types/authTypes';
 import classNames from 'classnames/bind';
@@ -37,7 +38,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                     const decoded: TokenDecoded = jwtDecode(token);
 
                     if (decoded.exp * 1000 > Date.now()) {
-                        navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
+                        navigate(decoded.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
                     } else {
                         Cookies.remove(COOKIE_TOKEN_NAME);
                     }
@@ -80,11 +81,11 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                     });
 
                     const decoded = jwtDecode<TokenDecoded>(response.token);
-                    navigate(decoded.role === 'ADMIN' ? '/admin/dashboard' : '/', { replace: true });
+                    navigate(decoded.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
                 } else {
                     await signup(signUpPayload);
                     dispatch({ type: 'RESET' });
-                    navigate('/signin');
+                    navigate(PUBLIC_ROUTE.signin);
                 }
             } catch {
                 dispatch({

@@ -1,0 +1,144 @@
+@use '../variables' as *;
+
+$__border-radius: 8px;
+$__padding: 10px;
+$__opacity: 0.85;
+
+.user {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 30px;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: $__border-radius;
+}
+
+.user__avatar {
+    border-radius: 50%;
+    background: $background-white-color;
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.85);
+}
+
+.user__name {
+    font-size: 3rem;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+}
+
+.navbar__left {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+}
+
+.navbar__left-item {
+    white-space: nowrap;
+    padding: $__padding;
+    font-size: $font-large-size;
+    font-weight: 500;
+    user-select: none;
+    cursor: pointer;
+    color: $text-black-color;
+    transition: all 0.1s ease-out;
+
+    &:hover {
+        color: $success-color;
+        text-decoration: none;
+        background-color: $background-white-color;
+    }
+}
+
+.navbar__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: $__padding;
+    font-size: $font-large-size;
+    font-weight: 400;
+    font-style: italic;
+}
+
+.navbar__right-icon {
+    color: $warning-color;
+}
+
+.content {
+    margin: 30px 0;
+    padding: $__padding;
+}
+
+.filter {
+    padding: $__padding $__padding 30px $__padding;
+    height: fit-content;
+    position: sticky;
+    top: 90px;
+    border-radius: $__border-radius;
+    background-color: $background-white-color;
+    background-color: #fff;
+    border: 1px solid rgba(231, 228, 228, 0.85);
+}
+
+.filter__title {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 10px;
+    margin: 20px auto;
+    padding-left: 20px;
+    color: $success-color;
+}
+
+.filter__title-label {
+    font-weight: 400;
+    text-shadow: -1px -1px 2px rgba(255, 255, 255, 0.8), 1px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.filter__jobs {
+    list-style: none;
+}
+
+.filter__jobs-title {
+    padding: 10px 20px;
+    font-weight: 500;
+    font-size: $font-large-size;
+    border-radius: $__border-radius;
+    opacity: $__opacity;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in;
+}
+
+.filter__jobs-title.filter__jobs-title--selected {
+    border: 1px solid #10b981;
+    background-color: #f2fffb;
+}
+
+.filter__jobs-status {
+    margin: 10px 10px 10px 20px;
+}
+
+.filter__jobs-status-title {
+    margin-left: 8px;
+    font-size: $font-large-size;
+    opacity: $__opacity;
+    cursor: pointer;
+}
+
+.job-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.job-cards__no-data {
+    font-size: 1.8rem;
+    font-style: italic;
+    font-weight: 400;
+    opacity: $__opacity;
+    text-align: center;
+}

@@ -39,9 +39,9 @@ const AdminJDList = () => {
     }, [fetchJDs]);
 
     const filteredJDs = useMemo<typeof jds>(() => {
-        const filterJDs = jds.filter((jd) => jd.position.toLowerCase().includes(filter.jd_title.toLowerCase()));
+        const filterJDs = jds.filter((jd) => jd.position.toLowerCase().includes(filter.title.toLowerCase()));
         return filterJDs;
-    }, [filter.jd_title, jds]);
+    }, [filter.title, jds]);
 
     const handleEditJD = async (updatedJD: JD): Promise<void> => {
         if (updatedJD && Object.keys(updatedJD).length > 0) {

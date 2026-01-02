@@ -36,13 +36,13 @@
 }
 
 .chat-row__bubble.chat-row__bubble--assistant {
-    background: #fff;
     color: #222;
+    background-color: #fff;
     border-top-left-radius: 4px;
 }
 
 .chat-row__bubble.chat-row__bubble--user {
-    background: #4a90e2;
     color: #fff;
+    background-color: #4a90e2;
     border-top-right-radius: 4px;
 }

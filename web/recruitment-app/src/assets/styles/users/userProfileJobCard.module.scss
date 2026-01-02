@@ -1,0 +1,67 @@
+@use '../variables' as *;
+
+$__border-radius: 8px;
+
+.card {
+    padding: 20px;
+    border-radius: $__border-radius;
+    background-color: #fff;
+    border: 1px solid rgba(231, 228, 228, 0.85);
+    transition: all 0.2s ease-out;
+
+    &:hover {
+        border: 1px solid #f0f0f0;
+        box-shadow: 0px 4px 16px 0px #0000001f;
+    }
+}
+
+.card__logo {
+    text-align: center;
+    align-content: center;
+}
+
+.card__jobs {
+    padding-left: 10px;
+}
+
+.card__jobs-title {
+    font-weight: 500;
+}
+
+.card__jobs-item {
+    margin-top: 20px;
+}
+
+.card__jobs-item-info {
+    display: flex;
+    align-content: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.card__jobs-item-info-status-accepted {
+    color: $success-color;
+}
+
+.card__jobs-item-info-status-pending {
+    color: $warning-color;
+}
+
+.card__jobs-item-info-status-rejected {
+    color: $error-color;
+}
+
+.card__jobs-item-info-upload-proof {
+    color: $primary-color;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        color: #669ffc;
+    }
+}
+
+.card__jobs-item-info-upload-proof.card__jobs-item-info-upload-proof--disable {
+    cursor: not-allowed;
+    color: #ced6e4;
+}

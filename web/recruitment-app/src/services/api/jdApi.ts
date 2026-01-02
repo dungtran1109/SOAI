@@ -44,7 +44,11 @@ export const uploadJDFile = async (file: File): Promise<{ message: string }> => 
     try {
         const formData = new FormData();
         formData.append('file', file);
-        return axiosClient.post('/jds/upload', formData);
+        return axiosClient.post('/jds/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     } catch (error) {
         console.error('[DEBUG uploadJDFile]', error);
         return { message: `${error}` };

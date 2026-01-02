@@ -1,0 +1,168 @@
+@use '../variables' as *;
+
+@mixin element-size($width: 100%, $height: 56px) {
+    height: $height;
+    width: $width;
+}
+
+$__padding-content: 10px;
+
+.filter {
+    padding: 60px 0;
+    margin-bottom: 30px;
+    background: linear-gradient(269.85deg, #54151c 0%, #121212 54.89%);
+}
+
+.filter__item {
+    @include element-size;
+    border-radius: 6px;
+    padding: 10px;
+    outline: none;
+    border: none;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+}
+
+.job_counter {
+    font-size: 2.8rem;
+    font-weight: bold;
+    margin: 20px 10px;
+}
+
+.job_counter span {
+    color: $error-color;
+}
+
+.job-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: $__padding-content;
+}
+
+.job-right {
+    padding: $__padding-content;
+    position: sticky;
+    top: 80px;
+    height: fit-content;
+    align-self: flex-start;
+}
+
+.job {
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background-color: #fff;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease-out;
+
+    &:hover {
+        border: 1px solid #f0f0f0;
+        box-shadow: 0px 4px 16px 0px #0000001f;
+    }
+}
+
+.job-header {
+    display: flex;
+    gap: 10px;
+}
+
+.job-header__left {
+    padding: 10px;
+    text-align: center;
+    align-content: center;
+    border-radius: 6px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0px 4px 16px 0px #0000001f;
+}
+
+.job-header__left-img {
+    display: block;
+    width: 80px;
+}
+
+.job-header__right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+.job-header__right-header {
+    font-weight: 500;
+    font-size: $font-large-size;
+}
+
+.job-header__right-salary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: $font-large-size;
+    font-weight: 500;
+    color: $success-color;
+}
+
+.job__submit {
+    margin: 20px 0;
+}
+
+.job__submit input[type='file'] {
+    display: none;
+}
+
+.job__submit-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid $success-color;
+    color: $text-white-color;
+    background-color: $success-color;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #059669;
+    }
+
+    &:active {
+        background-color: #08b880;
+    }
+}
+
+.job__content-section {
+    margin: 30px 0;
+}
+
+.job__content-title {
+    margin-bottom: 14px;
+}
+
+.job__content-section ul {
+    list-style-position: inside;
+}
+
+.job__content-detail {
+    margin: 4px 0;
+}
+
+.job__footer-section {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.job__footer-section p {
+    margin-left: 10px;
+    font-style: normal;
+    font-weight: 500;
+}

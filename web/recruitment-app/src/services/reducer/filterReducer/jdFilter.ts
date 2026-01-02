@@ -1,11 +1,13 @@
 interface Filter {
-    jd_title: string;
+    title: string;
+    location: string;
 }
 
-type FilterAction = { type: 'JD_TITLE'; payload: string };
+type FilterAction = { type: 'JD_TITLE' | 'JD_LOCATION'; payload: string };
 
 export const initJDFilterValue: Filter = {
-    jd_title: '',
+    title: '',
+    location: '',
 };
 
 export const jdFilterReducer = (state: Filter, action: FilterAction): Filter => {
@@ -13,7 +15,12 @@ export const jdFilterReducer = (state: Filter, action: FilterAction): Filter => 
         case 'JD_TITLE':
             return {
                 ...state,
-                jd_title: action.payload,
+                title: action.payload,
+            };
+        case 'JD_LOCATION':
+            return {
+                ...state,
+                location: action.payload === '-- All --' ? '' : action.payload,
             };
         default:
             return state;

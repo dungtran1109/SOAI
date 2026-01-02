@@ -1,0 +1,83 @@
+@use '../variables' as *;
+
+$background-linear-gradient: linear-gradient(269.85deg, #54151c 0%, #121212 54.89%);
+$text-custom-white-color: #a6a6a6;
+
+.footer-frame {
+    margin-top: 30px;
+}
+
+.separate-line {
+    height: 4px;
+    background: $background-linear-gradient;
+}
+
+.footer {
+    margin-top: 4px;
+    min-height: 100px;
+    padding: 0 30px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(172, 172, 172, 0.1);
+    background: $background-linear-gradient;
+    padding: 30px;
+    color: $text-custom-white-color;
+}
+
+@media screen and (max-width: calc($lg - 1px)) {
+    .footer {
+        text-align: left;
+    }
+}
+
+.footer-col__content {
+    display: inline-block;
+}
+
+.footer-col__content.footer-col__content--logo-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.footer-col__content.footer-col__content--logo-center img {
+    margin-right: 26px;
+}
+
+.footer-col__content-title {
+    margin: 20px 0 30px 0;
+    text-align: left;
+}
+
+.footer-col__content-list {
+    list-style: none;
+    text-align: left;
+}
+
+.footer-col__content-list-item {
+    margin-top: 20px;
+    font-weight: 500;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.footer-col__content-list-item a {
+    color: $text-custom-white-color;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+.footer__divider {
+    height: 1px;
+    margin: 40px;
+    background-color: $text-custom-white-color;
+}
+
+.footer__endline {
+    font-size: $font-large-size;
+    font-weight: 500;
+    text-align: center;
+}

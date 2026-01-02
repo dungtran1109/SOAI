@@ -1,6 +1,7 @@
 import axiosClient from '../axios/axiosClient';
 import type { CV } from '../../shared/types/adminTypes';
 import { RECRUITMENT_API_BASE_URL } from '../../shared/constants/baseUrls';
+import type { AppliedJob } from '../../shared/types/userTypes';
 
 /**
  * Get all existing CVs (admin role).
@@ -76,4 +77,41 @@ export const deleteCV = async (cvId: number): Promise<{ message: string }> => {
  */
 export const getCVPreviewUrl = (cvId: number): string => {
     return `${RECRUITMENT_API_BASE_URL}/cvs/${cvId}/preview`;
+};
+
+/**
+ * Upload a CV file (user role).
+ * @param file - The CV file to upload.
+ * @param position - The position that candidate applied.
+ * @param email - Override email address (optional).
+ * @returns Object includes a message after uploading CV.
+ */
+export const uploadCV = async (file: File, position: string, email: string | null = null): Promise<{ message: string }> => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('position_applied_for', position);
+        if (email) formData.append('override_email', email);
+        return axiosClient.post('/cvs/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    } catch (error) {
+        console.error('[DEBUG uploadJDFile]', error);
+        return { message: `${error}` };
+    }
+};
+
+/**
+ * Get all owner application information (user role).
+ * @returns List of user application.
+ */
+export const getUserAppliedJobs = async (): Promise<AppliedJob[]> => {
+    try {
+        return axiosClient.get(`/cvs/me`);
+    } catch (error) {
+        console.error('[DEBUG getUserAppliedJobs]', error);
+        return [];
+    }
 };
