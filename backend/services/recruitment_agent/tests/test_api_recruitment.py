@@ -7,9 +7,10 @@ from constants import *
 from basiclib import *
 
 
-def wait_until_available(url, timeout=TIMEOUT):
+def wait_until_auth_available(timeout=TIMEOUT):
     """Wait until the given URL is reachable before proceeding."""
     start = time.time()
+    url = f"{AUTH_BASE_URL}/actuator/health"
     log_info(f"Waiting for service at {url} to be available...")
     while True:
         try:
@@ -23,6 +24,22 @@ def wait_until_available(url, timeout=TIMEOUT):
             raise RuntimeError(f"Timeout waiting for service at {url}")
         time.sleep(1)
 
+def wait_until_recruitment_available(timeout=TIMEOUT):
+    """Wait until the given URL is reachable before proceeding."""
+    start = time.time()
+    url = f"{BASE_URL}/health"
+    log_info(f"Waiting for service at {url} to be available...")
+    while True:
+        try:
+            response = httpx.get(url, timeout=3, verify=False)
+            if response.status_code < 500:
+                log_info(f"Service at {url} is available.")
+                break
+        except Exception:
+            pass
+        if time.time() - start > timeout:
+            raise RuntimeError(f"Timeout waiting for service at {url}")
+        time.sleep(1)
 
 class TestRecruitmentAPI(unittest.TestCase):
     admin_token = None
@@ -32,8 +49,8 @@ class TestRecruitmentAPI(unittest.TestCase):
     def setUpClass(cls):
         """Setup tokens for ADMIN and USER before tests run."""
         log_debug("Waiting for backend services to become available")
-        wait_until_available(AUTH_URL)
-        wait_until_available(BASE_URL)
+        wait_until_auth_available()
+        wait_until_recruitment_available()
 
         log_debug("Setting up tokens for ADMIN and USER")
         cls.admin_token = extract_token("admin", "Admin@123", role="ADMIN")
@@ -209,7 +226,6 @@ class TestRecruitmentAPI(unittest.TestCase):
             response = api_request(
                 "POST",
                 f"{BASE_URL}/cvs/{str(cv_id)}/approve",
-                data={"candidate_id": str(cv_id)},
                 headers=get_headers(self.admin_token),
             )
             self.assertIn(response.status_code, [200, 400])
@@ -262,7 +278,7 @@ class TestRecruitmentAPI(unittest.TestCase):
             response = api_request(
                 "POST",
                 f"{BASE_URL}/interviews/accept",
-                json={"candidate_id": interview_id},
+                json={"candidate_id": cv_id},
                 headers=get_headers(self.admin_token),
             )
             log_info(f"Accept Interview Response: {response.json()}")
@@ -435,7 +451,6 @@ class TestRecruitmentAPI(unittest.TestCase):
         response = api_request(
             "POST",
             f"{BASE_URL}/cvs/{str(candidate_id)}/approve",
-            data={"candidate_id": str(candidate_id)},
             headers=get_headers(self.user_token),
         )
         self.assertEqual(response.status_code, 403)

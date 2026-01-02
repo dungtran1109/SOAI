@@ -15,16 +15,31 @@ def log_error(message):
     logger.error(message)
 
 def extract_token(username, password, role=None):
+    headers = {"Content-Type": "application/json"}
     payload = {"userName": username, "password": password}
     url = f"{AUTH_URL}/signup" if role else f"{AUTH_URL}/signin"
+
     if role:
         payload["role"] = role
 
-    response = httpx.post(url, json=payload, timeout=TIMEOUT, verify=False)
+    response = httpx.post(
+        url,
+        json=payload,
+        headers=headers,
+        timeout=TIMEOUT,
+        verify=False,
+    )
+
     if response.status_code == 403 and role:
         url = f"{AUTH_URL}/signin"
         payload.pop("role", None)
-        response = httpx.post(url, json=payload, timeout=TIMEOUT, verify=False)
+        response = httpx.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=TIMEOUT,
+            verify=False,
+        )
 
     response.raise_for_status()
     token = response.json().get("token")
@@ -32,11 +47,29 @@ def extract_token(username, password, role=None):
     return token
 
 def get_headers(token):
-    return {"Authorization": f"Bearer {token}"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
 
 def api_request(method, url, **kwargs):
     try:
-        response = httpx.request(method, url, timeout=TIMEOUT, **kwargs, verify=False)
+        headers = kwargs.pop("headers", {})
+        # When uploading files, remove Content-Type so httpx can set multipart/form-data with boundary
+        # Otherwise, set Content-Type to application/json for JSON requests
+        if "files" in kwargs or "data" in kwargs:
+            headers.pop("Content-Type", None)
+        else:
+            headers.setdefault("Content-Type", "application/json")
+
+        response = httpx.request(
+            method,
+            url,
+            headers=headers,
+            timeout=TIMEOUT,
+            **kwargs,
+            verify=False,
+        )
         log_debug(f"{method.upper()} {url} -> {response.status_code}")
         return response
     except Exception as e:

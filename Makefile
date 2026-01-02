@@ -258,10 +258,14 @@ test:	test-recruitment \
 # Permission issue can not delete the __pycache__.
 test-recruitment:
 	@echo "Automation test for Recruitment Agent using Docker"
+	$(eval AUTH_IP := $(shell docker inspect soai_authentication --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'))
+	$(eval RECRUITMENT_IP := $(shell docker inspect soai_recruitment_agent --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'))
+	@echo "Using AUTH_IP=$(AUTH_IP) and RECRUITMENT_IP=$(RECRUITMENT_IP)"
 	docker run --rm \
-		--network=host \
+		--network=soai-net \
 		-e PYTHONDONTWRITEBYTECODE=1 \
-		-e HOST_NAME="localhost" \
+		-e AUTH_HOST="$(AUTH_IP)" \
+		-e RECRUITMENT_HOST="$(RECRUITMENT_IP)" \
 		-e TLS_ENABLED="false" \
 		-v $(RECRUITMENT_DIR):/app -w /app/tests python:3.11-slim bash -c "\
 		apt-get update && apt-get install -y curl && \

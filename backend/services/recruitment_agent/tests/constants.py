@@ -2,6 +2,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HOST_NAME = os.getenv("HOST_NAME", "localhost")
+AUTH_HOST = os.getenv("AUTH_HOST", HOST_NAME)
+RECRUITMENT_HOST = os.getenv("RECRUITMENT_HOST", HOST_NAME)
 TLS_ENABLED = os.getenv("TLS_ENABLED", "false").lower() == "true"
 SCHEMA = "https" if TLS_ENABLED else "http"
 
@@ -16,8 +18,10 @@ if "RECRUITMENT_PORT" in os.environ:
 else:
     RECRUITMENT_PORT = 8433 if TLS_ENABLED else 8003
 
-AUTH_URL = f"{SCHEMA}://{HOST_NAME}:{AUTH_PORT}/api/v1/authentications"
-BASE_URL = f"{SCHEMA}://{HOST_NAME}:{RECRUITMENT_PORT}/api/v1/recruitment"
+AUTH_BASE_URL = f"{SCHEMA}://{AUTH_HOST}:{AUTH_PORT}"
+AUTH_URL = f"{AUTH_BASE_URL}/api/v1/authentications"
+RECRUITMENT_BASE_URL = f"{SCHEMA}://{RECRUITMENT_HOST}:{RECRUITMENT_PORT}"
+BASE_URL = f"{RECRUITMENT_BASE_URL}/api/v1/recruitment"
 TIMEOUT = 60.0
 
 JD_FILE_PATH = os.path.join(BASE_DIR, "test_data", "jd_sample.json")
