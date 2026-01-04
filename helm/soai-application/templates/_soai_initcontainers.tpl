@@ -170,5 +170,7 @@
       done;
       echo "MySQL is up and running";
       echo "Init container finished successfully";
+  resources:
+{{- include "soai-application.resources" (index $top.Values "resources" "initcontainer") | indent 2 }}
 {{- end }}
 {{- end -}}

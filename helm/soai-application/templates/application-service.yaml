@@ -89,6 +89,36 @@ spec:
     {{- end }}
   type: {{ .Values.server.genai.serviceType }}
 ---
+# SOAI Agent Controller Service
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+  labels: {{- include "soai-agent-controller.labels" . | nindent 4 }}
+  name: {{ template "soai-agent-controller.name" . }}
+spec:
+  selector:
+    app: {{ template "soai-agent-controller.name" . }}
+  ports:
+    {{- if $g.security.tls.enabled }}
+    - name: {{ template "soai-agent-controller.name" . }}-https
+      protocol: "TCP"
+      port: {{ .Values.server.agentcontroller.httpsPort }}
+      {{- if not (eq .Values.server.agentcontroller.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.agentcontroller.httpsNodePort }}
+      {{- end }}
+      targetPort: tls-agent-svc
+    {{- else }}
+    - name: {{ template "soai-agent-controller.name" . }}-http
+      protocol: "TCP"
+      port: {{ .Values.server.agentcontroller.httpPort }}
+      {{- if not (eq .Values.server.agentcontroller.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.agentcontroller.httpNodePort }}
+      {{- end }}
+      targetPort: http-agent-svc
+    {{- end }}
+  type: {{ .Values.server.agentcontroller.serviceType }}
+---
 # SOAI Web Service
 apiVersion: v1
 kind: Service

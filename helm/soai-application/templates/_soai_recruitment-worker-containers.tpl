@@ -48,10 +48,17 @@
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-dbName
   - name: DB_USERNAME
+  {{- if not (eq ((include "soai-mysql.username" $top) | b64dec) "root") }}
+    valueFrom:
+      secretKeyRef:
+        name: {{ template "soai-mysql.name" $top }}-secret
+        key: {{ template "soai-mysql.name" $top }}-user
+  {{- else }}
     valueFrom:
       secretKeyRef:
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-root-password
+  {{- end }}
   - name: DB_PASSWORD
     valueFrom:
       secretKeyRef:
@@ -98,4 +105,6 @@
   {{- end }}
   - name: tmp-volume
     mountPath: /tmp
+  resources:
+{{- include "soai-application.resources" (index $top.Values "resources" "recruitmentWorker") | indent 2 }}
 {{- end -}}

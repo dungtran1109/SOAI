@@ -60,7 +60,8 @@ image-ci: image-authentication \
 image: 	image-authentication \
 		image-recruitment \
 		image-genai \
-		image-web
+		image-web \
+		image-controller
 
 image-authentication:
 	@echo "build authentication Image"
@@ -74,6 +75,9 @@ image-genai:
 image-web:
 	@echo "build web frontend Image"
 	$(TOP_DIR)/vas.sh build_image --name=web
+image-controller:
+	@echo "build agent controller Image"
+	$(TOP_DIR)/vas.sh build_image --name=agent_controller
 
 # Run this one to run all services for CI/CD
 run-ci: 	run-mysql \
@@ -280,6 +284,7 @@ push: 	push-recruitment \
 		push-authentication \
 		push-genai \
 		push-web \
+		push-controller \
 		push-helm
 
 push-authentication:
@@ -294,6 +299,9 @@ push-genai:
 push-web:
 	@echo "push image-web"
 	$(TOP_DIR)/vas.sh push_image --name=web
+push-controller:
+	@echo "push controller Image"
+	$(TOP_DIR)/vas.sh push_image --name=agent_controller
 push-helm:
 	@echo "push helm chart"
 	$(TOP_DIR)/vas.sh push_helm
@@ -313,6 +321,7 @@ remove:		remove-recruitment \
 			remove-consul \
 			remove-mysql \
 			remove-recruitment-celery-worker \
+			remove-controller \
 			remove-redis
 
 # Recruitment containers
@@ -336,6 +345,10 @@ remove-authentication:
 remove-genai:
 	@echo "Remove the GenAI provider docker image"
 	$(TOP_DIR)/vas.sh remove_image --name=gen_ai_provider
+
+remove-controller:
+	@echo "Remove the Agent Controller docker image"
+	$(TOP_DIR)/vas.sh remove_image --name=agent_controller
 
 remove-web:
 	@echo "Remove the Web frontend docker image"

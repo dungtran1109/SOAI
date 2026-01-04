@@ -95,6 +95,15 @@ server:
     httpsPort: "8434"
     httpNodePort: "30804"
     httpsNodePort: "30834"
+  
+  agentcontroller:
+    name: agent-controller
+    logLevel: DEBUG
+    serviceType: ClusterIP
+    httpPort: "8005"
+    httpsPort: "8445"
+    httpNodePort: "30805"
+    httpsNodePort: "30845"
 
   web:
     name: web
@@ -127,37 +136,58 @@ resources:
     requests:
       cpu: "500m"
       memory: "512Mi"
+  redis:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
   authentication:
     limits:
       cpu: "2"
       memory: "2048Mi"
     requests:
-      cpu: "500m"
-      memory: "512Mi"
+      cpu: "200m"
+      memory: "256Mi"
   recruitment:
     limits:
       cpu: "2"
       memory: "4096Mi"
     requests:
+      cpu: "200m"
+      memory: "256Mi"
+  recruitmentWorker:
+    limits:
       cpu: "1"
-      memory: "1024Mi"
+      memory: "2048Mi"
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
   genai:
     limits:
       cpu: "1"
       memory: "2048Mi"
     requests:
       cpu: "200m"
-      memory: "512Mi"
+      memory: "256Mi"
+  agentcontroller:
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
   web:
     limits:
       cpu: "200m"
-      memory: "100Mi"
+      memory: "128Mi"
     requests:
       cpu: "100m"
-      memory: "50Mi"
+      memory: "64Mi"
   consul:
     limits:
-      cpu: "200m"
+      cpu: "500m"
       memory: "512Mi"
     requests:
       cpu: "100m"
@@ -177,6 +207,9 @@ seccompProfile:
   #   type:
   #   localhostProfile:
   # recruitment:
+  #   type:
+  #   localhostProfile:
+  # agent-controller:
   #   type:
   #   localhostProfile:
   # genai:
@@ -199,6 +232,9 @@ appArmorProfile:
     type: ""
     localhostProfile:
   recruitment:
+    type: ""
+    localhostProfile:
+  agent-controller:
     type: ""
     localhostProfile:
   genai:

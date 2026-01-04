@@ -78,6 +78,14 @@ Expand the name of the genai chart
 {{- end -}}
 
 {{/*
+Expand the name of the genai chart
+*/}}
+{{- define "soai-agent-controller.name" -}}
+{{- $name := (include "soai-application.name" .) -}}
+{{- printf "%s-agent-controller" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Expand the name of the web chart
 */}}
 {{- define "soai-web.name" -}}
@@ -149,6 +157,16 @@ Selector labels for genai.
 {{- define "soai-genai.selectorLabels" -}}
 component: {{ .Values.server.genai.name | quote }}
 app: {{ template "soai-genai.name" . }}
+release: {{ .Release.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}
+
+{{/*
+Selector labels for agent-controller.
+*/}}
+{{- define "soai-agent-controller.selectorLabels" -}}
+component: {{ .Values.server.agentcontroller.name | quote }}
+app: {{ template "soai-agent-controller.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
@@ -335,6 +353,19 @@ Merged labels for common genai
     {{- $g := fromJson (include "soai-application.global" .) -}}
     {{- $selector := include "soai-genai.selectorLabels" . | fromYaml -}}
     {{- $name := (include "soai-genai.name" .) }}
+    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
+    {{- $global := $g.label -}}
+    {{- $service := .Values.labels -}}
+    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
+{{- end -}}
+
+{{/*
+Merged labels for common agent-controller
+*/}}
+{{- define "soai-agent-controller.labels" -}}
+    {{- $g := fromJson (include "soai-application.global" .) -}}
+    {{- $selector := include "soai-agent-controller.selectorLabels" . | fromYaml -}}
+    {{- $name := (include "soai-agent-controller.name" .) }}
     {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
     {{- $global := $g.label -}}
     {{- $service := .Values.labels -}}
@@ -678,7 +709,7 @@ Define FQDN for Cert-Manager certificates
 */}}
 {{- define "soai-application.FQDN" -}}
 {{- $root := index . 0 -}}
-{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) -}}
+{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) (include "soai-agent-controller.name" $root) -}}
 {{- $namespace := (include "soai-application.namespace" $root) -}}
 {{- range $service := $services }}
   - {{ $service }}

@@ -29,3 +29,5 @@ spec:
           image: redis:7
           ports:
             - containerPort: {{ .Values.server.redis.port }}
+          resources:
+{{- include "soai-application.resources" (index .Values "resources" "redis") | indent 10 }}

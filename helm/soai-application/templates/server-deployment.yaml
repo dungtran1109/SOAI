@@ -32,6 +32,7 @@ spec:
       containers:
       {{- include "soai-recruitment-containers" (list .) | nindent 6 }}
       {{- include "soai-recruitment-worker-container" (list .) | nindent 6 }}
+      {{- include "soai-agent-controller-containers" (list . ) | nindent 6 }}
       volumes:
       {{- if .Values.storage.enabled }}
       - name: {{ template "soai-recruitment.name" . }}-persistent-storage

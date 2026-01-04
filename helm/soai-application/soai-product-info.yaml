@@ -15,6 +15,11 @@ images:
     registry: '%%REGISTRY%%'
     name: soai-gen_ai_provider
     tag: '%%VERSION%%'
+  soai-agent-controller:
+    productName: SOAI Agent Controller API server
+    registry: '%%REGISTRY%%'
+    name: soai-agent_controller
+    tag: '%%VERSION%%'
   soai-web:
     productName: SOAI Web
     registry: '%%REGISTRY%%'
