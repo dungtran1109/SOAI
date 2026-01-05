@@ -31,3 +31,22 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
+
+{{/*
+Service names for cross references
+*/}}
+{{- define "prometheus.prometheusServiceName" -}}
+{{ include "prometheus.name" . }}
+{{- end }}
+
+{{- define "prometheus.alertmanagerServiceName" -}}
+alertmanager
+{{- end }}
+
+{{- define "prometheus.nodeExporterServiceName" -}}
+node-exporter
+{{- end }}
+
+{{- define "prometheus.grafanaServiceName" -}}
+grafana
+{{- end }}

@@ -1,28 +1,36 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus-tsdb-configmap
+  name: prometheus-config
 data:
   prometheus.yml: |
-    # Prometheus 3.x running in TSDB-only mode.
-    # All ingestion is done via OTLP receiver or remote_write (if enabled).
-    # Scraping and alerting are disabled.
-
     global:
-      scrape_interval: 0s
-      evaluation_interval: 0s
-
-    # No scrape jobs
-    scrape_configs: []
-
-    # No alerting or recording rules
-    rule_files: []
-
+      scrape_interval: {{ .Values.prometheus.scrapeInterval }}
+      evaluation_interval: {{ .Values.prometheus.evaluationInterval }}
+    
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+      
+      - job_name: "node"
+        static_configs:
+          - targets: ["node-exporter.{{ .Release.Namespace }}.svc.cluster.local:9100"]
+      
+      - job_name: "grafana"
+        static_configs:
+          - targets:
+              - {{ printf "%s.%s.svc.cluster.local:3000" (include "prometheus.grafanaServiceName" .) .Release.Namespace | quote }}
+    
+    rule_files:
+      - /etc/prometheus/rules/alert.rules.yml
+      
     storage:
       tsdb:
         # Prometheus 3.x setting for accepting partially out-of-order ingestion
         out_of_order_time_window: 30m
 
+    {{- if .Values.prometheus.enableOtlp }}
     # Native OTLP receiver (Prometheus ≥ 3.0)
     otlp:
       translation_strategy: UnderscoreEscapingWithSuffixes
@@ -40,13 +48,15 @@ data:
         - container.image.tag
         - cloud.region
         - cloud.availability_zone
+    {{- end }}
 
     # Remote write is optional; disabled by default
     remote_write: []
 
     # Remote read is unused in TSDB-only mode
     remote_read: []
-
-    # No alertmanagers used in TSDB-only mode
     alerting:
-      alertmanagers: []
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - {{ printf "%s.%s.svc.cluster.local:9093" (include "prometheus.alertmanagerServiceName" .) .Release.Namespace | quote }}

@@ -1,9 +1,42 @@
+replicaCount: 1
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: false
+
 grafana:
-  image: "grafana/grafana:latest"
+  image:
+    repository: grafana/grafana
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: LoadBalancer
+    port: 3000
+
   resources:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
     requests:
-      cpu: "200m"
       memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+
+  persistence:
+    enabled: true
+    storageClass: "standard"
+    size: 5Gi
+
+  adminUser: admin
+  adminPassword: admin@123
+
+  environment:
+    GF_AUTH_ANONYMOUS_ENABLED: "false"
+    GF_SECURITY_ADMIN_USER: admin
+    GF_SECURITY_ADMIN_PASSWORD: admin@123
+
+datasource:
+  prometheusUrl: "http://prometheus:9090"

@@ -1,0 +1,45 @@
+{{- if .Values.alertmanager.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ default (printf "%s-sa" (include "prometheus.name" .)) .Values.serviceAccount.name }}
+      {{- end }}
+      containers:
+      - name: alertmanager
+        image: "{{ .Values.alertmanager.image.repository }}:{{ .Values.alertmanager.image.tag }}"
+        imagePullPolicy: {{ .Values.alertmanager.image.pullPolicy }}
+        ports:
+        - containerPort: 9093
+          name: web
+        resources:
+          requests:
+            memory: "{{ .Values.alertmanager.resources.requests.memory }}"
+            cpu: "{{ .Values.alertmanager.resources.requests.cpu }}"
+          limits:
+            memory: "{{ .Values.alertmanager.resources.limits.memory }}"
+            cpu: "{{ .Values.alertmanager.resources.limits.cpu }}"
+        volumeMounts:
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager
+        args:
+          - '--config.file=/etc/alertmanager/alertmanager.yml'
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+{{- end }}
+

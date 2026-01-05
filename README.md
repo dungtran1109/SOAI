@@ -22,6 +22,8 @@ The repository
     - [Getting Started](#getting-started)
       - [Development Environment](#development-environment)
       - [How to use](#how-to-use)
+  - [Deploy helm chart to k8s cluster](#deploy-helm-chart-to-k8s-cluster)
+  - [Pushing the docker image to registry and release helm chart](#pushing-the-docker-image-to-registry-and-release-helm-chart)
 
 ## Developer's Guide
 
@@ -76,15 +78,18 @@ $ make test-recruitment
 
 ## Deploy helm chart to k8s cluster
 ### Prepare
-1. Need to install the k8s cluster (minikube/k3s for testing). Following page: https://docs.k3s.io/quick-start
+1. **Install the k8s cluster** (minikube/k3s for testing). Following page: https://docs.k3s.io/quick-start
 ```bash
 $ curl -sfL https://get.k3s.io | sh -
 ```
-2. Install `kubectl` and `helm`. Following the documentation: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/ and https://helm.sh/docs/intro/install/
+
+2. **Install `kubectl` and `helm`**. Following the documentation: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/ and https://helm.sh/docs/intro/install/
 
 To install kubectl
 ```bash
 $ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+$ chmod +x kubectl
+$ sudo mv kubectl /usr/local/bin/
 ```
 
 To install helm
@@ -94,36 +99,58 @@ $ chmod 700 get_helm.sh
 $ ./get_helm.sh
 ```
 
-Once you install all the neccessary things, you need to go to `test/athena_chart` and run
+3. **(Optional) Install monitoring stack** (prometheus, grafana)
+
+If you want to install monitoring tools, go to `test/athena_chart` and run:
 ```bash
 $ ./deploy.sh -n monitoring
 ```
+
 You can install the cert-manager, prometheus, grafana to monitor and create `cert-manager` CRDs in order to deploy TLS certificates in SOAI-application.
 
-3. You can get the latest released version and override the version in `build/var/.version`
+4. **Get the latest released version** and override the version in `build/var/.version`
 ```bash
 $ latest_version=$(git describe --tags `git rev-list --tags --max-count=1`)
 $ echo $latest_version > build/var/.version
 ```
 
-4. Package helm-chart
+5. **Package helm-chart**
 ```bash
 $ make package-helm
 ```
 The helm build will locate at `build/helm-build/soai-application/` folder
-You can preview the helm chart by
+
+You can preview the helm chart by:
 ```bash
 $ helm template soai-app build/helm-build/soai-application/soai-application/
 ```
 
-5. You must export the `OPENAI_API_KEY` in your environment
+6. **Deploy SOAI application**
+
+Export the `OPENAI_API_KEY` in your environment:
 ```bash
 $ export OPENAI_API_KEY=<your-api-key>
-$ helm -n <namespace> install soai-app build/helm-build/soai-application/soai-application-<version>.tgz --set openai.apiKey=$OPENAI_API_KEY --debug --create-namespace
 ```
-This will install SOAI helm chart to k8s cluster.
 
-6. The result looks like this after you done the installation
+Install the SOAI helm chart to k8s cluster:
+```bash
+$ helm -n <namespace> install soai-app build/helm-build/soai-application/soai-application-<version>.tgz \
+    --set openai.apiKey=$OPENAI_API_KEY \
+    --debug \
+    --create-namespace
+```
+
+**Example:**
+```bash
+$ helm -n soai install soai-app build/helm-build/soai-application/soai-application-1.2.0-79556139999.tgz \
+    --set openai.apiKey=$OPENAI_API_KEY \
+    --debug \
+    --create-namespace
+```
+
+7. **Verify installation**
+
+The result looks like this after you done the installation:
 ```bash
 $ k $NAME get po
 NAME                                               READY   STATUS    RESTARTS   AGE
@@ -138,6 +165,10 @@ soai-application-mysql-0                           1/1     Running   0          
 soai-application-recruitment-7844644774-9nt2h      2/2     Running   0          4m50s
 soai-application-web-84ff858bbb-s58td              1/1     Running   0          4m50s
 ```
+
+# Login to Grafana
+Username: admin
+Password: admin@123
 
 ## Pushing the docker image to registry and release helm chart
 ### Prepare

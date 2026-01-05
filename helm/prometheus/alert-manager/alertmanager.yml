@@ -1,0 +1,13 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'soaitest@gmail.com'
+  smtp_auth_username: 'soaitest@gmail.com'
+  smtp_auth_password: 'soaitest@123'
+
+route:
+  receiver: 'email-alert'
+
+receivers:
+  - name: 'email-alert'
+    email_configs:
+      - to: 'soaitest@gmail.com'

@@ -1,13 +1,47 @@
+{{- if .Values.prometheus.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "prometheus.name" . }}
+  name: {{ include "prometheus.prometheusServiceName" . }}
 spec:
-  selector:
-    {{- include "prometheus.selectorLabels" . | nindent 4 }}
-  type: LoadBalancer
+  type: {{ .Values.prometheus.service.type }}
   ports:
-    - name: http
-      port: 9090
-      targetPort: 9090
-      protocol: TCP
+  - port: {{ .Values.prometheus.service.port }}
+    targetPort: 9090
+    protocol: TCP
+    name: web
+  selector:
+    app: prometheus
+---
+{{- end }}
+{{- if .Values.nodeExporter.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prometheus.nodeExporterServiceName" . }}
+spec:
+  type: {{ .Values.nodeExporter.service.type }}
+  ports:
+  - port: {{ .Values.nodeExporter.service.port }}
+    targetPort: 9100
+    protocol: TCP
+    name: metrics
+  selector:
+    app: node-exporter
+---
+{{- end }}
+{{- if .Values.alertmanager.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prometheus.alertmanagerServiceName" . }}
+spec:
+  type: {{ .Values.alertmanager.service.type }}
+  ports:
+  - port: {{ .Values.alertmanager.service.port }}
+    targetPort: 9093
+    protocol: TCP
+    name: web
+  selector:
+    app: alertmanager
+{{- end }}

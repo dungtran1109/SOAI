@@ -1,0 +1,20 @@
+groups:
+  - name: node_alerts
+    rules:
+      - alert: HighCPULoad
+        expr: avg(rate(node_cpu_seconds_total{mode="system"}[5m])) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "System CPU usage is over 80% for more than 2 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage > 90%"
+          description: "More than 90% of memory used on {{ $labels.instance }}"

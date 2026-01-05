@@ -3,23 +3,27 @@ kind: Deployment
 metadata:
   name: {{ template "grafana.name" . }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels: {{- include "grafana.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels: {{- include "grafana.labels" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ default (printf "%s-sa" (include "grafana.name" .)) .Values.serviceAccount.name }}
+      {{- end }}
       containers:
         - name: grafana
-          image: {{ .Values.grafana.image }}
+          image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
+          imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
           ports:
             - containerPort: 3000
           env:
             - name: GF_AUTH_BASIC_ENABLED
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ENABLED
-              value: "false"
+              value: "{{ .Values.grafana.environment.GF_AUTH_ANONYMOUS_ENABLED }}"
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:
                 secretKeyRef:
@@ -30,9 +34,48 @@ spec:
                 secretKeyRef:
                   name: {{ template "grafana.name" . }}
                   key: admin-password
+          resources:
+            requests:
+              memory: "{{ .Values.grafana.resources.requests.memory }}"
+              cpu: "{{ .Values.grafana.resources.requests.cpu }}"
+            limits:
+              memory: "{{ .Values.grafana.resources.limits.memory }}"
+              cpu: "{{ .Values.grafana.resources.limits.cpu }}"
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-dashboards-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /login
+              path: /api/health
               port: 3000
-            initialDelaySeconds: 60
-            timeoutSeconds: 10
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: grafana-storage
+          {{- if .Values.grafana.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
+        - name: grafana-dashboards-provider
+          configMap:
+            name: grafana-dashboards-provider
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
