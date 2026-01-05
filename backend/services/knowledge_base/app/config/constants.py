@@ -18,6 +18,8 @@ CA_PATH = os.getenv("CA_PATH", "")
 CERT_PATH = os.getenv("CERT_PATH", "")
 KEY_PATH = os.getenv("KEY_PATH", "")
 SCHEMA = "https" if TLS_ENABLED else "http"
+# GenAI Provider Configuration
+GENAI_HOST = os.getenv("GENAI_HOST", "localhost:8004")
 # LOGGING Configurations
 LOG_DIR = "/tmp/logs"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

@@ -16,6 +16,7 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 SERVICE_ID = "genai-agent"
 LOG_VERSION = "1.0.0"
 DEFAULT_MODEL_NAME = "llama3.2"
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 
 MAPPING_AI_PROVIDER_TO_MODEL = {
     "openai": "OpenAI",

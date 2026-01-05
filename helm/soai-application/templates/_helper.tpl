@@ -102,6 +102,22 @@ Expand the name of the consul chart
 {{- end -}}
 
 {{/*
+Expand the name of the knowledge-base chart
+*/}}
+{{- define "soai-knowledge-base.name" -}}
+{{- $name := (include "soai-application.name" .) -}}
+{{- printf "%s-knowledge-base" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Expand the name of the qdrant chart
+*/}}
+{{- define "soai-qdrant.name" -}}
+{{- $name := (include "soai-application.name" .) -}}
+{{- printf "%s-qdrant" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Selector labels for mysql.
 */}}
 {{- define "soai-mysql.selectorLabels" -}}
@@ -187,6 +203,26 @@ Selector labels for consul.
 {{- define "soai-consul.selectorLabels" -}}
 component: {{ .Values.server.consul.name | quote }}
 app: {{ template "soai-consul.name" . }}
+release: {{ .Release.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}
+
+{{/*
+Selector labels for knowledge-base.
+*/}}
+{{- define "soai-knowledge-base.selectorLabels" -}}
+component: {{ .Values.server.knowledgebase.name | quote }}
+app: {{ template "soai-knowledge-base.name" . }}
+release: {{ .Release.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}
+
+{{/*
+Selector labels for qdrant.
+*/}}
+{{- define "soai-qdrant.selectorLabels" -}}
+component: {{ .Values.server.qdrant.name | quote }}
+app: {{ template "soai-qdrant.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
@@ -392,6 +428,32 @@ Merged labels for common consul
     {{- $g := fromJson (include "soai-application.global" .) -}}
     {{- $selector := include "soai-consul.selectorLabels" . | fromYaml -}}
     {{- $name := (include "soai-consul.name" .) }}
+    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
+    {{- $global := $g.label -}}
+    {{- $service := .Values.labels -}}
+    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
+{{- end -}}
+
+{{/*
+Merged labels for common knowledge-base
+*/}}
+{{- define "soai-knowledge-base.labels" -}}
+    {{- $g := fromJson (include "soai-application.global" .) -}}
+    {{- $selector := include "soai-knowledge-base.selectorLabels" . | fromYaml -}}
+    {{- $name := (include "soai-knowledge-base.name" .) }}
+    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
+    {{- $global := $g.label -}}
+    {{- $service := .Values.labels -}}
+    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
+{{- end -}}
+
+{{/*
+Merged labels for common qdrant
+*/}}
+{{- define "soai-qdrant.labels" -}}
+    {{- $g := fromJson (include "soai-application.global" .) -}}
+    {{- $selector := include "soai-qdrant.selectorLabels" . | fromYaml -}}
+    {{- $name := (include "soai-qdrant.name" .) }}
     {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
     {{- $global := $g.label -}}
     {{- $service := .Values.labels -}}
@@ -709,7 +771,7 @@ Define FQDN for Cert-Manager certificates
 */}}
 {{- define "soai-application.FQDN" -}}
 {{- $root := index . 0 -}}
-{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) (include "soai-agent-controller.name" $root) -}}
+{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) (include "soai-agent-controller.name" $root) (include "soai-knowledge-base.name" $root) -}}
 {{- $namespace := (include "soai-application.namespace" $root) -}}
 {{- range $service := $services }}
   - {{ $service }}
@@ -771,5 +833,17 @@ Get the metrics port for genai deployment
 {{- print .Values.server.genai.httpsPort -}}
 {{- else -}}
 {{- print .Values.server.genai.httpPort -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the metrics port for knowledge-base deployment
+*/}}
+{{- define "soai-knowledge-base.metrics.port" -}}
+{{- $g := fromJson (include "soai-application.global" .) -}}
+{{- if $g.security.tls.enabled -}}
+{{- print .Values.server.knowledgebase.httpsPort -}}
+{{- else -}}
+{{- print .Values.server.knowledgebase.httpPort -}}
 {{- end -}}
 {{- end -}}

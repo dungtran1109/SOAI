@@ -1,0 +1,43 @@
+{{- $g := fromJson (include "soai-application.global" . ) -}}
+{{- $knowledgeBaseMetricsPort := (include "soai-knowledge-base.metrics.port" .) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "soai-knowledge-base.name" . }}
+  labels: {{- include "soai-knowledge-base.labels" . | nindent 4 }}
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.knowledgebase.replicaCount }}
+  strategy:
+{{ toYaml .Values.updateStrategy | indent 4 }}
+  selector:
+    matchLabels: {{- include "soai-knowledge-base.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- $appArmorAnn := include "soai-application.appArmorProfileAnnotation" . | fromYaml -}}
+        {{- $metricsAnn := include "soai-application.metrics.annotations" (list . "/metrics" $knowledgeBaseMetricsPort ) | fromYaml -}}
+        {{- $defaultAnn := include "soai-application.annotations" . | fromYaml -}}
+        {{- $annotations := list $appArmorAnn $metricsAnn $defaultAnn -}}
+        {{- include "soai-application.mergeAnnotations" (dict "location" (.Template.Name) "sources" $annotations) | trim | nindent 8 }}
+      labels: {{- include "soai-knowledge-base.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- include "soai-application.appArmorProfile.securityContext" (list .) | indent 8 }}
+        fsGroup: {{ template "soai-application.fsGroup.coordinated" . }}
+        {{- include "soai-application.podSeccompProfile" . | indent 8 }}
+        {{- include "soai-application.supplementalGroups" . }}
+      containers:
+      {{- include "soai-knowledge-base-containers" (list .) | nindent 6 }}
+      volumes:
+      {{- if $g.security.tls.enabled }}
+      - name: tls-cert
+        secret:
+          secretName: {{ template "soai-application.name" . }}-cert
+      {{- end }}
+      - name: tmp-volume
+        emptyDir: {}
+    {{- if include "soai-application.pullSecrets" . }}
+      imagePullSecrets:
+        - name: {{ template "soai-application.pullSecrets" . }}
+    {{- end }}

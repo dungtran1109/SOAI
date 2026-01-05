@@ -1,8 +1,10 @@
+from typing import List, Union
 from services.ollama_service import OllamaService
 from services.openai_service import OpenAIService
 from services.gemini_service import GeminiAIService
 from services.service_factory import get_ai_service
 from config.log_config import AppLogger
+from config.constants import DEFAULT_EMBEDDING_MODEL
 from metrics.prometheus_metrics import *
 logger = AppLogger(__name__)
 
@@ -45,3 +47,24 @@ class GenAIService:
             logger.error(f"Chat error with provider {provider}: {e}")
             CHAT_ERRORS.labels(provider=provider).inc()
         return "Error querying AI."
+
+    @staticmethod
+    def embed(
+        input: Union[str, List[str]],
+        model: str = DEFAULT_EMBEDDING_MODEL,
+    ) -> List[List[float]]:
+        """
+        Create embeddings for the given input using OpenAI's embedding API.
+
+        :param input: A string or list of strings to embed
+        :param model: The embedding model to use
+        :return: List of embedding vectors
+        """
+        try:
+            service = OpenAIService()
+            CHAT_REQUESTS.labels(provider="OpenAIService").inc()
+            return service.embed(input, model)
+        except Exception as e:
+            logger.error(f"Embedding error: {e}")
+            CHAT_ERRORS.labels(provider="OpenAIService").inc()
+            raise

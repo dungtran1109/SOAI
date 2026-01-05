@@ -1,8 +1,10 @@
 import os
+from typing import List, Union
 from openai import OpenAI
 from services.base_ai_service import BaseAIService
 from config.constants import (
     MAPPING_AI_PROVIDER_TO_MODEL,
+    DEFAULT_EMBEDDING_MODEL,
 )
 from config.log_config import AppLogger
 
@@ -50,3 +52,20 @@ class OpenAIService(BaseAIService):
         except Exception as e:
             logger.exception(e)
         return []
+
+    def embed(self, input: Union[str, List[str]], model: str = DEFAULT_EMBEDDING_MODEL) -> List[List[float]]:
+        """
+        Creates embeddings for the given input text(s).
+
+        :param input: A string or list of strings to embed
+        :param model: The embedding model to use
+        :return: List of embedding vectors
+        """
+        try:
+            # Ensure input is a list
+            texts = [input] if isinstance(input, str) else input
+            response = self.client.embeddings.create(model=model, input=texts)
+            return [item.embedding for item in response.data]
+        except Exception as e:
+            logger.exception(f"Error creating embeddings: {e}")
+            raise

@@ -61,7 +61,8 @@ image: 	image-authentication \
 		image-recruitment \
 		image-genai \
 		image-web \
-		image-controller
+		image-controller \
+		image-knowledge-base
 
 image-authentication:
 	@echo "build authentication Image"
@@ -78,6 +79,9 @@ image-web:
 image-controller:
 	@echo "build agent controller Image"
 	$(TOP_DIR)/vas.sh build_image --name=agent_controller
+image-knowledge-base:
+	@echo "build knowledge base Image"
+	$(TOP_DIR)/vas.sh build_image --name=knowledge_base
 
 # Run this one to run all services for CI/CD
 run-ci: 	run-mysql \
@@ -290,6 +294,7 @@ push: 	push-recruitment \
 		push-genai \
 		push-web \
 		push-controller \
+		push-knowledge-base \
 		push-helm
 
 push-authentication:
@@ -307,6 +312,9 @@ push-web:
 push-controller:
 	@echo "push controller Image"
 	$(TOP_DIR)/vas.sh push_image --name=agent_controller
+push-knowledge-base:
+	@echo "push knowledge base Image"
+	$(TOP_DIR)/vas.sh push_image --name=knowledge_base
 push-helm:
 	@echo "push helm chart"
 	$(TOP_DIR)/vas.sh push_helm

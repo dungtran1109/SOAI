@@ -1,30 +1,64 @@
 import logging
-import os
+import requests
 from typing import List, Optional
 
-from openai import OpenAI  # pip install openai
+from config.constants import GENAI_HOST, SCHEMA, TLS_ENABLED, CA_PATH
 
 logger = logging.getLogger(__file__)
 
-class OpenAIEmbeddingAdapter:
-    def __init__(self, client: OpenAI, model: str):
-        self._client = client
+
+class GenAIEmbeddingAdapter:
+    """Adapter that calls gen_ai_provider service for embeddings."""
+
+    def __init__(self, model: str):
         self._model = model
 
+    def _call_embedding_api(self, input_data) -> List[List[float]]:
+        """Calls the gen_ai_provider embedding endpoint."""
+        request_kwargs = {
+            "url": f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/embeddings",
+            "json": {
+                "model": self._model,
+                "input": input_data,
+            },
+            "headers": {"Content-Type": "application/json"},
+        }
+
+        # Use CA certificate for TLS validation if enabled
+        if TLS_ENABLED:
+            request_kwargs["verify"] = CA_PATH
+
+        try:
+            response = requests.post(**request_kwargs)
+            response.raise_for_status()
+            result = response.json()
+            if result.get("status") == "success":
+                return result["data"]["embeddings"]
+            else:
+                raise RuntimeError(f"Embedding API error: {result.get('message')}")
+        except requests.exceptions.SSLError as ssl_err:
+            logger.error(f"SSL Error: {ssl_err}")
+            raise
+        except requests.exceptions.RequestException as req_err:
+            logger.error(f"Request Error: {req_err}")
+            raise
+
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        resp = self._client.embeddings.create(model=self._model, input=texts)
-        return [item.embedding for item in resp.data]
+        """Embeds multiple documents."""
+        return self._call_embedding_api(texts)
 
     def embed_query(self, text: str) -> List[float]:
-        resp = self._client.embeddings.create(model=self._model, input=text)
-        return resp.data[0].embedding
+        """Embeds a single query text."""
+        embeddings = self._call_embedding_api(text)
+        return embeddings[0]
+
 
 class Embedding:
-    """OpenAI-only embeddings with lazy initialization and a LangChain-like adapter."""
+    """Embedding service that uses gen_ai_provider for embeddings."""
 
-    def __init__(self, model_name: str = "text-embedding-3-small"):
+    def __init__(self, model_name: str = "text-embedding-3-large"):
         self._model_name = model_name
-        self._embedding_model: Optional[OpenAIEmbeddingAdapter] = None
+        self._embedding_model: Optional[GenAIEmbeddingAdapter] = None
 
     def get_model_name(self) -> str:
         return self._model_name
@@ -36,13 +70,9 @@ class Embedding:
         self._embedding_model = None
         logger.info(f"Model name updated to: {self._model_name}")
 
-    def get_embedding_model(self) -> OpenAIEmbeddingAdapter:
-        """Initializes and retrieves the OpenAI embedding adapter lazily."""
+    def get_embedding_model(self) -> GenAIEmbeddingAdapter:
+        """Initializes and retrieves the GenAI embedding adapter lazily."""
         if self._embedding_model is None:
-            api_key = os.getenv("OPENAI_API_KEY")
-            if not api_key:
-                raise RuntimeError("Missing OPENAI_API_KEY environment variable.")
-            logger.info(f"Loading OpenAI embedding model: {self._model_name}")
-            client = OpenAI()  # reads OPENAI_API_KEY from environment
-            self._embedding_model = OpenAIEmbeddingAdapter(client, self._model_name)
+            logger.info(f"Loading GenAI embedding model: {self._model_name}")
+            self._embedding_model = GenAIEmbeddingAdapter(self._model_name)
         return self._embedding_model

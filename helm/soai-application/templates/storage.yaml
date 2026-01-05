@@ -4,6 +4,7 @@
 {{- $mysqlName := include "soai-mysql.name" . -}}
 {{- $serverName := include "soai-recruitment.name" . -}}
 {{- $authenticationName := include "soai-authentication.name" . -}}
+{{- $qdrantName := include "soai-qdrant.name" . -}}
 
 # StorageClass Definition
 {{- if .Values.storage.storageClass.enabled }}
@@ -88,4 +89,21 @@ spec:
   resources:
     requests:
       storage: {{ .Values.storage.persistentVolume.storageCapacity.recruitment }}
+---
+# PersistentVolumeClaim for Qdrant
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $qdrantName }}-pvc
+  labels:
+    app: {{ $qdrantName }}
+spec:
+  {{- if .Values.storage.storageClass.enabled }}
+  storageClassName: {{ $storageClassName }}
+  {{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.persistentVolume.storageCapacity.qdrant | default "5Gi" }}
 {{- end }}

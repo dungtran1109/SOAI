@@ -25,6 +25,16 @@ images:
     registry: '%%REGISTRY%%'
     name: soai-web
     tag: '%%VERSION%%'
+  soai-knowledge-base:
+    productName: SOAI Knowledge Base API server
+    registry: '%%REGISTRY%%'
+    name: soai-knowledge_base
+    tag: '%%VERSION%%'
+  soai-qdrant:
+    productName: SOAI Qdrant Vector Database
+    registry: 'qdrant'
+    name: qdrant
+    tag: 'latest'
   soai-mysql:
     productName: SOAI MySQL
     name: mysql

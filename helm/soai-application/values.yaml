@@ -105,6 +105,25 @@ server:
     httpNodePort: "30805"
     httpsNodePort: "30845"
 
+  knowledgebase:
+    name: knowledge-base
+    replicaCount: 1
+    logLevel: INFO
+    serviceType: ClusterIP
+    httpPort: "8006"
+    httpsPort: "8446"
+    httpNodePort: "30806"
+    httpsNodePort: "30846"
+
+  qdrant:
+    name: qdrant
+    replicaCount: 1
+    serviceType: ClusterIP
+    httpPort: "6333"
+    grpcPort: "6334"
+    httpNodePort: "30633"
+    grpcNodePort: "30634"
+
   web:
     name: web
     replicaCount: 1
@@ -178,6 +197,20 @@ resources:
     requests:
       cpu: "100m"
       memory: "256Mi"
+  knowledgebase:
+    limits:
+      cpu: "1"
+      memory: "2048Mi"
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+  qdrant:
+    limits:
+      cpu: "1"
+      memory: "2048Mi"
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
   web:
     limits:
       cpu: "200m"
@@ -240,6 +273,12 @@ appArmorProfile:
   genai:
     type: ""
     localhostProfile:
+  knowledge-base:
+    type: ""
+    localhostProfile:
+  qdrant:
+    type: ""
+    localhostProfile:
   web:
     type: ""
     localhostProfile:
@@ -258,6 +297,7 @@ storage:
     storageCapacity:
       mysql: 2Gi
       recruitment: 8Gi
+      qdrant: 5Gi
   # StoageClass is enabled => PVC will use StorageClass
   # StorageClass is disabled => PVC will use default StorageClass
   storageClass:

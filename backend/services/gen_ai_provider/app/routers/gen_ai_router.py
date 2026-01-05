@@ -2,7 +2,7 @@ from config.log_config import AppLogger
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
 from models.response_models import StandardResponse
-from models.request_models import ChatRequest
+from models.request_models import ChatRequest, EmbeddingRequest
 from services.gen_ai_service import GenAIService
 
 router = APIRouter()
@@ -56,6 +56,35 @@ async def models():
             content=StandardResponse(
                 status="error",
                 message="Failed to retrieve models.",
+                error=str(e),
+            ).dict(),
+            status_code=500,
+        )
+
+
+@router.post("/embeddings")
+def embeddings(embedding_request: EmbeddingRequest):
+    """Creates embeddings for the given input text(s)."""
+    try:
+        logger.debug(f"Embedding request: {embedding_request}")
+        embeddings_data = GenAIService.embed(
+            input=embedding_request.input,
+            model=embedding_request.model,
+        )
+        logger.debug(f"Embedding response: {len(embeddings_data)} vectors")
+        return JSONResponse(
+            content=StandardResponse(
+                status="success",
+                data={"embeddings": embeddings_data},
+            ).dict(),
+            status_code=200,
+        )
+    except Exception as e:
+        logger.exception(e)
+        return JSONResponse(
+            content=StandardResponse(
+                status="error",
+                message="Error creating embeddings",
                 error=str(e),
             ).dict(),
             status_code=500,

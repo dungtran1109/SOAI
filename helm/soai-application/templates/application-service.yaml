@@ -199,6 +199,63 @@ spec:
   selector:
     app: {{ template "soai-mysql.name" . }}
 ---
+# SOAI Knowledge Base Service
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+  labels: {{- include "soai-knowledge-base.labels" . | nindent 4 }}
+  name: {{ template "soai-knowledge-base.name" . }}
+spec:
+  selector:
+    app: {{ template "soai-knowledge-base.name" . }}
+  ports:
+    {{- if $g.security.tls.enabled }}
+    - name: {{ template "soai-knowledge-base.name" . }}-https
+      protocol: "TCP"
+      port: {{ .Values.server.knowledgebase.httpsPort }}
+      {{- if not (eq .Values.server.knowledgebase.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.knowledgebase.httpsNodePort }}
+      {{- end }}
+      targetPort: tls-kb-svc
+    {{- else }}
+    - name: {{ template "soai-knowledge-base.name" . }}-http
+      protocol: "TCP"
+      port: {{ .Values.server.knowledgebase.httpPort }}
+      {{- if not (eq .Values.server.knowledgebase.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.knowledgebase.httpNodePort }}
+      {{- end }}
+      targetPort: http-kb-svc
+    {{- end }}
+  type: {{ .Values.server.knowledgebase.serviceType }}
+---
+# SOAI Qdrant Service
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+  labels: {{- include "soai-qdrant.labels" . | nindent 4 }}
+  name: {{ template "soai-qdrant.name" . }}
+spec:
+  selector:
+    app: {{ template "soai-qdrant.name" . }}
+  ports:
+    - name: {{ template "soai-qdrant.name" . }}-http
+      protocol: "TCP"
+      port: {{ .Values.server.qdrant.httpPort }}
+      {{- if not (eq .Values.server.qdrant.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.qdrant.httpNodePort }}
+      {{- end }}
+      targetPort: http-qdrant-svc
+    - name: {{ template "soai-qdrant.name" . }}-grpc
+      protocol: "TCP"
+      port: {{ .Values.server.qdrant.grpcPort }}
+      {{- if not (eq .Values.server.qdrant.serviceType "ClusterIP" ) }}
+      nodePort: {{ .Values.server.qdrant.grpcNodePort }}
+      {{- end }}
+      targetPort: grpc-qdrant-svc
+  type: {{ .Values.server.qdrant.serviceType }}
+---
 apiVersion: v1
 kind: Service
 metadata:
