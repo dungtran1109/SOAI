@@ -20,6 +20,9 @@ COPY --chmod=0755 --chown=${USER_ID}:0 app/ ./app/
 FROM python:3.12-slim
 
 ARG USER_ID=1001
+# System setup
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 ENV HOME=/home/soai_user
 ENV PYTHONPATH=/app/app
 WORKDIR /app

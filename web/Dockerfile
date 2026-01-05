@@ -3,10 +3,10 @@ FROM node:23.1.0 AS builder
 
 WORKDIR /app
 
-COPY main-app/package.json ./
+COPY recruitment-app/package.json ./
 RUN npm install
 
-COPY main-app/ ./
+COPY recruitment-app/ ./
 RUN npm run build
 
 # --- Stage 2: Serve with nginx-unprivileged ---
@@ -23,7 +23,7 @@ LABEL \
   soai.image.created=$BUILD_TIME
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 8080
 

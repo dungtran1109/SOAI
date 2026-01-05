@@ -249,10 +249,7 @@ check-url-health:
 	done; \
 	echo "$$NAME health check failed after $(RETRIES) attempts"; exit 1
 
-test:	test-recruitment \
-	collect-authentication-log \
-	collect-gen-ai-log \
-	collect-recruitment-log
+test: test-recruitment
 
 # Avoid to generate __pycache__ when running test because it will generate as root user.
 # Permission issue can not delete the __pycache__.
@@ -261,7 +258,7 @@ test-recruitment:
 	$(eval AUTH_IP := $(shell docker inspect soai_authentication --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'))
 	$(eval RECRUITMENT_IP := $(shell docker inspect soai_recruitment_agent --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'))
 	@echo "Using AUTH_IP=$(AUTH_IP) and RECRUITMENT_IP=$(RECRUITMENT_IP)"
-	docker run --rm \
+	@docker run --rm \
 		--network=soai-net \
 		-e PYTHONDONTWRITEBYTECODE=1 \
 		-e AUTH_HOST="$(AUTH_IP)" \
@@ -270,7 +267,8 @@ test-recruitment:
 		-v $(RECRUITMENT_DIR):/app -w /app/tests python:3.11-slim bash -c "\
 		apt-get update && apt-get install -y curl && \
 		pip install httpx && \
-		python test_api_recruitment.py"
+		python test_api_recruitment.py" || \
+	($(MAKE) collect-authentication-log collect-gen-ai-log collect-recruitment-log collect-recruitment-celery-worker-log && exit 1)
 collect-authentication-log:
 	@echo "Collect SOAI_AUTHENTICATION logs"
 	$(TOP_DIR)/vas.sh collect_docker_logs --name=authentication
@@ -280,6 +278,9 @@ collect-gen-ai-log:
 collect-recruitment-log:
 	@echo "Collect SOAI_RECRUITMENT logs"
 	$(TOP_DIR)/vas.sh collect_docker_logs --name=recruitment_agent
+collect-recruitment-celery-worker-log:
+	@echo "Collect SOAI_RECRUITMENT_CELERY_WORKER logs"
+	$(TOP_DIR)/vas.sh collect_docker_logs --name=recruitment_agent-celery-worker
 
 push-ci: 	push-recruitment \
 			push-authentication \
