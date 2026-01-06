@@ -113,6 +113,39 @@
   - name: tls-secret
     mountPath: {{ $top.Values.server.secretsPath.certPath }}
 {{- end }}
+{{- else if eq $pod "qdrant" }}
+- name: init-qdrant-permissions
+  image: busybox:1.36
+  imagePullPolicy: IfNotPresent
+  securityContext:
+    runAsUser: 0
+    runAsNonRoot: false
+  command:
+    - sh
+    - -c
+    - |
+      echo "Setting permissions for qdrant directories..."
+      # Set ownership to qdrant user (1000:1000)
+      chown -R 1000:1000 /qdrant/storage
+      chmod -R 755 /qdrant/storage
+      chown -R 1000:1000 /qdrant/snapshots
+      chmod -R 755 /qdrant/snapshots
+      chown -R 1000:1000 /qdrant/workdir
+      chmod -R 755 /qdrant/workdir
+      # Create init file with correct permissions
+      touch /qdrant-init/.qdrant-initialized
+      chown 1000:1000 /qdrant-init/.qdrant-initialized
+      chmod 644 /qdrant-init/.qdrant-initialized
+      echo "Permissions set successfully"
+  volumeMounts:
+    - name: qdrant-storage
+      mountPath: /qdrant/storage
+    - name: qdrant-snapshots
+      mountPath: /qdrant/snapshots
+    - name: qdrant-workdir
+      mountPath: /qdrant/workdir
+    - name: qdrant-init
+      mountPath: /qdrant-init
 {{- else if eq $pod "recruitment" }}
 - name: wait-for-mysql
   image: {{ template "soai-application.imagePath" (merge (dict "imageName" "soai-mysql") $top) }}

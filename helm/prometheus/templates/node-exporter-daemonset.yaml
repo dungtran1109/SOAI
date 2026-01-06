@@ -24,9 +24,11 @@ spec:
         image: "{{ .Values.nodeExporter.image.repository }}:{{ .Values.nodeExporter.image.tag }}"
         imagePullPolicy: {{ .Values.nodeExporter.image.pullPolicy }}
         ports:
-        - containerPort: 9100
+        - containerPort: {{ .Values.nodeExporter.service.port }}
+          hostPort: {{ .Values.nodeExporter.service.port }}
           name: metrics
         args:
+          - '--web.listen-address=:{{ .Values.nodeExporter.service.port }}'
           - '--path.sysfs=/host/sys'
           - '--path.rootfs=/host/root'
           - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'

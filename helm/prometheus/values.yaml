@@ -28,7 +28,8 @@ prometheus:
 
   persistence:
     enabled: true
-    storageClass: "standard"
+    # Set to "" to use default StorageClass, or specify your cluster's StorageClass
+    storageClass: ""
     size: 8Gi
 
   scrapeInterval: 15s
@@ -53,10 +54,12 @@ alertmanager:
       cpu: "200m"
 
 nodeExporter:
-  enabled: true
+  # Set to false if node-exporter already exists in another namespace (e.g., monitoring)
+  # NodeExporter uses hostNetwork and will conflict if multiple instances run on the same node
+  enabled: false
   image:
     repository: prom/node-exporter
-    tag: latest
+    tag: v1.8.2
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP

@@ -22,9 +22,13 @@ spec:
     spec:
       securityContext:
         {{- include "soai-application.appArmorProfile.securityContext" (list .) | indent 8 }}
-        fsGroup: {{ template "soai-application.fsGroup.coordinated" . }}
+        fsGroup: 1000
         {{- include "soai-application.podSeccompProfile" . | indent 8 }}
         {{- include "soai-application.supplementalGroups" . }}
+      {{- if .Values.storage.enabled }}
+      initContainers:
+      {{- include "soai-initContainers" (list . "qdrant") | nindent 6 }}
+      {{- end }}
       containers:
       {{- include "soai-qdrant-containers" (list .) | nindent 6 }}
       volumes:
@@ -40,6 +44,15 @@ spec:
         {{- else }}
         emptyDir: {}
         {{- end }}
+      # Ephemeral volume for qdrant snapshots
+      - name: qdrant-snapshots
+        emptyDir: {}
+      # Ephemeral volume for qdrant working directory
+      - name: qdrant-workdir
+        emptyDir: {}
+      # Ephemeral volume for qdrant init indicator file
+      - name: qdrant-init
+        emptyDir: {}
     {{- if include "soai-application.pullSecrets" . }}
       imagePullSecrets:
         - name: {{ template "soai-application.pullSecrets" . }}

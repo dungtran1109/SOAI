@@ -13,9 +13,11 @@ data:
         static_configs:
           - targets: ["localhost:9090"]
       
+      {{- if .Values.nodeExporter.enabled }}
       - job_name: "node"
         static_configs:
-          - targets: ["node-exporter.{{ .Release.Namespace }}.svc.cluster.local:9100"]
+          - targets: ["node-exporter.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.nodeExporter.service.port }}"]
+      {{- end }}
       
       - job_name: "grafana"
         static_configs:

@@ -27,7 +27,8 @@ grafana:
 
   persistence:
     enabled: true
-    storageClass: "standard"
+    # Set to "" to use default StorageClass, or specify your cluster's StorageClass
+    storageClass: ""
     size: 5Gi
 
   adminUser: admin

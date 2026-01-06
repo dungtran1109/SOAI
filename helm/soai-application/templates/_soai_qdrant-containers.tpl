@@ -9,8 +9,11 @@
     allowPrivilegeEscalation: false
     privileged: false
     readOnlyRootFilesystem: false
+    # Qdrant official image runs as user 1000 (qdrant) by default
+    # Ensure fsGroup in pod securityContext matches for volume permissions
     runAsNonRoot: true
     runAsUser: 1000
+    runAsGroup: 1000
     capabilities:
         drop:
           - ALL
@@ -30,6 +33,11 @@
     value: {{ $top.Values.server.qdrant.httpPort | quote }}
   - name: QDRANT__SERVICE__GRPC_PORT
     value: {{ $top.Values.server.qdrant.grpcPort | quote }}
+  # Configure qdrant to use mounted directories for writable data
+  - name: QDRANT__STORAGE__STORAGE_PATH
+    value: "/qdrant/storage"
+  - name: QDRANT__STORAGE__SNAPSHOTS_PATH
+    value: "/qdrant/snapshots"
   {{- if $g.security.tls.enabled }}
   - name: QDRANT__SERVICE__ENABLE_TLS
     value: "true"
@@ -48,6 +56,16 @@
   {{- end }}
   - name: qdrant-storage
     mountPath: /qdrant/storage
+  # Ephemeral directory for snapshots
+  - name: qdrant-snapshots
+    mountPath: /qdrant/snapshots
+  # Ephemeral directory for working files
+  - name: qdrant-workdir
+    mountPath: /qdrant/workdir
+  # Writable file for qdrant init indicator
+  - name: qdrant-init
+    mountPath: /qdrant/.qdrant-initialized
+    subPath: .qdrant-initialized
   readinessProbe:
     httpGet:
       path: /readyz

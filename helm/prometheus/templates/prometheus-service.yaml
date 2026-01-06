@@ -23,7 +23,7 @@ spec:
   type: {{ .Values.nodeExporter.service.type }}
   ports:
   - port: {{ .Values.nodeExporter.service.port }}
-    targetPort: 9100
+    targetPort: {{ .Values.nodeExporter.service.port }}
     protocol: TCP
     name: metrics
   selector:
