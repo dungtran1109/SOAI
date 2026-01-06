@@ -17,6 +17,7 @@ async def add_document(
         texts=request.texts,
         collection_name=request.collection_name,
         embedding_model=request.embedding_model,
+        payloads=request.payloads,
     )
     if not result:
         return JSONResponse(
@@ -43,6 +44,8 @@ async def search_knowledge_base(request: QueryRequest):
                 query=request.query,
                 collection_name=request.collection_name,
                 embedding_model=request.embedding_model,
+                filters=request.filters,
+                top_k=request.top_k,
             ),
         ).dict(),
         status_code=200,

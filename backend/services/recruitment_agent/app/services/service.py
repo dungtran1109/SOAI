@@ -3,6 +3,7 @@ import os
 import subprocess
 import shutil
 import json
+import requests
 from typing import Optional, List
 
 from sqlalchemy.orm import Session
@@ -29,6 +30,7 @@ from schemas.interview_question_schema import InterviewQuestionSchema
 from schemas.jd_schema import JobDescriptionUploadSchema
 from schemas.cv_schema import CVUploadResponseSchema
 from metrics.prometheus_metrics import *
+from utils.utils import extract_text_from_pdf, chunk_text
 
 logger = AppLogger(__name__)
 
@@ -55,7 +57,7 @@ class RecruitmentService:
         file,
         override_email: Optional[str] = None,
         position_applied_for: Optional[str] = None,
-        username: Optional[str] = None
+        username: Optional[str] = None,
     ):
         logger.info("Uploading and processing CV file.")
         try:
@@ -90,8 +92,11 @@ class RecruitmentService:
 
             full_path = os.path.join(cv_dir, pdf_filename)
             from celery_tasks.pipeline import process_cv_pipeline
+
             cv_upload_total.inc()
-            process_cv_pipeline.delay(full_path, override_email, position_applied_for, username)
+            process_cv_pipeline.delay(
+                full_path, override_email, position_applied_for, username
+            )
             return CVUploadResponseSchema(message="CV received and is being processed.")
         except Exception as e:
             logger.exception(f"Error processing CV: {e}")
@@ -141,7 +146,10 @@ class RecruitmentService:
                 CVApplication.email == email_to_check,
                 CVApplication.matched_position == matched.get("position"),
                 CVApplication.status.in_(
-                    [FinalDecisionStatus.PENDING.value, FinalDecisionStatus.ACCEPTED.value]
+                    [
+                        FinalDecisionStatus.PENDING.value,
+                        FinalDecisionStatus.ACCEPTED.value,
+                    ]
                 ),
             )
             .first()
@@ -178,7 +186,60 @@ class RecruitmentService:
         db.add(cv)
         db.commit()
         logger.info("CV saved to database.")
+        # Index CV into Qdrant via Knowledge Base service
+        try:
+            self.index_cv_embeddings(
+                cv_application=cv,
+                cv_file_path=cv_file_path,
+            )
+        except Exception as e:
+            logger.error(f"Error indexing CV embeddings: {e}")
         return f"CV processed successfully for candidate name: {candidate_name}"
+
+    def index_cv_embeddings(self, cv_application: CVApplication, cv_file_path: str):
+        """Extract text, chunk, and send to Knowledge Base for embedding/upsert."""
+        try:
+            text = extract_text_from_pdf(cv_file_path)
+            chunks = chunk_text(text)
+            if not chunks:
+                logger.warning("No chunks produced for CV; skipping RAG ingestion.")
+                return
+            payloads = [
+                {
+                    "candidate_id": cv_application.id,
+                    "email": cv_application.email,
+                    "position": cv_application.matched_position,
+                    "source_doc": os.path.basename(cv_file_path),
+                }
+                for _ in chunks
+            ]
+
+            request_body = {
+                "texts": chunks,
+                "collection_name": QDRANT_COLLECTION,
+                "embedding_model": EMBEDDING_MODEL,
+                "payloads": payloads,
+            }
+            url = (
+                f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
+            )
+            kwargs = {
+                "url": url,
+                "json": request_body,
+                "headers": {"Content-Type": "application/json"},
+            }
+            if TLS_ENABLED and CA_PATH:
+                kwargs["verify"] = CA_PATH
+            resp = requests.post(**kwargs)
+            if resp.status_code == 200:
+                rag_ingest_total.inc(len(chunks))
+                logger.info(
+                    f"Indexed {len(chunks)} chunks for CV ID={cv_application.id} into collection {QDRANT_COLLECTION}"
+                )
+            else:
+                logger.error(f"Failed to add documents to KB: {resp.text}")
+        except Exception as e:
+            logger.error(f"Error during RAG ingestion: {e}")
 
     def approve_cv(self, candidate_id: int, db: Session):
         logger.info(f"Starting approval for candidate_id={candidate_id}.")
@@ -196,14 +257,12 @@ class RecruitmentService:
             parsed_cv = (
                 json.loads(cv_application.parsed_cv)
                 if isinstance(cv_application.parsed_cv, str)
-                else cv_application.parsed_cv
-                or {}
+                else cv_application.parsed_cv or {}
             )
             matched_jd_skills = (
                 json.loads(cv_application.matched_jd_skills)
                 if isinstance(cv_application.matched_jd_skills, str)
-                else cv_application.matched_jd_skills
-                or []
+                else cv_application.matched_jd_skills or []
             )
         except Exception as e:
             logger.error(f"Error loading CV or JD skills JSON: {e}")
@@ -243,6 +302,45 @@ class RecruitmentService:
             f"CV status updated to {cv_application.status} for candidate: {cv_application.candidate_name}"
         )
         return f"CV approval result: {final_state.final_decision}"
+
+    def index_cv_embeddings(self, cv_application: CVApplication, cv_file_path: str):
+        """Extract text, chunk, and send to Knowledge Base for embedding/upsert."""
+        try:
+            text = extract_text_from_pdf(cv_file_path)
+            chunks = chunk_text(text)
+            if not chunks:
+                logger.warn("No chunks produced for CV; skipping RAG ingestion.")
+                return
+            payloads = [
+                {
+                    "candidate_id": cv_application.id,
+                    "email": cv_application.email,
+                    "position": cv_application.matched_position,
+                    "source_doc": os.path.basename(cv_file_path),
+                }
+                for _ in chunks
+            ]
+
+            request_body = {
+                "texts": chunks,
+                "collection_name": QDRANT_COLLECTION,
+                "embedding_model": EMBEDDING_MODEL,
+                "payloads": payloads,
+            }
+            url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
+            kwargs = {"url": url, "json": request_body, "headers": {"Content-Type": "application/json"}}
+            if TLS_ENABLED and CA_PATH:
+                kwargs["verify"] = CA_PATH
+            resp = requests.post(**kwargs)
+            if resp.status_code == 200:
+                rag_ingest_total.inc(len(chunks))
+                logger.info(
+                    f"Indexed {len(chunks)} chunks for CV ID={cv_application.id} into collection {QDRANT_COLLECTION}"
+                )
+            else:
+                logger.error(f"Failed to add documents to KB: {resp.text}")
+        except Exception as e:
+            logger.error(f"Error during RAG ingestion: {e}")
 
     def upload_jd(self, jd_data_list: list, db: Session):
         logger.info("Uploading JD list.")
@@ -362,7 +460,11 @@ class RecruitmentService:
             db.commit()
             logger.info("Interview accepted successfully.")
 
-            cv = db.query(CVApplication).filter_by(id=interview.cv_application_id).first()
+            cv = (
+                db.query(CVApplication)
+                .filter_by(id=interview.cv_application_id)
+                .first()
+            )
             if not cv:
                 logger.warn("Associated CV not found for this interview.")
                 return "Associated CV not found."
@@ -421,7 +523,9 @@ class RecruitmentService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error accepting interview: {e}")
-            return CVUploadResponseSchema(message=f"Failed to accept interview: {str(e)}")
+            return CVUploadResponseSchema(
+                message=f"Failed to accept interview: {str(e)}"
+            )
 
     def get_all_interviews(
         self,
@@ -482,18 +586,18 @@ class RecruitmentService:
             )
         pending_cvs = query.all()
         return [
-        {
-            "id": cv.id,
-            "candidate_name": cv.candidate_name,
-            "email": cv.email,
-            "position": cv.matched_position,
-            "matched_score": cv.matched_score,
-            "justification": cv.justification,
-            "status": cv.status,
-            "datetime": cv.datetime,
-        }
-        for cv in pending_cvs
-    ]
+            {
+                "id": cv.id,
+                "candidate_name": cv.candidate_name,
+                "email": cv.email,
+                "position": cv.matched_position,
+                "matched_score": cv.matched_score,
+                "justification": cv.justification,
+                "status": cv.status,
+                "datetime": cv.datetime,
+            }
+            for cv in pending_cvs
+        ]
 
     def get_approved_cvs(
         self, db: Session, candidate_name: Optional[str] = None
@@ -507,18 +611,18 @@ class RecruitmentService:
             )
         approved_cvs = query.all()
         return [
-        {
-            "id": cv.id,
-            "candidate_name": cv.candidate_name,
-            "email": cv.email,
-            "position": cv.matched_position,
-            "matched_score": cv.matched_score,
-            "justification": cv.justification,
-            "status": cv.status,
-            "datetime": cv.datetime,
-        }
-        for cv in approved_cvs
-    ]
+            {
+                "id": cv.id,
+                "candidate_name": cv.candidate_name,
+                "email": cv.email,
+                "position": cv.matched_position,
+                "matched_score": cv.matched_score,
+                "justification": cv.justification,
+                "status": cv.status,
+                "datetime": cv.datetime,
+            }
+            for cv in approved_cvs
+        ]
 
     def update_cv_application(self, cv_id: int, update_data: dict, db: Session):
         logger.info(f"Updating CV application ID={cv_id}")
@@ -557,31 +661,37 @@ class RecruitmentService:
             "position": cv.matched_position,
             "experience_years": cv.experience_years,
             "skills": json.loads(cv.skills) if cv.skills else [],
-            "jd_skills": json.loads(cv.matched_jd_skills) if cv.matched_jd_skills else [],
+            "jd_skills": (
+                json.loads(cv.matched_jd_skills) if cv.matched_jd_skills else []
+            ),
             "matched_score": cv.matched_score,
             "justification": cv.justification,
             "status": cv.status,
             "parsed_cv": json.loads(cv.parsed_cv) if cv.parsed_cv else {},
         }
-    
+
     def get_cv_application_by_username(self, username: str, db: Session):
         cvs = db.query(CVApplication).filter(CVApplication.username == username).all()
         result = []
         for cv in cvs:
-            result.append({
-                "id": cv.id,
-                "candidate_name": cv.candidate_name,
-                "username": cv.username,
-                "email": cv.email,
-                "position": cv.matched_position,
-                "experience_years": cv.experience_years,
-                "skills": json.loads(cv.skills) if cv.skills else [],
-                "jd_skills": json.loads(cv.matched_jd_skills) if cv.matched_jd_skills else [],
-                "matched_score": cv.matched_score,
-                "justification": cv.justification,
-                "status": cv.status,
-                "parsed_cv": json.loads(cv.parsed_cv) if cv.parsed_cv else {},
-            })
+            result.append(
+                {
+                    "id": cv.id,
+                    "candidate_name": cv.candidate_name,
+                    "username": cv.username,
+                    "email": cv.email,
+                    "position": cv.matched_position,
+                    "experience_years": cv.experience_years,
+                    "skills": json.loads(cv.skills) if cv.skills else [],
+                    "jd_skills": (
+                        json.loads(cv.matched_jd_skills) if cv.matched_jd_skills else []
+                    ),
+                    "matched_score": cv.matched_score,
+                    "justification": cv.justification,
+                    "status": cv.status,
+                    "parsed_cv": json.loads(cv.parsed_cv) if cv.parsed_cv else {},
+                }
+            )
         logger.debug(f"Found {len(result)} CV(s) for username '{username}'")
         return result
 
@@ -595,19 +705,19 @@ class RecruitmentService:
         cvs = query.all()
         logger.info(f"Fetched {len(cvs)} CV applications.")
         return [
-        {
-            "id": cv.id,
-            "candidate_name": cv.candidate_name,
-            "username": cv.username,
-            "email": cv.email,
-            "position": cv.matched_position,
-            "matched_score": cv.matched_score,
-            "justification": cv.justification,
-            "status": cv.status,
-            "datetime": cv.datetime,
-        }
-        for cv in cvs
-    ]
+            {
+                "id": cv.id,
+                "candidate_name": cv.candidate_name,
+                "username": cv.username,
+                "email": cv.email,
+                "position": cv.matched_position,
+                "matched_score": cv.matched_score,
+                "justification": cv.justification,
+                "status": cv.status,
+                "datetime": cv.datetime,
+            }
+            for cv in cvs
+        ]
 
     def update_interview(self, interview_id: int, update_data: dict, db: Session):
         logger.info(f"Updating interview ID={interview_id}")
@@ -659,18 +769,28 @@ class RecruitmentService:
         logger.info("All JDs deleted.")
         return CVUploadResponseSchema(message="All JDs deleted.")
 
-    def get_interview_questions(self, cv_id: int, db: Session) -> List[InterviewQuestionSchema]:
-        logger.info(f"[get_interview_questions] Fetching interview questions for CV ID={cv_id}")
+    def get_interview_questions(
+        self, cv_id: int, db: Session
+    ) -> List[InterviewQuestionSchema]:
+        logger.info(
+            f"[get_interview_questions] Fetching interview questions for CV ID={cv_id}"
+        )
         try:
-            questions = db.query(InterviewQuestion).filter_by(cv_application_id=cv_id).all()
-            logger.info(f"[get_interview_questions] Found {len(questions)} questions for CV ID={cv_id}")
+            questions = (
+                db.query(InterviewQuestion).filter_by(cv_application_id=cv_id).all()
+            )
+            logger.info(
+                f"[get_interview_questions] Found {len(questions)} questions for CV ID={cv_id}"
+            )
             for i, q in enumerate(questions, 1):
                 logger.debug(
                     f"[get_interview_questions] Q{i}: {q.original_question} (edited: {q.is_edited})"
                 )
             return [InterviewQuestionSchema.model_validate(q) for q in questions]
         except Exception as e:
-            logger.error(f"[get_interview_questions] Error fetching questions for CV ID={cv_id}: {e}")
+            logger.error(
+                f"[get_interview_questions] Error fetching questions for CV ID={cv_id}: {e}"
+            )
             return []
 
     def edit_interview_question(
@@ -694,7 +814,9 @@ class RecruitmentService:
         logger.info("Interview question updated.")
         return {"message": "Interview question updated successfully."}
 
-    def regenerate_interview_questions(self, cv_id: int, db: Session) -> List[InterviewQuestion]:
+    def regenerate_interview_questions(
+        self, cv_id: int, db: Session
+    ) -> List[InterviewQuestion]:
         logger.info(f"Regenerating interview questions for CV ID={cv_id}")
 
         cv = db.query(CVApplication).filter_by(id=cv_id).first()
@@ -704,7 +826,9 @@ class RecruitmentService:
         parsed_cv = json.loads(cv.parsed_cv) if cv.parsed_cv else {}
         matched_jd = {
             "position": cv.matched_position,
-            "skills_required": json.loads(cv.matched_jd_skills) if cv.matched_jd_skills else [],
+            "skills_required": (
+                json.loads(cv.matched_jd_skills) if cv.matched_jd_skills else []
+            ),
             "experience_required": cv.matched_jd_experience_required,
         }
 
@@ -786,13 +910,14 @@ class RecruitmentService:
             raise HTTPException(status_code=404, detail="CV not found.")
 
         parsed_cv = json.loads(cv.parsed_cv) if cv.parsed_cv else {}
-        filename = parsed_cv.get("cv_file_name") or f"{cv.candidate_name.replace(' ', '_')}.pdf"
+        filename = (
+            parsed_cv.get("cv_file_name")
+            or f"{cv.candidate_name.replace(' ', '_')}.pdf"
+        )
         file_path = os.path.join(UPLOAD_DIR, filename)
 
         if not os.path.exists(file_path):
-            raise HTTPException(
-                status_code=404, detail="CV file not found on server."
-            )
+            raise HTTPException(status_code=404, detail="CV file not found on server.")
 
         return FileResponse(
             path=file_path,
@@ -844,7 +969,15 @@ Hiring Manager: {jd.hiring_manager or ''}
 
         try:
             subprocess.run(
-                ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, txt_path],
+                [
+                    "libreoffice",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    output_dir,
+                    txt_path,
+                ],
                 check=True,
             )
         except Exception as e:
@@ -860,7 +993,7 @@ Hiring Manager: {jd.hiring_manager or ''}
             filename=filename,
             headers={"Content-Disposition": f'inline; filename="{filename}"'},
         )
-    
+
     def list_proof_images(self, cv_id: int) -> List[str]:
         folder_path = os.path.join(UPLOAD_DIR, f"cv_{cv_id}", "proofs")
         if not os.path.exists(folder_path):
@@ -870,11 +1003,13 @@ Hiring Manager: {jd.hiring_manager or ''}
         image_urls = [
             f"{API_PREFIX}/static/cv_{cv_id}/proofs/{file}"
             for file in files
-            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
+            if file.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
         ]
         return image_urls
-    
-    def upload_proof_images(self, cv_id: int, files: List[UploadFile]) -> CVUploadResponseSchema:
+
+    def upload_proof_images(
+        self, cv_id: int, files: List[UploadFile]
+    ) -> CVUploadResponseSchema:
         folder_path = os.path.join(UPLOAD_DIR, f"cv_{cv_id}", "proofs")
         saved_files = []
         for file in files:
@@ -884,4 +1019,6 @@ Hiring Manager: {jd.hiring_manager or ''}
             with open(save_path, "wb") as f:
                 shutil.copyfileobj(file.file, f)
             saved_files.append(file.filename)
-        return CVUploadResponseSchema(message=f"Uploaded {len(saved_files)} proof images.")
+        return CVUploadResponseSchema(
+            message=f"Uploaded {len(saved_files)} proof images."
+        )

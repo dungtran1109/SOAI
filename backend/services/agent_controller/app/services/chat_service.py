@@ -1,7 +1,20 @@
 import logging
+import requests
 from services.user_history_store import UserHistoryStore
 from services.genai import GenAI
-from config.constants import DEFAULT_MODEL
+from config.constants import (
+    DEFAULT_MODEL,
+    RAG_ENABLED,
+    RAG_UNGROUNDED_CONTINUATION,
+    RAG_TOP_K,
+    RECRUITMENT_HOST,
+    KNOWLEDGE_BASE_HOST,
+    EMBEDDING_MODEL,
+    QDRANT_COLLECTION,
+    SCHEMA,
+    TLS_ENABLED,
+    CA_PATH,
+)
 from config.log_config import AppLogger
 
 logger = AppLogger(__file__)
@@ -13,19 +26,92 @@ class ChatService:
         model=DEFAULT_MODEL,
         user_id=None,
         conversation_id=None,
+        auth_token: str | None = None,
     ):
         self.model = model
         self.conversation_id = conversation_id
         self.user_id = user_id
+        self.auth_token = auth_token
         self.history_store = UserHistoryStore(
             user_id=user_id, conversation_id=conversation_id
         )
         self.ai_service = GenAI(model=model)
 
     async def ask(self, user_input):
-        instructions = f"""
-            You are a friendly and professional assistant helping someone on recruitment. You should sound warm, conversational, and helpful.
-"""
+        # Attempt RAG directly via Knowledge Base (no extra HTTP API)
+        if RAG_ENABLED:
+            try:
+                kb_body = {
+                    "query": user_input,
+                    "collection_name": QDRANT_COLLECTION,
+                    "embedding_model": EMBEDDING_MODEL,
+                    "top_k": RAG_TOP_K,
+                    "filters": None,
+                }
+                url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/search/"
+                headers = {"Content-Type": "application/json"}
+                kwargs = {"url": url, "json": kb_body, "headers": headers}
+                if TLS_ENABLED and CA_PATH:
+                    kwargs["verify"] = CA_PATH
+                resp = requests.post(**kwargs)
+                if resp.status_code == 200:
+                    kb_data = resp.json().get("data", [])
+                    # Build grounded prompt with citations
+                    contexts = []
+                    for item in kb_data:
+                        text = item.get("page_content", "")
+                        cid = str(item.get("id", ""))
+                        if text:
+                            contexts.append(f"[Chunk {cid}]\n{text}")
+
+                    system_prompt = (
+                        "You are an assistant answering recruitment questions grounded in provided CV excerpts. "
+                        "Cite chunk IDs (e.g., [Chunk abc]) when you use information. If no relevant context, say so."
+                    )
+                    context_block = "\n\n".join(contexts)
+                    messages = [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "system", "content": f"Context:\n{context_block}"},
+                        {"role": "user", "content": user_input},
+                    ]
+                    logger.info(f"RAG messages: {messages}")
+                    # Invoke GenAI provider for grounded completion
+                    answer = await self.ai_service.invoke(messages)
+                    citations_present = len(contexts) > 0
+                    if citations_present and answer:
+                        self.history_store.add_history_messages(
+                            [
+                                {"role": "user", "content": user_input},
+                                {"role": "assistant", "content": answer},
+                            ]
+                        )
+                        return {"text": answer}
+                    else:
+                        # Fallback messaging when no valid info
+                        fallback = (
+                            "No relevant context found; please provide more details."
+                        )
+                        if not RAG_UNGROUNDED_CONTINUATION:
+                            self.history_store.add_history_messages(
+                                [
+                                    {"role": "user", "content": user_input},
+                                    {"role": "assistant", "content": fallback},
+                                ]
+                            )
+                            return {"text": fallback}
+                        # Continue ungrounded below
+                else:
+                    logger.warn(
+                        f"KB search failed status={resp.status_code}: {resp.text}"
+                    )
+            except Exception as e:
+                logger.error(f"RAG flow error: {e}")
+
+        # Ungrounded chat as default or fallback
+        instructions = (
+            "You are a friendly and professional assistant helping someone on recruitment. "
+            "You should sound warm, conversational, and helpful."
+        )
         messages = [{"role": "system", "content": instructions}]
         messages += self.history_store.get_history()
         messages.append({"role": "user", "content": user_input})
@@ -38,6 +124,4 @@ class ChatService:
                 {"role": "assistant", "content": ai_response},
             ],
         )
-        return {
-            "text": ai_response,
-        }
+        return {"text": ai_response}

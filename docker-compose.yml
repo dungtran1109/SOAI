@@ -180,6 +180,8 @@ services:
       - CONSUL_HOST=consul:8500
       - GENAI_HOST=genai:8004
       - LOG_LEVEL=DEBUG
+      - RAG_ENABLED=true
+      - RAG_UNGROUNDED_CONTINUATION=false
     restart: always
     ports:
       - "8005:8005"
@@ -272,7 +274,7 @@ services:
       - SERVICE_PORT=8006
       - CONSUL_HOST=consul:8500
       - LOG_LEVEL=DEBUG
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GENAI_HOST=genai:8004
     restart: always
     ports:
       - "8006:8006"

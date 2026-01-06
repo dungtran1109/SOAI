@@ -43,6 +43,11 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "your_app_password")
 DEFAULT_CANDIDATE_EMAIL = os.getenv("DEFAULT_CANDIDATE_EMAIL", "")
 DEFAULT_MODEL = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-4o-mini")
 
+# Knowledge Base / RAG settings
+KNOWLEDGE_BASE_HOST = os.getenv("KNOWLEDGE_BASE_HOST", "soai_knowledge_base:8006")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
+QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "cv_embeddings")
+
 # Celery Settings
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", f"redis://{os.getenv('REDIS_HOST', 'redis')}:{os.getenv('REDIS_PORT', '6379')}/0")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)

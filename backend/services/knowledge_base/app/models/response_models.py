@@ -1,4 +1,4 @@
-from typing import List,Any, Optional
+from typing import List, Any, Optional, Dict
 from pydantic import BaseModel, validator
 from config.constants import DEFAULT_COLLECTION_NAME, DEFAULT_EMBEDDING_MODEL
 
@@ -8,6 +8,7 @@ class QueryRequest(BaseModel):
     collection_name: str = DEFAULT_COLLECTION_NAME
     embedding_model: str = DEFAULT_EMBEDDING_MODEL
     top_k: int = 3
+    filters: Optional[Dict[str, Any]] = None
 
     @validator("top_k")
     def top_k_must_be_positive(cls, value):
@@ -20,6 +21,7 @@ class AddDocumentRequest(BaseModel):
     texts: List[str]
     collection_name: str = DEFAULT_COLLECTION_NAME
     embedding_model: str = DEFAULT_EMBEDDING_MODEL
+    payloads: Optional[List[Dict[str, Any]]] = None
 
 class StandardResponse(BaseModel):
     status: str
