@@ -41,3 +41,9 @@ grafana:
 
 datasource:
   prometheusUrl: "http://prometheus:9090"
+  clickhouse:
+    enabled: true
+    url: "http://clickhouse:8123"
+    username: "soai_user"
+    password: "soai_password"
+    database: "otel"

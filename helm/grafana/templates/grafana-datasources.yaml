@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: grafana-datasources
 data:
-  prometheus.yml: |
+  datasources.yml: |
     apiVersion: 1
     datasources:
       - name: Prometheus
@@ -14,4 +14,18 @@ data:
         isDefault: true
         jsonData:
           timeInterval: 30s
+      {{- if .Values.datasource.clickhouse.enabled }}
+      - name: ClickHouse
+        type: grafana-clickhouse-datasource
+        uid: clickhouse
+        access: proxy
+        url: {{ .Values.datasource.clickhouse.url | quote }}
+        jsonData:
+          defaultDatabase: {{ .Values.datasource.clickhouse.database | quote }}
+          port: 8123
+          protocol: http
+          username: {{ .Values.datasource.clickhouse.username | quote }}
+        secureJsonData:
+          password: {{ .Values.datasource.clickhouse.password | quote }}
+      {{- end }}
 
