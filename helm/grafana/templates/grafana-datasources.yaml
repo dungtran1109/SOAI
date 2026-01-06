@@ -8,6 +8,7 @@ data:
     datasources:
       - name: Prometheus
         type: prometheus
+        uid: prometheus
         access: proxy
         url: {{ .Values.datasource.prometheusUrl | quote }}
         isDefault: true
