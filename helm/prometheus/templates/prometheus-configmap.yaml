@@ -17,6 +17,31 @@ data:
       - job_name: "node"
         static_configs:
           - targets: ["node-exporter.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.nodeExporter.service.port }}"]
+      {{- else if .Values.nodeExporter.autoDiscover }}
+      # Auto-discover node-exporter using Kubernetes service discovery
+      - job_name: "node"
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: []  # Empty means all namespaces
+        relabel_configs:
+          # Keep only endpoints with node-exporter related labels
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: (node-exporter|prometheus-node-exporter|node-exporter-prometheus-node-exporter)
+            action: keep
+          # Use the service port named 'metrics' or 'http-metrics' or port 9100
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: (metrics|http-metrics|http)
+            action: keep
+          # Set instance label to node name if available
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node
+          # Set namespace label
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          # Set pod label
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
       {{- end }}
       
       - job_name: "grafana"
