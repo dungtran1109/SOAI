@@ -30,13 +30,31 @@
     value: {{ $top.Values.server.qdrant.httpPort | quote }}
   - name: QDRANT__SERVICE__GRPC_PORT
     value: {{ $top.Values.server.qdrant.grpcPort | quote }}
+  {{- if $g.security.tls.enabled }}
+  - name: QDRANT__SERVICE__ENABLE_TLS
+    value: "true"
+  - name: QDRANT__TLS__CERT
+    value: {{ $top.Values.server.secretsPath.certPath }}/tls.crt
+  - name: QDRANT__TLS__KEY
+    value: {{ $top.Values.server.secretsPath.certPath }}/tls.key
+  - name: QDRANT__TLS__CA_CERT
+    value: {{ $top.Values.server.secretsPath.certPath }}/ca.crt
+  {{- end }}
   volumeMounts:
+  {{- if $g.security.tls.enabled }}
+  - name: tls-cert
+    mountPath: {{ $top.Values.server.secretsPath.certPath }}
+    readOnly: true
+  {{- end }}
   - name: qdrant-storage
     mountPath: /qdrant/storage
   readinessProbe:
     httpGet:
       path: /readyz
       port: {{ $top.Values.server.qdrant.httpPort }}
+      {{- if $g.security.tls.enabled }}
+      scheme: HTTPS
+      {{- end }}
     initialDelaySeconds: 5
     periodSeconds: 10
     timeoutSeconds: 5
@@ -46,6 +64,9 @@
     httpGet:
       path: /healthz
       port: {{ $top.Values.server.qdrant.httpPort }}
+      {{- if $g.security.tls.enabled }}
+      scheme: HTTPS
+      {{- end }}
     initialDelaySeconds: 10
     periodSeconds: 30
     timeoutSeconds: 5

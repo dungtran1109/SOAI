@@ -133,15 +133,33 @@ class QdrantDB:
 
     @staticmethod
     def get_or_create_qdrant_collection(
-        qdrant_host="qdrant",
-        qdrant_port=6333,
+        qdrant_host=None,
+        qdrant_port=None,
         vector_dimension=3072,
         collection_name=DEFAULT_COLLECTION_NAME,
     ):
         """Gets or creates a Qdrant collection."""
+        import os
+        if qdrant_host is None:
+            qdrant_host = os.getenv("QDRANT_HOST", "qdrant")
+        if qdrant_port is None:
+            qdrant_port = int(os.getenv("QDRANT_PORT", 6333))
+
+        # TLS configuration
+        tls_enabled = os.getenv("QDRANT_TLS_ENABLED", "false").lower() == "true"
+        ca_path = os.getenv("CA_PATH", "")
 
         try:
-            client = qdrant_client.QdrantClient(qdrant_host, port=qdrant_port)
+            if tls_enabled:
+                # Use HTTPS when TLS is enabled
+                url = f"https://{qdrant_host}:{qdrant_port}"
+                client = qdrant_client.QdrantClient(
+                    url=url,
+                    https=True,
+                    ca_cert=ca_path if ca_path else None,
+                )
+            else:
+                client = qdrant_client.QdrantClient(qdrant_host, port=qdrant_port)
 
             if not client.collection_exists(collection_name):
                 logger.error(f"Creating new Qdrant collection: {collection_name}")

@@ -66,6 +66,29 @@
     value: redis
   - name: REDIS_PORT
     value: {{ $top.Values.server.redis.port | quote }}
+  # RAG settings from constants.py
+  - name: RAG_ENABLED
+    value: {{ $top.Values.rag.enabled | default false | quote }}
+  - name: RAG_UNGROUNDED_CONTINUATION
+    value: {{ $top.Values.rag.ungroundedContinuation | default false | quote }}
+  - name: RAG_TOP_K
+    value: {{ $top.Values.rag.topK | default 5 | quote }}
+  - name: KNOWLEDGE_BASE_HOST
+    {{- if $g.security.tls.enabled }}
+    value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpsPort }}
+    {{- else }}
+    value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpPort }}
+    {{- end }}
+  - name: RECRUITMENT_HOST
+    {{- if $g.security.tls.enabled }}
+    value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpsPort }}
+    {{- else }}
+    value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpPort }}
+    {{- end }}
+  - name: EMBEDDING_MODEL
+    value: {{ $top.Values.rag.embeddingModel | default "text-embedding-3-large" | quote }}
+  - name: QDRANT_COLLECTION
+    value: {{ $top.Values.rag.qdrantCollection | default "cv_embeddings" | quote }}
   volumeMounts:
   {{- if $g.security.tls.enabled }}
   - name: tls-cert

@@ -771,7 +771,7 @@ Define FQDN for Cert-Manager certificates
 */}}
 {{- define "soai-application.FQDN" -}}
 {{- $root := index . 0 -}}
-{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) (include "soai-agent-controller.name" $root) (include "soai-knowledge-base.name" $root) -}}
+{{- $services := list (include "soai-genai.name" $root) (include "soai-web.name" $root) (include "soai-recruitment.name" $root) (include "soai-authentication.name" $root) (include "soai-agent-controller.name" $root) (include "soai-knowledge-base.name" $root) (include "soai-qdrant.name" $root) -}}
 {{- $namespace := (include "soai-application.namespace" $root) -}}
 {{- range $service := $services }}
   - {{ $service }}

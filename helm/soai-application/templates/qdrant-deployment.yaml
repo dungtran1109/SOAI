@@ -28,6 +28,11 @@ spec:
       containers:
       {{- include "soai-qdrant-containers" (list .) | nindent 6 }}
       volumes:
+      {{- if $g.security.tls.enabled }}
+      - name: tls-cert
+        secret:
+          secretName: {{ template "soai-application.name" . }}-cert
+      {{- end }}
       - name: qdrant-storage
         {{- if .Values.storage.enabled }}
         persistentVolumeClaim:

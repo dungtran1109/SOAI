@@ -105,6 +105,17 @@
     value: "600"
   - name: CELERY_TASK_SOFT_TIME_LIMIT
     value: "500"
+  # Knowledge Base / RAG settings from constants.py
+  - name: KNOWLEDGE_BASE_HOST
+    {{- if $g.security.tls.enabled }}
+    value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpsPort }}
+    {{- else }}
+    value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpPort }}
+    {{- end }}
+  - name: EMBEDDING_MODEL
+    value: {{ $top.Values.rag.embeddingModel | default "text-embedding-3-large" | quote }}
+  - name: QDRANT_COLLECTION
+    value: {{ $top.Values.rag.qdrantCollection | default "cv_embeddings" | quote }}
   volumeMounts:
   {{- if $top.Values.storage.enabled }}
   - name: {{ template "soai-recruitment.name" $top }}-persistent-storage

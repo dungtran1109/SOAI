@@ -78,6 +78,13 @@
     {{- else }}
     value: {{ printf "%s:%s" (include "soai-genai.name" $top) $top.Values.server.genai.httpPort }}
     {{- end }}
+  # Qdrant connection settings (used in qdrant.py)
+  - name: QDRANT_HOST
+    value: {{ include "soai-qdrant.name" $top }}
+  - name: QDRANT_PORT
+    value: {{ $top.Values.server.qdrant.httpPort | quote }}
+  - name: QDRANT_TLS_ENABLED
+    value: {{ ternary "true" "false" $g.security.tls.enabled | quote }}
   volumeMounts:
   {{- if $g.security.tls.enabled }}
   - name: tls-cert
