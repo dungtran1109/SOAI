@@ -6,7 +6,9 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  {{- if .Values.grafana.persistence.storageClass }}
   storageClassName: {{ .Values.grafana.persistence.storageClass }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.grafana.persistence.size }}

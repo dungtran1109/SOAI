@@ -69,6 +69,23 @@ data:
         static_configs:
           - targets:
               - {{ printf "%s.%s.svc.cluster.local:3000" (include "prometheus.grafanaServiceName" .) .Release.Namespace | quote }}
+
+      # Auto-discover kube-state-metrics using Kubernetes service discovery
+      - job_name: "kube-state-metrics"
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: []  # Empty means all namespaces
+        relabel_configs:
+          # Keep only endpoints with kube-state-metrics related service names
+          - source_labels: [__meta_kubernetes_service_name]
+            regex: (.*(kube-state-metrics).*)
+            action: keep
+          # Set a friendly instance label
+          - source_labels: [__address__]
+            target_label: instance
+        # Honor labels from kube-state-metrics (namespace, pod, container, etc.)
+        honor_labels: true
     
     rule_files:
       - /etc/prometheus/rules/alert.rules.yml

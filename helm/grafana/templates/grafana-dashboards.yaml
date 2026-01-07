@@ -5,5 +5,9 @@ metadata:
   labels:
     grafana_dashboard: "true"
 data:
-{{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
+  {{- $namespace := .Release.Namespace }}
+  {{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+  {{ base $path }}: |
+    {{- $.Files.Get $path | replace "$__namespace" $namespace | nindent 4 }}
+  {{- end }}
 
