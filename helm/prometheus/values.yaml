@@ -54,9 +54,13 @@ alertmanager:
       cpu: "200m"
 
 nodeExporter:
+  # Set to true to deploy node-exporter in this namespace
   # Set to false if node-exporter already exists in another namespace (e.g., monitoring)
   # NodeExporter uses hostNetwork and will conflict if multiple instances run on the same node
   enabled: false
+  # Auto-discover node-exporter from any namespace using Kubernetes service discovery
+  # When enabled is false and autoDiscover is true, Prometheus will find node-exporter automatically
+  autoDiscover: true
   image:
     repository: prom/node-exporter
     tag: v1.8.2

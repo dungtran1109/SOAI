@@ -26,10 +26,26 @@ spec:
             - name: config
               mountPath: /etc/clickhouse-server/users.d/otel-user.xml
               subPath: otel-user.xml
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d/init-otel-views.sh
+              subPath: init-otel-views.sh
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/bash
+                  - -c
+                  - |
+                    # Run init script in background after container starts
+                    nohup /bin/bash /docker-entrypoint-initdb.d/init-otel-views.sh > /var/log/init-otel-views.log 2>&1 &
       volumes:
         - name: config
           configMap:
             name: clickhouse-configmap
+        - name: init-scripts
+          configMap:
+            name: clickhouse-configmap
+            defaultMode: 0755
   volumeClaimTemplates:
     - metadata:
         name: data

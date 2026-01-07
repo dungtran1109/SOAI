@@ -16,3 +16,45 @@ data:
                 </soai_user>
             </users>
         </yandex>
+    init-otel-views.sh: |
+        #!/bin/bash
+        # Wait for ClickHouse to be ready
+        until clickhouse-client --query "SELECT 1" 2>/dev/null; do
+          echo "Waiting for ClickHouse to be ready..."
+          sleep 2
+        done
+
+        # Check if otel database exists
+        if clickhouse-client --query "EXISTS DATABASE otel" | grep -q 1; then
+          echo "Creating unified otel_metrics view..."
+          clickhouse-client --query "
+            CREATE VIEW IF NOT EXISTS otel.otel_metrics AS
+            SELECT
+                ServiceName,
+                MetricName,
+                MetricDescription,
+                MetricUnit,
+                Attributes,
+                StartTimeUnix,
+                TimeUnix,
+                Value,
+                Flags,
+                'gauge' as MetricType
+            FROM otel.otel_metrics_gauge
+            UNION ALL
+            SELECT
+                ServiceName,
+                MetricName,
+                MetricDescription,
+                MetricUnit,
+                Attributes,
+                StartTimeUnix,
+                TimeUnix,
+                Value,
+                Flags,
+                'sum' as MetricType
+            FROM otel.otel_metrics_sum
+          " && echo "otel_metrics view created successfully" || echo "Failed to create otel_metrics view"
+        else
+          echo "otel database does not exist yet, skipping view creation"
+        fi

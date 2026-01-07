@@ -9,6 +9,10 @@ spec:
   template:
     metadata:
       labels: {{- include "grafana.labels" . | nindent 8 }}
+      annotations:
+        checksum/dashboards: {{ include (print $.Template.BasePath "/grafana-dashboards.yaml") . | sha256sum }}
+        checksum/datasources: {{ include (print $.Template.BasePath "/grafana-datasources.yaml") . | sha256sum }}
+        checksum/dashboards-provider: {{ include (print $.Template.BasePath "/grafana-dashboards-provider.yaml") . | sha256sum }}
     spec:
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ default (printf "%s-sa" (include "grafana.name" .)) .Values.serviceAccount.name }}
@@ -24,6 +28,10 @@ spec:
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "{{ .Values.grafana.environment.GF_AUTH_ANONYMOUS_ENABLED }}"
+            {{- if .Values.datasource.clickhouse.enabled }}
+            - name: GF_INSTALL_PLUGINS
+              value: "grafana-clickhouse-datasource"
+            {{- end }}
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:
                 secretKeyRef:
@@ -49,7 +57,7 @@ spec:
             - name: grafana-dashboards-provider
               mountPath: /etc/grafana/provisioning/dashboards
             - name: grafana-dashboards
-              mountPath: /var/lib/grafana/dashboards
+              mountPath: /etc/grafana/dashboards
           livenessProbe:
             httpGet:
               path: /api/health
