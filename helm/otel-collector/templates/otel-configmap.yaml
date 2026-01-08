@@ -57,19 +57,14 @@ data:
         traces_table_name: otel_traces
         metrics_table_name: otel_metrics
         timeout: 5s
+        # TTL configuration - auto-delete old data to prevent unbounded growth
+        # Applies to all tables (logs, traces, metrics)
+        ttl: 168h  # 7 days retention
         retry_on_failure:
           enabled: true
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
-        # TTL configuration - auto-delete old data to prevent unbounded growth
-        ttl: 168h  # 7 days for logs (default table)
-        logs:
-          ttl: 168h  # 7 days
-        traces:
-          ttl: 336h  # 14 days
-        metrics:
-          ttl: 720h  # 30 days
 {{- end }}
     processors:
       memory_limiter:
