@@ -1,6 +1,10 @@
 global:
   otel:
     enabled: true
+    # OTEL Collector endpoint - adjust based on deployment
+    # Same namespace: otel-collector:4317
+    # Different namespace: otel-collector.<namespace>.svc.cluster.local:4317
+    endpoint: "otel-collector:4317"
   clickHouse:
     enabled: true
   grafana:
@@ -133,13 +137,6 @@ server:
     httpNodePort: "30800"
     httpsNodePort: "30844"
 
-  consul:
-    name: consul
-    replicaCount: 1
-    serviceType: LoadBalancer
-    httpPort: "8500"
-    httpNodePort: "30500"
-
 resources:
   initcontainer:
     limits:
@@ -218,14 +215,6 @@ resources:
     requests:
       cpu: "100m"
       memory: "64Mi"
-  consul:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "100m"
-      memory: "256Mi"
-
 annotations: {}
 
 seccompProfile:

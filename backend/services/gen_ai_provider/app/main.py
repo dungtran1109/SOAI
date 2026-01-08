@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from routers import router
 from fastapi.middleware.cors import CORSMiddleware
-from config.service_registration import ServiceRegistration
 from config.log_config import LoggingConfig, AppLogger
 import uvicorn
 from config.constants import *
@@ -40,8 +39,6 @@ setup_otel(app=app, service_name=SERVICE_NAME)
 
 # Include all routers
 app.include_router(router, prefix="/api/v1/gen-ai", tags=["gen-ai"])
-# Include health check router
-ServiceRegistration.register_service()
 
 if __name__ == "__main__":
     logger.info(f"Starting GenAI Provider API with TLS enabled: {TLS_ENABLED}")

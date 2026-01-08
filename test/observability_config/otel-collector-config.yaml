@@ -65,6 +65,9 @@ exporters:
     traces_table_name: otel_traces
     metrics_table_name: otel_metrics
     timeout: 5s
+    # TTL configuration - auto-delete old data to prevent unbounded growth
+    # Applies to all tables (logs, traces, metrics)
+    ttl: 168h  # 7 days retention
     retry_on_failure:
       enabled: true
       initial_interval: 5s
@@ -76,6 +79,37 @@ processors:
     check_interval: 1s
     limit_mib: 1000
     spike_limit_mib: 200
+
+  # Filter out noisy health check and probe logs
+  filter/logs:
+    logs:
+      exclude:
+        match_type: regexp
+        bodies:
+          - '.*"GET /health.*'
+          - '.*"GET /api/v1/.*/health.*'
+          - '.*readiness.*'
+          - '.*liveness.*'
+          - '.*healthcheck.*'
+          - '.*GET /metrics.*'
+
+  # Sample DEBUG level logs (keep only 10%)
+  # INFO, WARN, ERROR logs are always kept
+  probabilistic_sampler/logs:
+    sampling_percentage: 100  # Base rate for all logs
+
+  # Tail sampling for traces - keep error traces and sample others
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100
+    expected_new_traces_per_sec: 10
+    policies:
+      - name: error-policy
+        type: status_code
+        status_code: {status_codes: [ERROR]}
+      - name: probabilistic-policy
+        type: probabilistic
+        probabilistic: {sampling_percentage: 20}
 
   k8sattributes:
     passthrough: true # Only keep this for docker environment
@@ -111,8 +145,13 @@ processors:
         key: service.instance.id
 
   batch:
-    send_batch_size: 10000
+    send_batch_size: 5000
     timeout: 10s
+
+  # Smaller batch for logs to reduce memory pressure
+  batch/logs:
+    send_batch_size: 2000
+    timeout: 5s
 
   transform:
     error_mode: ignore
@@ -161,10 +200,10 @@ service:
 
     traces:
       receivers: [otlp]
-      processors: [k8sattributes, batch]
+      processors: [memory_limiter, k8sattributes, tail_sampling, batch]
       exporters: [clickhouse]
 
     logs:
       receivers: [otlp]
-      processors: [k8sattributes, transform/logs, batch]
+      processors: [memory_limiter, filter/logs, k8sattributes, transform/logs, batch/logs]
       exporters: [clickhouse]

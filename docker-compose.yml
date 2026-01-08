@@ -6,7 +6,6 @@ services:
       context: ./backend/services/gen_ai_provider
       dockerfile: ./Dockerfile
     environment:
-      - CONSUL_HOST=consul:8500
       - SERVICE_NAME=soai_gen_ai_provider
       - SERVICE_PORT=8004
       - OTEL_ENDPOINT=otel-collector:4317
@@ -61,17 +60,6 @@ services:
       mysql:
         condition: service_healthy
 
-  consul:
-    image: hashicorp/consul:latest
-    container_name: soai_consul
-    ports:
-      - "8500:8500"
-      - "8600:8600/udp"
-    command: "agent -server -bootstrap -ui -client=0.0.0.0"
-    restart: always
-    networks:
-      - soai-net
-
   web:
     container_name: soai_web
     image: soai-web:latest
@@ -102,7 +90,6 @@ services:
       - CELERY_TASK_TIME_LIMIT=600
       - CELERY_TASK_SOFT_TIME_LIMIT=500
       - CELERY_TIMEZONE=Asia/Ho_Chi_Minh
-      - CONSUL_HOST=consul:8500
       - GENAI_HOST=genai:8004
       - SERVICE_NAME=soai_recruitment_agent
       - SERVICE_PORT=8003
@@ -125,8 +112,6 @@ services:
       authentication:
         condition: service_started
       genai:
-        condition: service_started
-      consul:
         condition: service_started
       recruitment_worker:
         condition: service_started
@@ -151,7 +136,6 @@ services:
       - DB_NAME=soai_db
       - DB_USERNAME=soai_user
       - DB_PASSWORD=soai_password
-      - CONSUL_HOST=consul:8500
       - GENAI_HOST=genai:8004
       - SERVICE_NAME=soai_recruitment_agent_worker
       - SERVICE_PORT=8003
@@ -177,8 +161,8 @@ services:
       - SERVICE_NAME=soai_agent_controller
       - SERVICE_PORT=8005
       - SOAI_RECRUITMENT_AGENT=soai_recruitment_agent
-      - CONSUL_HOST=consul:8500
       - GENAI_HOST=genai:8004
+      - OTEL_ENDPOINT=otel-collector:4317
       - LOG_LEVEL=DEBUG
       - RAG_ENABLED=true
       - RAG_UNGROUNDED_CONTINUATION=false
@@ -191,8 +175,6 @@ services:
       - ./backend/services/agent_controller:/app
     depends_on:
       authentication:
-        condition: service_started
-      consul:
         condition: service_started
       recruitment_worker:
         condition: service_started
@@ -272,9 +254,9 @@ services:
     environment:
       - SERVICE_NAME=soai_knowledge_base
       - SERVICE_PORT=8006
-      - CONSUL_HOST=consul:8500
       - LOG_LEVEL=DEBUG
       - GENAI_HOST=genai:8004
+      - OTEL_ENDPOINT=otel-collector:4317
     restart: always
     ports:
       - "8006:8006"

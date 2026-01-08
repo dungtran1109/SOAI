@@ -29,7 +29,7 @@
 {{- include "soai-application.resources" (index $top.Values "resources" "genai") | indent 2 }}
   env:
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -47,8 +47,6 @@
       secretKeyRef:
         name: openai-secret
         key: openai-key
-  - name: CONSUL_HOST
-    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ include "soai-genai.name" $top }}
   - name: SERVICE_PORT
