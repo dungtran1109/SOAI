@@ -14,6 +14,6 @@ class KnowledgeBaseService:
         return qdrantdb.add(texts=texts, embedding_model=embedding_model, payloads=payloads)
 
     @staticmethod
-    def retrieve(collection_name: str):
+    def retrieve(collection_name: str, limit: int = 100, offset: int = 0):
         qdrantdb = QdrantDB(collection_name=collection_name)
-        return qdrantdb.retrieve()
+        return qdrantdb.retrieve(limit=limit, offset=offset)

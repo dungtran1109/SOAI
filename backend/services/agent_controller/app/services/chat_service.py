@@ -1,7 +1,6 @@
 import logging
-import requests
 from services.user_history_store import UserHistoryStore
-from services.genai import GenAI
+from services.genai import GenAI, get_http_client
 from services.cv_link_service import CVLinkIntentDetector, CVLinkService
 from config.constants import (
     DEFAULT_MODEL,
@@ -44,7 +43,7 @@ class ChatService:
         if is_cv_request and candidate_name:
             logger.info(f"CV link request detected for candidate: {candidate_name}")
             cv_link_service = CVLinkService(auth_token=self.auth_token)
-            cv_data = cv_link_service.get_cv_link(candidate_name)
+            cv_data = await cv_link_service.get_cv_link(candidate_name)
             response_text = CVLinkService.format_response(cv_data)
             self.history_store.add_history_messages([
                 {"role": "user", "content": user_input},
@@ -52,7 +51,7 @@ class ChatService:
             ])
             return {"text": response_text}
 
-        # STEP 2: Attempt RAG directly via Knowledge Base (no extra HTTP API)
+        # STEP 2: Attempt RAG directly via Knowledge Base (async HTTP)
         if RAG_ENABLED:
             try:
                 kb_body = {
@@ -64,10 +63,10 @@ class ChatService:
                 }
                 url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/search/"
                 headers = {"Content-Type": "application/json"}
-                kwargs = {"url": url, "json": kb_body, "headers": headers}
-                if TLS_ENABLED and CA_PATH:
-                    kwargs["verify"] = CA_PATH
-                resp = requests.post(**kwargs)
+
+                # Use async httpx client
+                client = await get_http_client()
+                resp = await client.post(url, json=kb_body, headers=headers)
                 if resp.status_code == 200:
                     kb_data = resp.json().get("data", [])
                     # Build grounded prompt with citations

@@ -138,6 +138,13 @@ const useChatSocket = (endpointURL: string) => {
             socket.onmessage = (event): void => {
                 if (!isMountedRef.current) return;
                 const msg: WSMessage = JSON.parse(event.data);
+
+                // Handle ping/pong for keep-alive
+                if (msg.type === 'ping') {
+                    socket.send(JSON.stringify({ type: 'pong' }));
+                    return;
+                }
+
                 dispatch(pushMessage({ role: CHAT_ROLE.AI, content: msg.data }));
                 dispatch(setDoneResponse());
             };

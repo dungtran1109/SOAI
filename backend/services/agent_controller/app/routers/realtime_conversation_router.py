@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, WebSocket
 from starlette.websockets import WebSocketDisconnect
 from fastapi.responses import JSONResponse
@@ -14,6 +15,11 @@ from models.response_models import StandardResponse
 
 router = APIRouter()
 logger = AppLogger(__file__)
+
+# WebSocket timeout settings
+HANDSHAKE_TIMEOUT = 30  # seconds to wait for initial handshake
+MESSAGE_TIMEOUT = 300   # seconds to wait for messages (5 minutes)
+PING_INTERVAL = 30      # seconds between ping messages
 
 
 @router.get("/conversations/{user_id}")
@@ -80,11 +86,22 @@ def get_conversation(user_id: str, conversation_id: str):
 @router.websocket("/conversations/realtime")
 async def realtime_stream(ws: WebSocket):
     await ws.accept()
+    ping_task = None
     try:
-        # First message must be the handshake with JWT token
-        connect_msg_json = await ws.receive_json()
+        # First message must be the handshake with JWT token (with timeout)
+        try:
+            connect_msg_json = await asyncio.wait_for(
+                ws.receive_json(),
+                timeout=HANDSHAKE_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            logger.warning("WebSocket handshake timeout")
+            await send_ws_message(ws, WebsocketErrorMessage("handshake timeout"))
+            await ws.close(code=1008)
+            return
+
         connect_msg = WebsocketMessage.from_json(connect_msg_json)
-        logger.error(f"Received handshake message: {connect_msg}")
+        logger.info(f"Received handshake message: {connect_msg}")
         if connect_msg.type != WebsocketMessageType.USER_CONNECT:
             await send_ws_message(
                 ws,
@@ -94,19 +111,40 @@ async def realtime_stream(ws: WebSocket):
             )
             return
         connect_msg = WebsocketConnectMessage.from_msg(connect_msg)
-        # if not JWTService.verify_jwt_token(connect_msg.auth_token()):
-        #     await send_ws_message(ws, WebsocketErrorMessage("invalid auth token"))
-        #     return
 
-        # TODO: fix this initialization with model name
         chat_service = ChatService(
             user_id=connect_msg.user_id(),
             conversation_id=connect_msg.conversation_id(),
             auth_token=connect_msg.auth_token(),
         )
+
+        # Start ping task to keep connection alive
+        async def send_ping():
+            while True:
+                try:
+                    await asyncio.sleep(PING_INTERVAL)
+                    await ws.send_json({"type": "ping"})
+                except Exception:
+                    break
+
+        ping_task = asyncio.create_task(send_ping())
+
         while True:
-            frame = await ws.receive_json()
+            try:
+                frame = await asyncio.wait_for(
+                    ws.receive_json(),
+                    timeout=MESSAGE_TIMEOUT
+                )
+            except asyncio.TimeoutError:
+                logger.info("WebSocket message timeout, closing connection")
+                await ws.close(code=1000, reason="idle timeout")
+                return
+
             msg = WebsocketMessage.from_json(frame)
+
+            # Handle pong response (client acknowledgment)
+            if msg.type == WebsocketMessageType.PONG if hasattr(WebsocketMessageType, 'PONG') else frame.get("type") == "pong":
+                continue
 
             if msg.type == WebsocketMessageType.USER_INPUT_TEXT_COMMIT:
                 # msg.data can be a raw string or a dict with "text"
@@ -120,7 +158,7 @@ async def realtime_stream(ws: WebSocket):
                     continue
 
                 # Call ChatService
-                print("User text:", user_text)
+                logger.debug(f"User text: {user_text}")
                 result = await chat_service.ask(
                     user_text
                 )  # returns {"text": ai_response}
@@ -146,6 +184,14 @@ async def realtime_stream(ws: WebSocket):
         except Exception:
             # Connection already closed, ignore
             pass
+    finally:
+        # Cancel ping task if running
+        if ping_task and not ping_task.done():
+            ping_task.cancel()
+            try:
+                await ping_task
+            except asyncio.CancelledError:
+                pass
 
 
 async def send_ws_message(ws: WebSocket, msg: WebsocketMessage):

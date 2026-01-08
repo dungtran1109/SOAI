@@ -2,9 +2,9 @@
 CV Link Service for detecting CV link requests in chat and retrieving presigned URLs.
 """
 import re
-import requests
 from typing import Optional, Tuple, List, Dict, Any
 
+from services.genai import get_http_client
 from config.constants import RECRUITMENT_HOST, SCHEMA, TLS_ENABLED, CA_PATH
 from config.log_config import AppLogger
 
@@ -85,7 +85,7 @@ class CVLinkService:
         self.auth_token = auth_token
         self.base_url = f"{SCHEMA}://{RECRUITMENT_HOST}/api/v1/recruitment"
 
-    def get_cv_link(self, candidate_name: str) -> Dict[str, Any]:
+    async def get_cv_link(self, candidate_name: str) -> Dict[str, Any]:
         """
         Get CV download link(s) for a candidate by name.
 
@@ -101,16 +101,15 @@ class CVLinkService:
             if self.auth_token:
                 headers["Authorization"] = f"Bearer {self.auth_token}"
 
-            kwargs = {
-                "url": url,
-                "headers": headers,
-                "params": {"candidate_name": candidate_name},
-            }
-            if TLS_ENABLED and CA_PATH:
-                kwargs["verify"] = CA_PATH
-
             logger.info(f"Fetching CV link for candidate: {candidate_name}")
-            resp = requests.get(**kwargs)
+
+            # Use async httpx client
+            client = await get_http_client()
+            resp = await client.get(
+                url,
+                headers=headers,
+                params={"candidate_name": candidate_name},
+            )
 
             if resp.status_code == 200:
                 data = resp.json()

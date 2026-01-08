@@ -61,7 +61,11 @@ async def list_documents(
     return JSONResponse(
         content=StandardResponse(
             status="success",
-            data=KnowledgeBaseService.retrieve(collection_name),
+            data=KnowledgeBaseService.retrieve(
+                collection_name=collection_name,
+                limit=limit,
+                offset=offset,
+            ),
         ).dict(),
         status_code=200,
     )

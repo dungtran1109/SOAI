@@ -3,7 +3,6 @@ import os
 import subprocess
 import shutil
 import json
-import requests
 import tempfile
 from typing import Optional, List, Tuple
 
@@ -16,7 +15,7 @@ from config.config import Settings
 from config.log_config import AppLogger
 from config.constants import *
 from utils.email_sender import EmailSender
-from services.genai import GenAI
+from services.genai import GenAI, get_sync_http_client
 from services.storage_service import get_storage, StorageBackend
 from agents.state import RecruitmentState
 from agents.graph import (
@@ -276,14 +275,11 @@ class RecruitmentService:
             url = (
                 f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
             )
-            kwargs = {
-                "url": url,
-                "json": request_body,
-                "headers": {"Content-Type": "application/json"},
-            }
-            if TLS_ENABLED and CA_PATH:
-                kwargs["verify"] = CA_PATH
-            resp = requests.post(**kwargs)
+            headers = {"Content-Type": "application/json"}
+
+            # Use httpx with connection pooling
+            client = get_sync_http_client()
+            resp = client.post(url, json=request_body, headers=headers)
             if resp.status_code == 200:
                 rag_ingest_total.inc(len(chunks))
                 logger.info(
