@@ -241,7 +241,7 @@ kind: Service
 metadata:
   annotations: {{- include "soai-application.annotations" . | nindent 4 }}
   labels: {{- include "soai-redis.labels" . | nindent 4 }}
-  name: redis
+  name: {{ template "soai-redis.name" . }}
 spec:
   type: ClusterIP
   selector:
