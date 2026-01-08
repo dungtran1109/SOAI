@@ -8,11 +8,6 @@ from config.log_config import LoggingConfig, AppLogger, enable_otlp_logging
 from config.constants import *
 import uvicorn
 from config.constants import *
-# This is required because we need to include model for sqlachemy identify and create tables automatically 
-import models.job_description
-import models.cv_application
-import models.interview_schedule
-import models.interview_question
 from fastapi.staticfiles import StaticFiles
 # === OpenTelemetry setup ===
 from metrics.otel_setup import setup_otel

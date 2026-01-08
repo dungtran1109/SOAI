@@ -14,6 +14,10 @@ from services.jwt_service import JWTService
 from config.log_config import AppLogger
 from schemas.interview_question_schema import InterviewQuestionSchema
 from celery_tasks.pipeline import *
+from services.genai import GenAI
+from utils.utils import extract_text_from_pdf, ensure_text, clean_json_from_text
+from config.constants import UPLOAD_DIR
+import os, subprocess, json
 
 logger = AppLogger(__name__)
 router = APIRouter()
@@ -446,3 +450,126 @@ async def upload_proof_images(
         f"USER '{get_current_user.get('sub')}' is calling POST /cvs/{cv_id}/proofs/upload"
     )
     return recruitment_service.upload_proof_images(cv_id=cv_id, files=files)
+
+
+# === Scorecard Auto-Fill (single multipart upload) ===
+@router.post("/scorecards/auto-fill")
+async def auto_fill_scorecard(
+    jdFile: UploadFile = File(...),
+    templateFile: UploadFile = File(...),
+    transcriptFile: Optional[UploadFile] = File(None),
+    gradePayload: Optional[str] = Form(None),
+    mode: Optional[str] = Form("genai"),
+    model: Optional[str] = Form(None),
+    get_current_user: dict = JWTService.require_role("USER"),
+):
+    async def _save(path_dir: str, up: UploadFile) -> str:
+        os.makedirs(path_dir, exist_ok=True)
+        path = os.path.join(path_dir, up.filename)
+        content = await up.read()
+        with open(path, "wb") as f:
+            f.write(content)
+        return path
+
+    async def _parse_txt(path: str) -> str:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            return ensure_text(f.read())
+
+    async def _convert_docx_to_pdf(path: str) -> str:
+        outdir = os.path.dirname(path)
+        subprocess.run([
+            "libreoffice", "--headless", "--convert-to", "pdf", "--outdir", outdir, path
+        ], check=True)
+        pdf_path = os.path.splitext(path)[0] + ".pdf"
+        if not os.path.exists(pdf_path):
+            raise RuntimeError("DOCX to PDF conversion failed")
+        return pdf_path
+
+    async def _parse_file(up: UploadFile) -> str:
+        saved = await _save(os.path.join(UPLOAD_DIR, "autofill"), up)
+        ext = os.path.splitext(saved)[1].lower()
+        if ext == ".txt":
+            return await _parse_txt(saved)
+        if ext == ".pdf":
+            return ensure_text(extract_text_from_pdf(saved))
+        if ext == ".docx":
+            pdf_path = await _convert_docx_to_pdf(saved)
+            return ensure_text(extract_text_from_pdf(pdf_path))
+        if ext == ".vtt":
+            # Minimal VTT parsing: strip indices and timestamps
+            lines = []
+            with open(saved, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    s = line.strip()
+                    if "-->" in s or s.isdigit():
+                        continue
+                    if s:
+                        lines.append(s)
+            return "\n".join(lines)
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
+
+    # Parse inputs
+    jd_text = await _parse_file(jdFile)
+    tpl_text = await _parse_file(templateFile)
+    tr_text = ""
+    if transcriptFile is not None:
+        tr_text = await _parse_file(transcriptFile)
+
+    # Build a minimal schema from template lines
+    fields = [
+        {"label": line[:64], "type": "string"}
+        for line in tpl_text.splitlines() if line.strip()
+    ]
+    schema = {"sections": [{"name": templateFile.filename, "fields": fields}]}
+
+    # Optional grade payload
+    grade = {}
+    try:
+        if gradePayload:
+            grade = json.loads(gradePayload)
+    except Exception:
+        grade = {}
+
+    # GenAI path
+    if (mode or "genai") == "genai":
+        try:
+            system_prompt = (
+                "You are an extractor. Output strict JSON with keys: grades (object), confidence (object of floats 0..1), notes (string). "
+                "Use the provided schema to map fields."
+            )
+            user_payload = json.dumps({
+                "schema": schema,
+                "job_description": jd_text,
+                "interview_transcript": tr_text,
+                "provided_grades": grade,
+            })
+            ga = GenAI(model=model or None)
+            resp = ga.invoke(message=f"{system_prompt}\n{user_payload}")
+            content = resp.json().get("message") if hasattr(resp, "json") else resp.text
+            cleaned = clean_json_from_text(ensure_text(content))
+            obj = json.loads(cleaned)
+            proposed = obj.get("grades") or {}
+            confidence = obj.get("confidence") or {}
+            notes = obj.get("notes") or ""
+            return {
+                "proposed_grades": proposed,
+                "confidence": confidence,
+                "notes": notes,
+            }
+        except Exception as e:
+            logger.error(f"GenAI auto-fill failed, falling back: {e}")
+
+    # Deterministic fallback: naive keyword frequency mapping
+    base_text = f"{jd_text}\n{tr_text}".lower()
+    proposed = {}
+    for f in fields:
+        key = ensure_text(f.get("label", "")).lower()
+        if not key:
+            continue
+        score = float(base_text.count(key))
+        proposed[key] = min(1.0, score / 5.0)
+    return {
+        "proposed_grades": proposed,
+        "confidence": {k: 0.5 for k in proposed.keys()},
+        "notes": "Deterministic fallback applied",
+    }
