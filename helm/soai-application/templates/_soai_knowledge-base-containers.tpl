@@ -28,6 +28,9 @@
   resources:
 {{- include "soai-application.resources" (index $top.Values "resources" "knowledgebase") | indent 2 }}
   env:
+  # OpenTelemetry endpoint
+  - name: OTEL_ENDPOINT
+    value: "otel-collector:4317"
   # From log_config.py: POD_NAME = os.getenv("POD_NAME", "knowledge_base-pod")
   - name: POD_NAME
     valueFrom:
@@ -41,9 +44,6 @@
   # From log_config.py: CONTAINER_NAME = os.getenv("CONTAINER_NAME", "knowledge_base_container")
   - name: CONTAINER_NAME
     value: {{ $top.Values.server.knowledgebase.name }}
-  # From constants.py: CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost:8500")
-  - name: CONSUL_HOST
-    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   # From constants.py: SERVICE_NAME = os.getenv("SERVICE_NAME", "knowledge_base_service")
   - name: SERVICE_NAME
     value: {{ include "soai-knowledge-base.name" $top }}

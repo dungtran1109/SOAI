@@ -62,12 +62,44 @@ data:
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
+        # TTL configuration - auto-delete old data to prevent unbounded growth
+        ttl: 168h  # 7 days for logs (default table)
+        logs:
+          ttl: 168h  # 7 days
+        traces:
+          ttl: 336h  # 14 days
+        metrics:
+          ttl: 720h  # 30 days
 {{- end }}
     processors:
       memory_limiter:
         check_interval: 1s
         limit_mib: 1000
         spike_limit_mib: 200
+      # Filter out noisy health check and probe logs
+      filter/logs:
+        logs:
+          exclude:
+            match_type: regexp
+            bodies:
+              - '.*"GET /health.*'
+              - '.*"GET /api/v1/.*/health.*'
+              - '.*readiness.*'
+              - '.*liveness.*'
+              - '.*healthcheck.*'
+              - '.*GET /metrics.*'
+      # Tail sampling for traces - keep error traces and sample others
+      tail_sampling:
+        decision_wait: 10s
+        num_traces: 100
+        expected_new_traces_per_sec: 10
+        policies:
+          - name: error-policy
+            type: status_code
+            status_code: {status_codes: [ERROR]}
+          - name: probabilistic-policy
+            type: probabilistic
+            probabilistic: {sampling_percentage: 20}
       k8sattributes:
         auth_type: serviceAccount
         filter:
@@ -102,8 +134,12 @@ data:
             from_attribute: k8s.pod.uid
             key: service.instance.id
       batch:
-        send_batch_size: 10000
+        send_batch_size: 5000
         timeout: 10s
+      # Smaller batch for logs to reduce memory pressure
+      batch/logs:
+        send_batch_size: 2000
+        timeout: 5s
       transform:
         error_mode: ignore
         metric_statements:
@@ -154,9 +190,9 @@ data:
             - {{ include "otel-collector.exporter" . }}
         traces:
           receivers: [otlp]
-          processors: [k8sattributes, batch]
+          processors: [memory_limiter, k8sattributes, tail_sampling, batch]
           exporters: [{{ include "otel-collector.exporter" . }}]
         logs:
           receivers: [otlp]
-          processors: [k8sattributes, transform/logs, batch]
+          processors: [memory_limiter, filter/logs, k8sattributes, transform/logs, batch/logs]
           exporters: [{{ include "otel-collector.exporter" . }}]

@@ -133,13 +133,6 @@ server:
     httpNodePort: "30800"
     httpsNodePort: "30844"
 
-  consul:
-    name: consul
-    replicaCount: 1
-    serviceType: LoadBalancer
-    httpPort: "8500"
-    httpNodePort: "30500"
-
 resources:
   initcontainer:
     limits:
@@ -218,14 +211,6 @@ resources:
     requests:
       cpu: "100m"
       memory: "64Mi"
-  consul:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "100m"
-      memory: "256Mi"
-
 annotations: {}
 
 seccompProfile:
