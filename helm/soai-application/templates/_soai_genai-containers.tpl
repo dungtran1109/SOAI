@@ -47,8 +47,6 @@
       secretKeyRef:
         name: openai-secret
         key: openai-key
-  - name: CONSUL_HOST
-    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ include "soai-genai.name" $top }}
   - name: SERVICE_PORT

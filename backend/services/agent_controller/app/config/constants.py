@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # Configurations
-CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost:8500")
 GENAI_HOST = os.getenv("GENAI_HOST", "localhost:8004")
 RECRUITMENT_HOST = os.getenv("RECRUITMENT_HOST", "soai_recruitment_agent:8003")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -23,6 +22,9 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 SERVICE_ID = "agent-controller"
 LOG_VERSION = "1.0.0"
 DEFAULT_MODEL = "gpt-4.1"
+
+# OpenTelemetry Configuration
+OTEL_ENDPOINT = os.getenv("OTEL_ENDPOINT", "otel-collector:4317")
 
 # RAG settings
 RAG_ENABLED = os.getenv("RAG_ENABLED", "false").lower() == "true"

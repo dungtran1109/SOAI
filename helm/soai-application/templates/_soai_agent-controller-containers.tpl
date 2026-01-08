@@ -28,6 +28,8 @@
   resources:
 {{- include "soai-application.resources" (index $top.Values "resources" "agentcontroller") | indent 2 }}
   env:
+  - name: OTEL_ENDPOINT
+    value: "otel-collector:4317"
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -42,8 +44,6 @@
     value: {{ $top.Values.server.agentcontroller.logLevel | default "INFO" | quote }}
   - name: GENAI_HOST
     value: {{ printf "%s:%s" (include "soai-genai.name" $top) (ternary $top.Values.server.genai.httpsPort $top.Values.server.genai.httpPort $g.security.tls.enabled) | quote }}
-  - name: CONSUL_HOST
-    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ include "soai-agent-controller.name" $top }}
   - name: SERVICE_PORT
