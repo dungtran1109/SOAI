@@ -1,4 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, Body, Query, HTTPException
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    Form,
+    Depends,
+    Body,
+    Query,
+    HTTPException,
+)
 from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from config.database import DatabaseSession
@@ -457,8 +466,8 @@ async def upload_proof_images(
 async def auto_fill_scorecard(
     jdFile: UploadFile = File(...),
     templateFile: UploadFile = File(...),
-    transcriptFile: Optional[UploadFile] = File(None),
-    gradePayload: Optional[str] = Form(None),
+    transcriptFile: UploadFile = File(...),
+    gradeFile: Optional[UploadFile] = File(None),
     mode: Optional[str] = Form("genai"),
     model: Optional[str] = Form(None),
     get_current_user: dict = JWTService.require_role("USER"),
@@ -477,9 +486,18 @@ async def auto_fill_scorecard(
 
     async def _convert_docx_to_pdf(path: str) -> str:
         outdir = os.path.dirname(path)
-        subprocess.run([
-            "libreoffice", "--headless", "--convert-to", "pdf", "--outdir", outdir, path
-        ], check=True)
+        subprocess.run(
+            [
+                "libreoffice",
+                "--headless",
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                outdir,
+                path,
+            ],
+            check=True,
+        )
         pdf_path = os.path.splitext(path)[0] + ".pdf"
         if not os.path.exists(pdf_path):
             raise RuntimeError("DOCX to PDF conversion failed")
@@ -511,24 +529,25 @@ async def auto_fill_scorecard(
     # Parse inputs
     jd_text = await _parse_file(jdFile)
     tpl_text = await _parse_file(templateFile)
-    tr_text = ""
-    if transcriptFile is not None:
-        tr_text = await _parse_file(transcriptFile)
+    tr_text = await _parse_file(transcriptFile)
 
     # Build a minimal schema from template lines
     fields = [
         {"label": line[:64], "type": "string"}
-        for line in tpl_text.splitlines() if line.strip()
+        for line in tpl_text.splitlines()
+        if line.strip()
     ]
     schema = {"sections": [{"name": templateFile.filename, "fields": fields}]}
 
     # Optional grade payload
     grade = {}
-    try:
-        if gradePayload:
-            grade = json.loads(gradePayload)
-    except Exception:
-        grade = {}
+    if gradeFile is not None:
+        try:
+            content = await gradeFile.read()
+            decoded = content.decode("utf-8", errors="ignore")
+            grade = json.loads(decoded)
+        except Exception:
+            grade = {}
 
     # GenAI path
     if (mode or "genai") == "genai":
@@ -537,12 +556,14 @@ async def auto_fill_scorecard(
                 "You are an extractor. Output strict JSON with keys: grades (object), confidence (object of floats 0..1), notes (string). "
                 "Use the provided schema to map fields."
             )
-            user_payload = json.dumps({
-                "schema": schema,
-                "job_description": jd_text,
-                "interview_transcript": tr_text,
-                "provided_grades": grade,
-            })
+            user_payload = json.dumps(
+                {
+                    "schema": schema,
+                    "job_description": jd_text,
+                    "interview_transcript": tr_text,
+                    "provided_grades": grade,
+                }
+            )
             ga = GenAI(model=model or None)
             resp = ga.invoke(message=f"{system_prompt}\n{user_payload}")
             content = resp.json().get("message") if hasattr(resp, "json") else resp.text

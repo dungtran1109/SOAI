@@ -66,7 +66,7 @@ The system SHALL emit traces and metrics for template upload, scorecard create/u
 The system SHALL auto-fill a scorecard by processing uploaded artifacts: job description (TXT/PDF/DOCX), scorecard template (TXT/PDF/DOCX), interview transcription (TXT/PDF/DOCX/VTT), and optional grade input.
 
 #### Scenario: Auto-fill with uploaded files
- **WHEN** a user sends `POST /api/v1/recruitment/scorecards/auto-fill` with a single multipart payload containing `jdFile` (TXT/PDF/DOCX), `templateFile` (TXT/PDF/DOCX), `transcriptFile` (TXT/PDF/DOCX/VTT), and optional `gradePayload` (JSON), and may specify `mode=genai|deterministic` (default `genai`)
+ **WHEN** a user sends `POST /api/v1/recruitment/scorecards/auto-fill` with a single multipart payload containing `jdFile` (TXT/PDF/DOCX), `templateFile` (TXT/PDF/DOCX), `transcriptFile` (TXT/PDF/DOCX/VTT, required), and optional `gradeFile` (JSON file), and may specify `mode=genai|deterministic` (default `genai`)
  **THEN** the system extracts relevant information and returns a proposed scorecard mapped to the template fields with confidence scores; the proposal is not persisted until confirmation
 
  (Deprecated) The ID-based auto-fill variant is removed in favor of the single upload API.
