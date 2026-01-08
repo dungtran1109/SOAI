@@ -1,4 +1,5 @@
 from fastapi import APIRouter, WebSocket
+from starlette.websockets import WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from services.chat_service import ChatService
 from models.websocket_models import (
@@ -134,12 +135,16 @@ async def realtime_stream(ws: WebSocket):
             else:
                 # Ignore other types in text-only mode
                 continue
+    except WebSocketDisconnect as e:
+        logger.info("WebSocket disconnected: code=%s, reason=%s", e.code, e.reason)
     except Exception as e:
         logger.error("Connection terminated with error: %s", e)
-        await send_ws_message(ws, WebsocketErrorMessage(str(e)))
-        await ws.close(code=1011)
-
-    await send_ws_message(ws, WebsocketMessage(WebsocketMessageType.USER_DISCONNECTED))
+        try:
+            await send_ws_message(ws, WebsocketErrorMessage(str(e)))
+            await ws.close(code=1011)
+        except Exception:
+            # Connection already closed, ignore
+            pass
 
 
 async def send_ws_message(ws: WebSocket, msg: WebsocketMessage):

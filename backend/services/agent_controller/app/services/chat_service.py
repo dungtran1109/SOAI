@@ -77,8 +77,9 @@ class ChatService:
                     logger.info(f"RAG messages: {messages}")
                     # Invoke GenAI provider for grounded completion
                     answer = await self.ai_service.invoke(messages)
-                    citations_present = len(contexts) > 0
-                    if citations_present and answer:
+                    if answer:
+                        # Return AI's response - it will indicate if no context was found
+                        # based on the system prompt instructions
                         self.history_store.add_history_messages(
                             [
                                 {"role": "user", "content": user_input},
@@ -86,20 +87,6 @@ class ChatService:
                             ]
                         )
                         return {"text": answer}
-                    else:
-                        # Fallback messaging when no valid info
-                        fallback = (
-                            "No relevant context found; please provide more details."
-                        )
-                        if not RAG_UNGROUNDED_CONTINUATION:
-                            self.history_store.add_history_messages(
-                                [
-                                    {"role": "user", "content": user_input},
-                                    {"role": "assistant", "content": fallback},
-                                ]
-                            )
-                            return {"text": fallback}
-                        # Continue ungrounded below
                 else:
                     logger.warn(
                         f"KB search failed status={resp.status_code}: {resp.text}"

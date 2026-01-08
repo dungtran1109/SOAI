@@ -22,9 +22,9 @@ receivers:
         - job_name: 'soai_services'
           metrics_path: /metrics
           static_configs:
-            - targets: 
-              - 'soai_gen_ai_provider:8004'
-              - 'soai_recruitment_agent:8003'
+            - targets:
+              - 'genai:8004'        # Use service name
+              - 'recruitment:8003'  # Use service name
           relabel_configs:
             - source_labels: [__address__]
               regex: '(.*):.*'
@@ -43,15 +43,14 @@ receivers:
           metrics_path: /actuator/prometheus
           static_configs:
             - targets:
-              - 'soai_authentication:9090'
+              - 'authentication:9090'  # Use service name (no underscores)
           relabel_configs:
             - source_labels: [__address__]
               regex: '(.*):.*'
               target_label: instance
-              replacement: '$${1}'
+              replacement: 'soai_authentication'
             - source_labels: [__address__]
               target_label: service
-              regex: 'authentication:.*'
               replacement: 'authentication_service'
 
 exporters:
@@ -64,15 +63,15 @@ exporters:
     logs_table_name: otel_logs
     traces_table_name: otel_traces
     metrics_table_name: otel_metrics
-    timeout: 5s
+    timeout: 30s
     # TTL configuration - auto-delete old data to prevent unbounded growth
     # Applies to all tables (logs, traces, metrics)
     ttl: 168h  # 7 days retention
     retry_on_failure:
       enabled: true
       initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
+      max_interval: 60s
+      max_elapsed_time: 600s
 
 processors:
   memory_limiter:

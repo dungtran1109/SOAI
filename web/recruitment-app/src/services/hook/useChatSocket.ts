@@ -8,6 +8,7 @@ import { CHAT_ROLE, type SingleMgs, type WSMessage } from '../../shared/types/ch
 
 const useChatSocket = (endpointURL: string) => {
     const socketRef = useRef<WebSocket | null>(null);
+    const connectingRef = useRef<boolean>(false);
     const dispatch = useDispatch();
 
     const getUserId = async (): Promise<number | null> => {
@@ -33,18 +34,41 @@ const useChatSocket = (endpointURL: string) => {
     };
 
     useEffect(() => {
+        // Prevent multiple concurrent connection attempts
+        if (connectingRef.current) return;
+        connectingRef.current = true;
+
+        let socket: WebSocket | null = null;
+        let isMounted = true;
+
         const initChatSocket = async (): Promise<void> => {
             const userId = await getUserId();
-            if (userId === null) return;
+            if (userId === null || !isMounted) {
+                connectingRef.current = false;
+                return;
+            }
             const chatId = await getChatId(userId);
+            if (!isMounted) {
+                connectingRef.current = false;
+                return;
+            }
             const chatHistories = await getChatHistory(userId, chatId);
+            if (!isMounted) {
+                connectingRef.current = false;
+                return;
+            }
             dispatch(setMessages(chatHistories));
 
-            const socket = new WebSocket(endpointURL);
+            socket = new WebSocket(endpointURL);
             socketRef.current = socket;
 
             socket.onopen = (): void => {
-                socket.send(
+                connectingRef.current = false;
+                if (!isMounted) {
+                    socket?.close();
+                    return;
+                }
+                socket?.send(
                     JSON.stringify({
                         type: 'user.connect',
                         data: {
@@ -56,6 +80,7 @@ const useChatSocket = (endpointURL: string) => {
             };
 
             socket.onmessage = (event): void => {
+                if (!isMounted) return;
                 const msg: WSMessage = JSON.parse(event.data);
                 dispatch(pushMessage({ role: CHAT_ROLE.AI, content: msg.data }));
                 dispatch(setDoneResponse());
@@ -63,17 +88,24 @@ const useChatSocket = (endpointURL: string) => {
 
             socket.onerror = (err): void => {
                 console.error('WS error', err);
+                connectingRef.current = false;
             };
 
             socket.onclose = (): void => {
                 console.log('WS closed');
+                connectingRef.current = false;
                 // TODO: Handling reconnection
             };
         };
 
         initChatSocket();
 
-        return () => socketRef.current?.close();
+        return () => {
+            isMounted = false;
+            connectingRef.current = false;
+            socket?.close();
+            socketRef.current = null;
+        };
     }, [dispatch, endpointURL]);
 
     const wsSendMsg = (content: string): void => {
