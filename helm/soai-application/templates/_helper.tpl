@@ -9,6 +9,7 @@ Create a map from ".Values.global" with defaults if missing in values file.
     {{- $globalDefaults := merge $globalDefaults (dict "registry" (dict "url" "anhdung12399")) -}}
     {{- $globalDefaults := merge $globalDefaults (dict "timezone" "UTC") -}}
     {{- $globalDefaults := merge $globalDefaults (dict "nodeSelector" (dict)) -}}
+    {{- $globalDefaults := merge $globalDefaults (dict "otel" (dict "enabled" true "endpoint" "otel-collector:4317")) -}}
     {{ if .Values.global }}
         {{- mergeOverwrite $globalDefaults .Values.global | toJson -}}
     {{ else }}

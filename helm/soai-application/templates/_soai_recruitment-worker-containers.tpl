@@ -16,7 +16,7 @@
         - ALL
   env:
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -63,13 +63,13 @@
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-password
   - name: REDIS_HOST
-    value: redis
+    value: {{ include "soai-redis.name" $top }}
   - name: REDIS_PORT
     value: {{ $top.Values.server.redis.port | quote }}
   - name: CELERY_BROKER_URL
-    value: {{ printf "redis://redis:%s/0" (toString $top.Values.server.redis.port) | quote }}
+    value: {{ printf "redis://%s:%s/0" (include "soai-redis.name" $top) (toString $top.Values.server.redis.port) | quote }}
   - name: CELERY_RESULT_BACKEND
-    value: {{ printf "redis://redis:%s/0" (toString $top.Values.server.redis.port) | quote }}
+    value: {{ printf "redis://%s:%s/0" (include "soai-redis.name" $top) (toString $top.Values.server.redis.port) | quote }}
   - name: CELERY_TASK_TIME_LIMIT
     value: "600"
   - name: CELERY_TASK_SOFT_TIME_LIMIT

@@ -29,7 +29,7 @@
 {{- include "soai-application.resources" (index $top.Values "resources" "genai") | indent 2 }}
   env:
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:

@@ -29,7 +29,7 @@
 {{- include "soai-application.resources" (index $top.Values "resources" "recruitment") | indent 2 }}
   env:
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -92,13 +92,13 @@
   - name: TLS_ENABLED
     value: {{ ternary "true" "false" $g.security.tls.enabled | quote }}
   - name: REDIS_HOST
-    value: redis
+    value: {{ include "soai-redis.name" $top }}
   - name: REDIS_PORT
     value: {{ $top.Values.server.redis.port | quote }}
   - name: CELERY_BROKER_URL
-    value: {{ printf "redis://redis:%s/0" (toString $top.Values.server.redis.port) | quote }}
+    value: {{ printf "redis://%s:%s/0" (include "soai-redis.name" $top) (toString $top.Values.server.redis.port) | quote }}
   - name: CELERY_RESULT_BACKEND
-    value: {{ printf "redis://redis:%s/0" (toString $top.Values.server.redis.port) | quote }}
+    value: {{ printf "redis://%s:%s/0" (include "soai-redis.name" $top) (toString $top.Values.server.redis.port) | quote }}
   - name: CELERY_TASK_TIME_LIMIT
     value: "600"
   - name: CELERY_TASK_SOFT_TIME_LIMIT

@@ -29,7 +29,7 @@
 {{- include "soai-application.resources" (index $top.Values "resources" "agentcontroller") | indent 2 }}
   env:
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -63,7 +63,7 @@
   - name: TLS_ENABLED
     value: {{ ternary "true" "false" $g.security.tls.enabled | quote }}
   - name: REDIS_HOST
-    value: redis
+    value: {{ include "soai-redis.name" $top }}
   - name: REDIS_PORT
     value: {{ $top.Values.server.redis.port | quote }}
   # RAG settings from constants.py

@@ -30,7 +30,7 @@
   env:
   # OpenTelemetry endpoint
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   # From log_config.py: POD_NAME = os.getenv("POD_NAME", "knowledge_base-pod")
   - name: POD_NAME
     valueFrom:

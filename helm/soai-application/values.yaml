@@ -1,6 +1,10 @@
 global:
   otel:
     enabled: true
+    # OTEL Collector endpoint - adjust based on deployment
+    # Same namespace: otel-collector:4317
+    # Different namespace: otel-collector.<namespace>.svc.cluster.local:4317
+    endpoint: "otel-collector:4317"
   clickHouse:
     enabled: true
   grafana:
