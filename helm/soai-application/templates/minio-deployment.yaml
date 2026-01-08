@@ -1,0 +1,127 @@
+{{- if .Values.objectStorage.enabled }}
+{{- $g := fromJson (include "soai-application.global" . ) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "soai-minio.name" . }}
+  labels: {{- include "soai-minio.labels" . | nindent 4 }}
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.minio.replicaCount }}
+  strategy:
+{{ toYaml .Values.updateStrategy | indent 4 }}
+  selector:
+    matchLabels: {{- include "soai-minio.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- $appArmorAnn := include "soai-application.appArmorProfileAnnotation" . | fromYaml -}}
+        {{- $defaultAnn := include "soai-application.annotations" . | fromYaml -}}
+        {{- $annotations := list $appArmorAnn $defaultAnn -}}
+        {{- include "soai-application.mergeAnnotations" (dict "location" (.Template.Name) "sources" $annotations) | trim | nindent 8 }}
+      labels: {{- include "soai-minio.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- include "soai-application.appArmorProfile.securityContext" (list .) | indent 8 }}
+        fsGroup: 1000
+        {{- include "soai-application.podSeccompProfile" . | indent 8 }}
+        {{- include "soai-application.supplementalGroups" . }}
+      containers:
+      - name: {{ .Values.server.minio.name }}
+        image: minio/minio:latest
+        imagePullPolicy: {{ template "soai-application.imagePullPolicy" . }}
+        args:
+          - server
+          - /data
+          - --console-address
+          - ":9001"
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+              - ALL
+        ports:
+          - name: api
+            containerPort: 9000
+          - name: console
+            containerPort: 9001
+        env:
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "soai-minio.name" . }}-secret
+                key: root-user
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "soai-minio.name" . }}-secret
+                key: root-password
+        volumeMounts:
+          - name: minio-storage
+            mountPath: /data
+        resources:
+{{- include "soai-application.resources" (index .Values "resources" "minio") | indent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+        - name: minio-storage
+          {{- if .Values.storage.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ template "soai-minio.name" . }}-pvc
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+    {{- if include "soai-application.pullSecrets" . }}
+      imagePullSecrets:
+        - name: {{ template "soai-application.pullSecrets" . }}
+    {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "soai-minio.name" . }}
+  labels: {{- include "soai-minio.labels" . | nindent 4 }}
+  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.server.minio.serviceType }}
+  ports:
+    - name: api
+      port: {{ .Values.server.minio.apiPort }}
+      targetPort: 9000
+      {{- if eq .Values.server.minio.serviceType "NodePort" }}
+      nodePort: {{ .Values.server.minio.apiNodePort }}
+      {{- end }}
+    - name: console
+      port: {{ .Values.server.minio.consolePort }}
+      targetPort: 9001
+      {{- if eq .Values.server.minio.serviceType "NodePort" }}
+      nodePort: {{ .Values.server.minio.consoleNodePort }}
+      {{- end }}
+  selector: {{- include "soai-minio.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "soai-minio.name" . }}-secret
+  labels: {{- include "soai-minio.labels" . | nindent 4 }}
+type: Opaque
+data:
+  root-user: {{ .Values.minio.rootUser | b64enc }}
+  root-password: {{ .Values.minio.rootPassword | b64enc }}
+{{- end }}

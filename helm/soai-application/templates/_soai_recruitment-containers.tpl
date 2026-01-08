@@ -114,6 +114,31 @@
     value: {{ $top.Values.rag.embeddingModel | default "text-embedding-3-large" | quote }}
   - name: QDRANT_COLLECTION
     value: {{ $top.Values.rag.qdrantCollection | default "cv_embeddings" | quote }}
+  # MinIO / Object Storage settings
+  - name: OBJECT_STORAGE_ENABLED
+    value: {{ $top.Values.objectStorage.enabled | default false | quote }}
+  {{- if $top.Values.objectStorage.enabled }}
+  - name: MINIO_ENDPOINT
+    value: {{ printf "%s:%s" (include "soai-minio.name" $top) $top.Values.server.minio.apiPort }}
+  - name: MINIO_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ template "soai-minio.name" $top }}-secret
+        key: root-user
+  - name: MINIO_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: {{ template "soai-minio.name" $top }}-secret
+        key: root-password
+  - name: MINIO_BUCKET_NAME
+    value: {{ $top.Values.objectStorage.bucketName | default "cv-storage" | quote }}
+  - name: MINIO_PRESIGNED_URL_EXPIRY
+    value: {{ $top.Values.objectStorage.presignedUrlExpiry | default 86400 | quote }}
+  {{- if $top.Values.objectStorage.externalEndpoint }}
+  - name: MINIO_EXTERNAL_ENDPOINT
+    value: {{ $top.Values.objectStorage.externalEndpoint | quote }}
+  {{- end }}
+  {{- end }}
   volumeMounts:
   {{- if $top.Values.storage.enabled }}
   - name: {{ template "soai-recruitment.name" $top }}-persistent-storage

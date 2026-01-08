@@ -6,27 +6,45 @@ from config.log_config import AppLogger
 logger = AppLogger(__name__)
 
 @celery.task(name="celery_tasks.process_cv_pipeline", bind=True, max_retries=3)
-def process_cv_pipeline(self, cv_file_path: str, email: str, position: str, username: str):
+def process_cv_pipeline(
+    self,
+    storage_key: str,
+    bucket_name: str,
+    original_filename: str,
+    email: str,
+    position: str,
+    username: str,
+):
     """
-    Celery task to process a CV file (already uploaded to disk) and run the matching pipeline.
+    Celery task to process a CV file from object storage and run the matching pipeline.
+
+    Args:
+        storage_key: Object key in MinIO storage
+        bucket_name: Storage bucket name
+        original_filename: Original uploaded filename
+        email: Candidate email override
+        position: Position applied for
+        username: User who uploaded the CV
     """
     db = DatabaseSession()
     try:
-        logger.info(f"[TASK] Start processing CV for position: {position} with cv_file: {cv_file_path}")
+        logger.info(f"[TASK] Start processing CV for position: {position} with storage_key: {storage_key}")
         from services.service import RecruitmentService
         service = RecruitmentService()
-        task_result = service.upload_cv_from_file_path(
-            cv_file_path=cv_file_path,
+        task_result = service.process_cv_from_storage(
+            storage_key=storage_key,
+            bucket_name=bucket_name,
+            original_filename=original_filename,
             override_email=email,
             position_applied_for=position,
             username=username,
             db=db
         )
 
-        logger.info(f"[✓] CV processed successfully for: {cv_file_path}")
+        logger.info(f"[OK] CV processed successfully for storage_key: {storage_key}")
         return task_result
     except Exception as e:
-        logger.error(f"[✘] Failed to process CV for: {cv_file_path} | Error: {e}")
+        logger.error(f"[ERROR] Failed to process CV for storage_key: {storage_key} | Error: {e}")
         self.retry(exc=e, countdown=10)
     finally:
         db.close()

@@ -128,6 +128,15 @@ server:
     httpNodePort: "30633"
     grpcNodePort: "30634"
 
+  minio:
+    name: minio
+    replicaCount: 1
+    serviceType: ClusterIP
+    apiPort: "9000"
+    consolePort: "9001"
+    apiNodePort: "30900"
+    consoleNodePort: "30901"
+
   web:
     name: web
     replicaCount: 1
@@ -215,6 +224,13 @@ resources:
     requests:
       cpu: "100m"
       memory: "64Mi"
+  minio:
+    limits:
+      cpu: "1"
+      memory: "1024Mi"
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
 annotations: {}
 
 seccompProfile:
@@ -287,6 +303,7 @@ storage:
       mysql: 2Gi
       recruitment: 8Gi
       qdrant: 5Gi
+      minio: 10Gi
   # StoageClass is enabled => PVC will use StorageClass
   # StorageClass is disabled => PVC will use default StorageClass
   storageClass:
@@ -308,6 +325,19 @@ rag:
   topK: 5
   embeddingModel: "text-embedding-3-large"
   qdrantCollection: "cv_embeddings"
+
+objectStorage:
+  # Enable MinIO object storage for CV files
+  enabled: true
+  bucketName: "cv-storage"
+  # Presigned URL expiry in seconds (24 hours)
+  presignedUrlExpiry: 86400
+  # External endpoint for presigned URLs (optional, for ingress)
+  externalEndpoint: ""
+
+minio:
+  rootUser: "minioadmin"
+  rootPassword: "minioadmin123"
 
 issuer:
   ipAddress: []

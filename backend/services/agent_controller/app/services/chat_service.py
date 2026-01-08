@@ -2,6 +2,7 @@ import logging
 import requests
 from services.user_history_store import UserHistoryStore
 from services.genai import GenAI
+from services.cv_link_service import CVLinkIntentDetector, CVLinkService
 from config.constants import (
     DEFAULT_MODEL,
     RAG_ENABLED,
@@ -38,7 +39,20 @@ class ChatService:
         self.ai_service = GenAI(model=model)
 
     async def ask(self, user_input):
-        # Attempt RAG directly via Knowledge Base (no extra HTTP API)
+        # STEP 1: Check for CV link intent FIRST
+        is_cv_request, candidate_name = CVLinkIntentDetector.detect_cv_link_intent(user_input)
+        if is_cv_request and candidate_name:
+            logger.info(f"CV link request detected for candidate: {candidate_name}")
+            cv_link_service = CVLinkService(auth_token=self.auth_token)
+            cv_data = cv_link_service.get_cv_link(candidate_name)
+            response_text = CVLinkService.format_response(cv_data)
+            self.history_store.add_history_messages([
+                {"role": "user", "content": user_input},
+                {"role": "assistant", "content": response_text},
+            ])
+            return {"text": response_text}
+
+        # STEP 2: Attempt RAG directly via Knowledge Base (no extra HTTP API)
         if RAG_ENABLED:
             try:
                 kb_body = {

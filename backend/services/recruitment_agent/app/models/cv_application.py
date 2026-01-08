@@ -24,3 +24,9 @@ class CVApplication(DeclarativeBase):
     matched_score = Column(Integer, nullable=False, default=0) # LLM Score after Matching
     datetime = Column(Date(), default=date.today, nullable=True)
     justification = Column(Text, nullable=True)
+
+    # Object storage fields (MinIO/S3)
+    storage_key = Column(String(512), nullable=True, index=True)  # Object key in storage
+    bucket_name = Column(String(255), nullable=True, default="cv-storage")  # Storage bucket name
+    storage_backend = Column(String(50), nullable=True, default="local")  # "minio" or "local"
+    original_filename = Column(String(255), nullable=True)  # Original uploaded filename

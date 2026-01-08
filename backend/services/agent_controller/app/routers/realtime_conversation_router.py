@@ -102,6 +102,7 @@ async def realtime_stream(ws: WebSocket):
         chat_service = ChatService(
             user_id=connect_msg.user_id(),
             conversation_id=connect_msg.conversation_id(),
+            auth_token=connect_msg.auth_token(),
         )
         while True:
             frame = await ws.receive_json()

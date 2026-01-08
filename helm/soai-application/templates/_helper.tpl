@@ -111,6 +111,14 @@ Expand the name of the qdrant chart
 {{- end -}}
 
 {{/*
+Expand the name of the minio chart
+*/}}
+{{- define "soai-minio.name" -}}
+{{- $name := (include "soai-application.name" .) -}}
+{{- printf "%s-minio" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Selector labels for mysql.
 */}}
 {{- define "soai-mysql.selectorLabels" -}}
@@ -206,6 +214,16 @@ Selector labels for qdrant.
 {{- define "soai-qdrant.selectorLabels" -}}
 component: {{ .Values.server.qdrant.name | quote }}
 app: {{ template "soai-qdrant.name" . }}
+release: {{ .Release.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}
+
+{{/*
+Selector labels for minio.
+*/}}
+{{- define "soai-minio.selectorLabels" -}}
+component: {{ .Values.server.minio.name | quote }}
+app: {{ template "soai-minio.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
@@ -424,6 +442,19 @@ Merged labels for common qdrant
     {{- $g := fromJson (include "soai-application.global" .) -}}
     {{- $selector := include "soai-qdrant.selectorLabels" . | fromYaml -}}
     {{- $name := (include "soai-qdrant.name" .) }}
+    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
+    {{- $global := $g.label -}}
+    {{- $service := .Values.labels -}}
+    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
+{{- end -}}
+
+{{/*
+Merged labels for common minio
+*/}}
+{{- define "soai-minio.labels" -}}
+    {{- $g := fromJson (include "soai-application.global" .) -}}
+    {{- $selector := include "soai-minio.selectorLabels" . | fromYaml -}}
+    {{- $name := (include "soai-minio.name" .) }}
     {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
     {{- $global := $g.label -}}
     {{- $service := .Values.labels -}}
