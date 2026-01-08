@@ -14,10 +14,11 @@
 - [ ] 1.7 Add OTEL instrumentation and Prometheus metrics for key operations.
 - [ ] 1.8 Update Nginx and web app clients only if new base paths are introduced (target remains `/api/v1/recruitment`).
  - [x] 1.9 Add auto-fill endpoint:
-	 - `POST /scorecards/auto-fill` (single multipart upload: `jdFile` TXT/PDF/DOCX, `templateFile` TXT/PDF/DOCX, `transcriptFile` TXT/PDF/DOCX/VTT [required], optional `gradeFile` JSON file)
+	 - `POST /scorecards/auto-fill` (single multipart upload: `jdFile` TXT/PDF/DOCX OR `jdId` (int), `templateFile` TXT/PDF/DOCX, `transcriptFile` TXT/PDF/DOCX/VTT [required], optional `gradeFile` JSON file). Require at least one of `jdFile` or `jdId`; if both present, prefer `jdFile`.
 	 - `POST /scorecards/{interviewId}/finalize` to persist proposed scorecard
 
  - [x] 1.14 Adjust auto-fill parameter handling in implementation to read `gradeFile` (JSON file) instead of form field and enforce `transcriptFile` as required; update validation and docs accordingly.
+ - [x] 1.15 Support `jdId` in auto-fill: when `jdFile` is absent and `jdId` is provided, load JD content from DB/service and proceed. Add validations and authorization checks.
  - [ ] 1.10 Implement mapping and confidence scoring; mark low-confidence fields for manual review.
  - [ ] 1.11 Use existing `GenAI` class in `backend/services/recruitment_agent/app/services/genai.py` to call GenAI Provider `POST /api/v1/gen-ai/chat` with schema-constrained prompts; add structured JSON parsing, timeouts, retries, and error handling. Avoid introducing a separate adapter.
  - [ ] 1.12 Implement `SchemaBuilder` to derive internal JSON schema from uploaded template (TXT/PDF/DOCX) and enforce types/required fields.

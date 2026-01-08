@@ -26,6 +26,7 @@ from celery_tasks.pipeline import *
 from services.genai import GenAI
 from utils.utils import extract_text_from_pdf, ensure_text, clean_json_from_text
 from config.constants import UPLOAD_DIR
+from models.job_description import JobDescription
 import os, subprocess, json
 
 logger = AppLogger(__name__)
@@ -464,13 +465,15 @@ async def upload_proof_images(
 # === Scorecard Auto-Fill (single multipart upload) ===
 @router.post("/scorecards/auto-fill")
 async def auto_fill_scorecard(
-    jdFile: UploadFile = File(...),
+    jdFile: Optional[UploadFile] = File(None),
+    jdId: Optional[int] = Form(None),
     templateFile: UploadFile = File(...),
     transcriptFile: UploadFile = File(...),
     gradeFile: Optional[UploadFile] = File(None),
     mode: Optional[str] = Form("genai"),
     model: Optional[str] = Form(None),
     get_current_user: dict = JWTService.require_role("USER"),
+    db: Session = Depends(get_db),
 ):
     async def _save(path_dir: str, up: UploadFile) -> str:
         os.makedirs(path_dir, exist_ok=True)
@@ -526,8 +529,37 @@ async def auto_fill_scorecard(
             return "\n".join(lines)
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
-    # Parse inputs
-    jd_text = await _parse_file(jdFile)
+    # Parse JD input: prefer file over ID
+    if jdFile is not None:
+        jd_text = await _parse_file(jdFile)
+    else:
+        if jdId is None:
+            raise HTTPException(
+                status_code=400, detail="Either jdFile or jdId is required"
+            )
+        jd = db.query(JobDescription).filter_by(id=jdId).first()
+        if not jd:
+            raise HTTPException(status_code=404, detail="Job Description not found")
+        # Normalize JD content to text
+        parts = [
+            f"Position: {jd.position}",
+            f"Level: {jd.level}",
+            f"Experience Required: {jd.experience_required}",
+            f"Location: {jd.location}",
+            f"Recruiter: {jd.recruiter or ''}",
+            f"Hiring Manager: {jd.hiring_manager or ''}",
+            "--- Company Description ---",
+            ensure_text(jd.company_description or ""),
+            "--- Job Description ---",
+            ensure_text(jd.job_description or ""),
+            "--- Responsibilities ---",
+            ensure_text(jd.responsibilities or ""),
+            "--- Qualifications ---",
+            ensure_text(jd.qualifications or ""),
+            "--- Additional Information ---",
+            ensure_text(jd.additional_information or ""),
+        ]
+        jd_text = "\n".join([p for p in parts if p is not None])
     tpl_text = await _parse_file(templateFile)
     tr_text = await _parse_file(transcriptFile)
 

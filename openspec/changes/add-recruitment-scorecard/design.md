@@ -21,8 +21,13 @@ Recruitment Agent requires a first-class scorecard feature to capture interview 
 	 5) If GenAI fails or times out, fall back to deterministic extraction (regex/section heuristics) where feasible.
 ## Request/Response (Auto-Fill Upload)
 - Request: `POST /api/v1/recruitment/scorecards/auto-fill` (`multipart/form-data`)
-- Parts: `jdFile` (TXT/PDF/DOCX), `templateFile` (TXT/PDF/DOCX), `transcriptFile` (TXT/PDF/DOCX/VTT, required), `gradeFile` (JSON file, optional); optional fields `mode=genai|deterministic` (default `genai`) and `model`
+- Parts: `jdFile` (TXT/PDF/DOCX) OR `jdId` (int), `templateFile` (TXT/PDF/DOCX), `transcriptFile` (TXT/PDF/DOCX/VTT, required), `gradeFile` (JSON file, optional); optional fields `mode=genai|deterministic` (default `genai`) and `model`
+- Rules: At least one of `jdFile` or `jdId` is required. If both are provided, `jdFile` is used.
 - Response: Proposed scorecard object with `grades`, `notes`, and `confidence` per field; not persisted
+
+### JD Retrieval by ID
+- When `jdFile` is not provided and `jdId` is present, load JD content from the database (table `job_description`) or via the service layer and normalize it to text before extraction.
+- Authorization must ensure the requester has read access to the referenced JD; return 404/403 appropriately.
  - Mode selection: Request can specify `mode=genai|deterministic` (default `genai`) and optional `model` to hint provider model; recruiter service remains decoupled from provider details.
  - Resilience: Timeouts and retries for GenAI calls; idempotent finalize; circuit breaker to avoid cascading failures.
 

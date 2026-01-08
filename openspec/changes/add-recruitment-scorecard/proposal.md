@@ -12,7 +12,7 @@ Interviewers and hiring managers need a consistent way to capture candidate asse
 - Persist scorecards and templates; emit OTEL spans and Prometheus metrics; include pagination and basic filtering.
 
 ### Auto-Fill Scope (New)
- - Auto-fill a scorecard proposal via a single multipart upload API that accepts multiple artifacts together: JD (TXT/PDF/DOCX), scorecard template (TXT/PDF/DOCX), interview transcription (TXT/PDF/DOCX/VTT, required), and optional grade file (`gradeFile`, JSON).
+ - Auto-fill a scorecard proposal via a single multipart upload API that accepts multiple artifacts together: JD provided as `jdFile` (TXT/PDF/DOCX) or `jdId` (reference to existing JD in DB), scorecard template (TXT/PDF/DOCX), interview transcription (TXT/PDF/DOCX/VTT, required), and optional grade file (`gradeFile`, JSON). If both `jdFile` and `jdId` are provided, `jdFile` takes precedence.
 - Endpoint returns a proposed scorecard with confidence scores in one response; proposal is not persisted until explicitly finalized.
 - Finalize endpoint persists the proposal linked to interview/JD/candidate; support manual overrides for low-confidence fields.
  - Authorization: Only USER role may create/update/auto-fill/finalize scorecards; other roles receive 403.
