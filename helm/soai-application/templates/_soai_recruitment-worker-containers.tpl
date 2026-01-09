@@ -16,7 +16,7 @@
         - ALL
   env:
   - name: OTEL_ENDPOINT
-    value: "otel-collector:4317"
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -31,8 +31,6 @@
     value: {{ $top.Values.server.recruitment.logLevel | default "INFO" | quote }}
   - name: GENAI_HOST
     value: {{ printf "%s:%s" (include "soai-genai.name" $top) (ternary $top.Values.server.genai.httpsPort $top.Values.server.genai.httpPort $g.security.tls.enabled) | quote }}
-  - name: CONSUL_HOST
-    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ include "soai-recruitment.name" $top }}
   - name: DB_HOST
@@ -65,17 +63,28 @@
         name: {{ template "soai-mysql.name" $top }}-secret
         key: {{ template "soai-mysql.name" $top }}-password
   - name: REDIS_HOST
-    value: redis
+    value: {{ include "soai-redis.name" $top }}
   - name: REDIS_PORT
     value: {{ $top.Values.server.redis.port | quote }}
   - name: CELERY_BROKER_URL
-    value: {{ printf "redis://redis:%s/0" (toString $top.Values.server.redis.port) | quote }}
+    value: {{ printf "redis://%s:%s/0" (include "soai-redis.name" $top) (toString $top.Values.server.redis.port) | quote }}
   - name: CELERY_RESULT_BACKEND
-    value: {{ printf "redis://redis:%s/0" (toString $top.Values.server.redis.port) | quote }}
+    value: {{ printf "redis://%s:%s/0" (include "soai-redis.name" $top) (toString $top.Values.server.redis.port) | quote }}
   - name: CELERY_TASK_TIME_LIMIT
     value: "600"
   - name: CELERY_TASK_SOFT_TIME_LIMIT
     value: "500"
+  # Knowledge Base / RAG settings from constants.py
+  - name: KNOWLEDGE_BASE_HOST
+    {{- if $g.security.tls.enabled }}
+    value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpsPort }}
+    {{- else }}
+    value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpPort }}
+    {{- end }}
+  - name: EMBEDDING_MODEL
+    value: {{ $top.Values.rag.embeddingModel | default "text-embedding-3-large" | quote }}
+  - name: QDRANT_COLLECTION
+    value: {{ $top.Values.rag.qdrantCollection | default "cv_embeddings" | quote }}
   {{- if $g.security.tls.enabled }}
   - name: CERT_PATH
     value: {{ $top.Values.server.secretsPath.certPath }}/tls.crt

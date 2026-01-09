@@ -48,7 +48,7 @@ def get_db():
 async def upload_cv(
     file: UploadFile = File(...),
     override_email: Optional[str] = Form(None),
-    position_applied_for: str = Form(...),
+    jd_id: int = Form(...),
     get_current_user: dict = Depends(JWTService.verify_jwt),
 ):
     username = get_current_user.get("sub")
@@ -57,7 +57,7 @@ async def upload_cv(
     return recruitment_service.upload_and_process_cv(
         file,
         override_email=override_email,
-        position_applied_for=position_applied_for,
+        jd_id=jd_id,
         username=username,
     )
 

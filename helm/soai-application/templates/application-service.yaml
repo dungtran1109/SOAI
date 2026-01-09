@@ -149,26 +149,6 @@ spec:
     {{- end }}
   type: {{ .Values.server.web.serviceType }}
 ---
-# SOAI Consul Service
-apiVersion: v1
-kind: Service
-metadata:
-  annotations: {{- include "soai-application.annotations" . | nindent 4 }}
-  labels: {{- include "soai-consul.labels" . | nindent 4 }}
-  name: {{ template "soai-consul.name" . }}
-spec:
-  selector:
-    app: {{ template "soai-consul.name" . }}
-  ports:
-    - name: {{ template "soai-consul.name" . }}-http
-      protocol: "TCP"
-      port: {{ .Values.server.consul.httpPort }}
-      {{- if not (eq .Values.server.consul.serviceType "ClusterIP" ) }}
-      nodePort: {{ .Values.server.consul.httpNodePort }}
-      {{- end }}
-      targetPort: http-consul-svc
-  type: {{ .Values.server.consul.serviceType }}
----
 # MySQL Service
 # This service is used for internal communication between MySQL pods in a StatefulSet.
 apiVersion: v1
@@ -261,7 +241,7 @@ kind: Service
 metadata:
   annotations: {{- include "soai-application.annotations" . | nindent 4 }}
   labels: {{- include "soai-redis.labels" . | nindent 4 }}
-  name: redis
+  name: {{ template "soai-redis.name" . }}
 spec:
   type: ClusterIP
   selector:

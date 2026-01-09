@@ -3,9 +3,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # Configurations
-CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost:8500")
 GENAI_HOST = os.getenv("GENAI_HOST", "localhost:8004")
-RECRUITMENT_HOST = os.getenv("RECRUITMENT_HOST", "soai_recruitment_agent:8003")
+# External URL for browser-accessible recruitment service (for CV preview links)
+RECRUITMENT_EXTERNAL_URL = os.getenv("RECRUITMENT_EXTERNAL_URL", "http://localhost:8003")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 SERVICE_NAME = os.getenv("SERVICE_NAME", "agent_controller_service")
@@ -24,9 +24,11 @@ SERVICE_ID = "agent-controller"
 LOG_VERSION = "1.0.0"
 DEFAULT_MODEL = "gpt-4.1"
 
+# OpenTelemetry Configuration
+OTEL_ENDPOINT = os.getenv("OTEL_ENDPOINT", "otel-collector:4317")
+
 # RAG settings
 RAG_ENABLED = os.getenv("RAG_ENABLED", "false").lower() == "true"
-RAG_UNGROUNDED_CONTINUATION = os.getenv("RAG_UNGROUNDED_CONTINUATION", "false").lower() == "true"
 RAG_TOP_K = int(os.getenv("RAG_TOP_K", 5))
 
 # Knowledge Base / RAG settings for direct KB calls

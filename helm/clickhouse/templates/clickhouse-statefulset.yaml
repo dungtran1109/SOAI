@@ -36,7 +36,7 @@ spec:
                   - /bin/bash
                   - -c
                   - |
-                    # Run init script in background after container starts
+                    # Run init scripts in background after container starts
                     nohup /bin/bash /docker-entrypoint-initdb.d/init-otel-views.sh > /var/log/init-otel-views.log 2>&1 &
       volumes:
         - name: config

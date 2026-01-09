@@ -152,11 +152,13 @@ class QdrantDB:
         try:
             if tls_enabled:
                 # Use HTTPS when TLS is enabled
+                # Note: For self-signed certs, we use verify=False
+                # In production with proper CA, set verify=True or provide CA path via REQUESTS_CA_BUNDLE env var
                 url = f"https://{qdrant_host}:{qdrant_port}"
                 client = qdrant_client.QdrantClient(
                     url=url,
                     https=True,
-                    ca_cert=ca_path if ca_path else None,
+                    verify=False,  # Skip certificate verification for self-signed certs
                 )
             else:
                 client = qdrant_client.QdrantClient(qdrant_host, port=qdrant_port)

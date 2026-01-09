@@ -9,6 +9,7 @@ Create a map from ".Values.global" with defaults if missing in values file.
     {{- $globalDefaults := merge $globalDefaults (dict "registry" (dict "url" "anhdung12399")) -}}
     {{- $globalDefaults := merge $globalDefaults (dict "timezone" "UTC") -}}
     {{- $globalDefaults := merge $globalDefaults (dict "nodeSelector" (dict)) -}}
+    {{- $globalDefaults := merge $globalDefaults (dict "otel" (dict "enabled" true "endpoint" "otel-collector:4317")) -}}
     {{ if .Values.global }}
         {{- mergeOverwrite $globalDefaults .Values.global | toJson -}}
     {{ else }}
@@ -91,14 +92,6 @@ Expand the name of the web chart
 {{- define "soai-web.name" -}}
 {{- $name := (include "soai-application.name" .) -}}
 {{- printf "%s-web" $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Expand the name of the consul chart
-*/}}
-{{- define "soai-consul.name" -}}
-{{- $name := (include "soai-application.name" .) -}}
-{{- printf "%s-consul" $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -193,16 +186,6 @@ Selector labels for web.
 {{- define "soai-web.selectorLabels" -}}
 component: {{ .Values.server.web.name | quote }}
 app: {{ template "soai-web.name" . }}
-release: {{ .Release.Name | quote }}
-app.kubernetes.io/instance: {{ .Release.Name | quote }}
-{{- end }}
-
-{{/*
-Selector labels for consul.
-*/}}
-{{- define "soai-consul.selectorLabels" -}}
-component: {{ .Values.server.consul.name | quote }}
-app: {{ template "soai-consul.name" . }}
 release: {{ .Release.Name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
@@ -415,19 +398,6 @@ Merged labels for common web
     {{- $g := fromJson (include "soai-application.global" .) -}}
     {{- $selector := include "soai-web.selectorLabels" . | fromYaml -}}
     {{- $name := (include "soai-web.name" .) }}
-    {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
-    {{- $global := $g.label -}}
-    {{- $service := .Values.labels -}}
-    {{- include "soai-application.mergeLabels" (dict "location" .Template.Name "sources" (list $selector $static $global $service)) | trim }}
-{{- end -}}
-
-{{/*
-Merged labels for common consul
-*/}}
-{{- define "soai-consul.labels" -}}
-    {{- $g := fromJson (include "soai-application.global" .) -}}
-    {{- $selector := include "soai-consul.selectorLabels" . | fromYaml -}}
-    {{- $name := (include "soai-consul.name" .) }}
     {{- $static := include "soai-application.static-labels" (list . $name) | fromYaml -}}
     {{- $global := $g.label -}}
     {{- $service := .Values.labels -}}
@@ -845,5 +815,17 @@ Get the metrics port for knowledge-base deployment
 {{- print .Values.server.knowledgebase.httpsPort -}}
 {{- else -}}
 {{- print .Values.server.knowledgebase.httpPort -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the metrics port for agent-controller deployment
+*/}}
+{{- define "soai-agent-controller.metrics.port" -}}
+{{- $g := fromJson (include "soai-application.global" .) -}}
+{{- if $g.security.tls.enabled -}}
+{{- print .Values.server.agentcontroller.httpsPort -}}
+{{- else -}}
+{{- print .Values.server.agentcontroller.httpPort -}}
 {{- end -}}
 {{- end -}}

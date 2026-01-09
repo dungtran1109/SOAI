@@ -105,6 +105,7 @@ def is_otel_collector_up(host: str, port: int, timeout: float = 2.0) -> bool:
 def enable_otlp_logging(service_name: str, otlp_endpoint: str) -> bool:
     """
     If the OTEL Collector is reachable, attach an OLTP handler that ship logs.
+    Includes rate limiting to prevent overwhelming the collector/ClickHouse.
     """
     logger = logging.getLogger(__name__)
     host, port_str = otlp_endpoint.split(":")
@@ -117,8 +118,15 @@ def enable_otlp_logging(service_name: str, otlp_endpoint: str) -> bool:
         return False
     lp = LoggerProvider(resource=Resource.create({"service.name": service_name}))
     set_logger_provider(lp)
+    # Configure BatchLogRecordProcessor with rate limiting:
+    # - max_queue_size: Buffer size before dropping logs (prevents memory issues)
+    # - max_export_batch_size: Logs per batch (smaller = more frequent, less bursty)
+    # - schedule_delay_millis: Time between exports (higher = less frequent writes)
     lp.add_log_record_processor(BatchLogRecordProcessor(
-        OTLPLogExporter(endpoint=otlp_endpoint, insecure=True)
+        OTLPLogExporter(endpoint=otlp_endpoint, insecure=True),
+        max_queue_size=2048,
+        max_export_batch_size=512,
+        schedule_delay_millis=5000,  # Export every 5 seconds
     ))
     root = logging.getLogger()
     already = any(isinstance(h, LoggingHandler) for h in root.handlers)

@@ -1,10 +1,35 @@
 import logging
-import requests
+import ssl
+import threading
+import httpx
 from typing import List, Optional
 
 from config.constants import GENAI_HOST, SCHEMA, TLS_ENABLED, CA_PATH
 
 logger = logging.getLogger(__file__)
+
+# Thread-safe reusable sync HTTP client with connection pooling
+_http_client = None
+_http_client_lock = threading.Lock()
+
+
+def _get_http_client() -> httpx.Client:
+    """Get or create a reusable HTTP client with connection pooling (thread-safe)."""
+    global _http_client
+    if _http_client is None:
+        with _http_client_lock:
+            # Double-check after acquiring lock
+            if _http_client is None:
+                ssl_context = None
+                if TLS_ENABLED and CA_PATH:
+                    ssl_context = ssl.create_default_context(cafile=CA_PATH)
+
+                _http_client = httpx.Client(
+                    timeout=httpx.Timeout(120.0, connect=10.0),  # Longer timeout for embeddings
+                    limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+                    verify=ssl_context if ssl_context else True,
+                )
+    return _http_client
 
 
 class GenAIEmbeddingAdapter:
@@ -14,32 +39,30 @@ class GenAIEmbeddingAdapter:
         self._model = model
 
     def _call_embedding_api(self, input_data) -> List[List[float]]:
-        """Calls the gen_ai_provider embedding endpoint."""
-        request_kwargs = {
-            "url": f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/embeddings",
-            "json": {
-                "model": self._model,
-                "input": input_data,
-            },
-            "headers": {"Content-Type": "application/json"},
+        """Calls the gen_ai_provider embedding endpoint using httpx with connection pooling."""
+        url = f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/embeddings"
+        payload = {
+            "model": self._model,
+            "input": input_data,
         }
-
-        # Use CA certificate for TLS validation if enabled
-        if TLS_ENABLED:
-            request_kwargs["verify"] = CA_PATH
+        headers = {"Content-Type": "application/json"}
 
         try:
-            response = requests.post(**request_kwargs)
+            client = _get_http_client()
+            response = client.post(url, json=payload, headers=headers)
             response.raise_for_status()
             result = response.json()
             if result.get("status") == "success":
                 return result["data"]["embeddings"]
             else:
                 raise RuntimeError(f"Embedding API error: {result.get('message')}")
-        except requests.exceptions.SSLError as ssl_err:
-            logger.error(f"SSL Error: {ssl_err}")
+        except httpx.TimeoutException as timeout_err:
+            logger.error(f"Timeout Error calling embedding API: {timeout_err}")
             raise
-        except requests.exceptions.RequestException as req_err:
+        except httpx.HTTPStatusError as http_err:
+            logger.error(f"HTTP Error: {http_err}")
+            raise
+        except httpx.RequestError as req_err:
             logger.error(f"Request Error: {req_err}")
             raise
 
