@@ -121,7 +121,6 @@ services:
       - soai-net
     volumes:
       - ./backend/services/recruitment_agent:/app
-      - ./backend/services/recruitment_agent/alembic:/app/alembic
     depends_on:
       mysql:
         condition: service_healthy
