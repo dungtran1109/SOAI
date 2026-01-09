@@ -17,6 +17,7 @@ RUN pip install --upgrade pip && pip install --prefix=/install --no-cache-dir -r
 # Copy source code
 COPY --chmod=0755 --chown=${USER_ID}:0 app/ ./app/
 
+
 # === Stage 2: Final runtime image ===
 FROM python:3.12-slim
 

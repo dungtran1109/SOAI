@@ -59,7 +59,7 @@ const UserJobPage = () => {
             if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
                 throw new Error('Invalid file type. Only PDF and Word documents are allowed.');
             }
-            await uploadCV(file, viewJob.position);
+            await uploadCV(file, viewJob.id);
             toast.success(`Succeed to apply CV to ${viewJob.position}`, {
                 position: 'top-center',
                 hideProgressBar: true,

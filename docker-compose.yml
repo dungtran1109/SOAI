@@ -36,6 +36,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    volumes:
+      - mysql-data:/var/lib/mysql
     networks:
       - soai-net
 
@@ -274,6 +276,7 @@ services:
 volumes:
   clickhouse-data:
   qdrant_data:
+  mysql-data:
 
 networks:
   soai-net:

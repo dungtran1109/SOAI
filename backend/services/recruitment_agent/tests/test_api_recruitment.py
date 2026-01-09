@@ -152,12 +152,12 @@ class TestRecruitmentAPI(unittest.TestCase):
                 headers=get_headers(token),
             )
 
-    def upload_cv(self, token, email, position):
+    def upload_cv(self, token, email, jd_id):
         with open(CV_FILE_PATH, "rb") as f:
             files = {
                 "file": ("sampleCV.pdf", f, "application/pdf"),
                 "override_email": (None, email),
-                "position_applied_for": (None, position),
+                "jd_id": (None, str(jd_id)),
             }
             return api_request(
                 "POST",
@@ -209,9 +209,12 @@ class TestRecruitmentAPI(unittest.TestCase):
             response = self.upload_jd(self.admin_token)
             self.assertEqual(response.status_code, 200)
 
-            # Test upload CV with ADMIN
+            # Resolve JD id by position and upload CV
             log_info("[Step 2] Upload CV")
-            response = self.upload_cv(self.user_token, email, position)
+            jds = self.get_items("jds", {"position": position}, self.admin_token)
+            self.assertGreater(len(jds), 0, "No JD found for position to upload CV")
+            target_jd_id = jds[0]["id"]
+            response = self.upload_cv(self.user_token, email, target_jd_id)
             self.assertEqual(response.status_code, 200)
 
             # Test GET Pending CV with admin
@@ -416,15 +419,21 @@ class TestRecruitmentAPI(unittest.TestCase):
         log_info("Uploading JD as ADMIN for CV testing")
         self.upload_jd(self.admin_token)
 
-        # Upload the CV with unmatch JD
+        # Upload the CV with unmatch JD (choose a JD id of a different position)
         log_info("Trying to upload CV with unmatch position")
-        response = self.upload_cv(self.user_token, email, unmatch_position)
+        unmatch_jds = self.get_items("jds", {"position": unmatch_position}, self.admin_token)
+        self.assertGreater(len(unmatch_jds), 0, "No JD found for unmatch position")
+        unmatch_jd_id = unmatch_jds[0]["id"]
+        response = self.upload_cv(self.user_token, email, unmatch_jd_id)
         self.assertEqual(response.status_code, 200)
         log_info("Unmatch position CV response: " + str(response.json().get("message")))
 
-        # Upload CV with User => Pass
+        # Upload CV with User => Pass (use matching JD id)
         log_info("Uploading CV with USER role")
-        response = self.upload_cv(self.user_token, email, position)
+        match_jds = self.get_items("jds", {"position": position}, self.admin_token)
+        self.assertGreater(len(match_jds), 0, "No JD found for matching position")
+        match_jd_id = match_jds[0]["id"]
+        response = self.upload_cv(self.user_token, email, match_jd_id)
         self.assertEqual(response.status_code, 200)
 
         # Get Pending CVs with candidate user => Blocked

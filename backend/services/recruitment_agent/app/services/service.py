@@ -57,7 +57,7 @@ class RecruitmentService:
         self,
         file,
         override_email: Optional[str] = None,
-        position_applied_for: Optional[str] = None,
+        jd_id: Optional[int] = None,
         username: Optional[str] = None,
     ):
         logger.info("Uploading and processing CV file.")
@@ -111,7 +111,7 @@ class RecruitmentService:
                 storage_key=storage_key,
                 original_filename=original_filename,
                 email=override_email,
-                position=position_applied_for,
+                jd_id=jd_id,
                 username=username,
             )
             return CVUploadResponseSchema(message="CV received and is being processed.")
@@ -124,7 +124,7 @@ class RecruitmentService:
         storage_key: str,
         original_filename: str,
         override_email: str,
-        position_applied_for: str,
+        jd_id: int,
         username: str,
         db: Session,
     ):
@@ -133,14 +133,17 @@ class RecruitmentService:
         Downloads from storage to a temp file for processing.
         """
         logger.info(f"[Worker] Processing CV from storage: {storage_key}")
-
+        # jd_id is provided by client; make it available to the pipeline
         storage = get_storage()
 
         # Download from storage to temp file for processing
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
             temp_path = temp_file.name
-
         try:
+            selected_jd = db.query(JobDescription).filter_by(id=jd_id).first()
+            if not selected_jd:
+                logger.info("Provided jd_id not found.")
+                return "Invalid jd_id: Job Description not found."
             storage.download_to_file(storage_key, temp_path)
 
             pipeline = build_recruitment_graph_matching(db)
@@ -148,8 +151,8 @@ class RecruitmentService:
 
             if override_email:
                 state.override_email = override_email
-            if position_applied_for:
-                state.position_applied_for = position_applied_for
+            if jd_id:
+                state.jd_id = jd_id
 
             updated_state = pipeline.invoke(state.model_dump())
             final_state = RecruitmentState(**updated_state)
@@ -206,7 +209,7 @@ class RecruitmentService:
                 candidate_name=candidate_name,
                 username=username,
                 email=email_to_check,
-                matched_position=matched.get("position", position_applied_for),
+                matched_position=matched.get("position", selected_jd.position),
                 status=FinalDecisionStatus.PENDING.value,
                 skills=json.dumps(parsed_cv.get("skills", [])),
                 matched_jd_skills=json.dumps(matched.get("skills_required", [])),
@@ -219,6 +222,7 @@ class RecruitmentService:
                 # Storage fields
                 storage_key=storage_key,
                 original_filename=original_filename,
+                jd_id=jd_id,
             )
             db.add(cv)
             db.commit()
@@ -253,7 +257,8 @@ class RecruitmentService:
                     "candidate_name": cv_application.candidate_name,
                     "email": cv_application.email,
                     "position": cv_application.matched_position,
-                    "source_doc": cv_application.original_filename or os.path.basename(cv_file_path),
+                    "source_doc": cv_application.original_filename
+                    or os.path.basename(cv_file_path),
                     "storage_key": cv_application.storage_key,
                 }
                 for _ in chunks
@@ -598,6 +603,7 @@ class RecruitmentService:
                 "justification": cv.justification,
                 "status": cv.status,
                 "datetime": cv.datetime,
+                "jd_id": getattr(cv, "jd_id", None),
             }
             for cv in pending_cvs
         ]
@@ -623,6 +629,7 @@ class RecruitmentService:
                 "justification": cv.justification,
                 "status": cv.status,
                 "datetime": cv.datetime,
+                "jd_id": getattr(cv, "jd_id", None),
             }
             for cv in approved_cvs
         ]
@@ -693,6 +700,7 @@ class RecruitmentService:
                     "justification": cv.justification,
                     "status": cv.status,
                     "parsed_cv": json.loads(cv.parsed_cv) if cv.parsed_cv else {},
+                    "jd_id": getattr(cv, "jd_id", None),
                 }
             )
         logger.debug(f"Found {len(result)} CV(s) for username '{username}'")
@@ -718,6 +726,7 @@ class RecruitmentService:
                 "justification": cv.justification,
                 "status": cv.status,
                 "datetime": cv.datetime,
+                "jd_id": getattr(cv, "jd_id", None),
             }
             for cv in cvs
         ]
@@ -917,10 +926,14 @@ class RecruitmentService:
         if cv.storage_key:
             storage = get_storage()
             file_path = storage._get_full_path(cv.storage_key)
-            filename = cv.original_filename or f"{cv.candidate_name.replace(' ', '_')}.pdf"
+            filename = (
+                cv.original_filename or f"{cv.candidate_name.replace(' ', '_')}.pdf"
+            )
 
             if not os.path.exists(file_path):
-                raise HTTPException(status_code=404, detail="CV file not found on server.")
+                raise HTTPException(
+                    status_code=404, detail="CV file not found on server."
+                )
 
             return FileResponse(
                 path=str(file_path),

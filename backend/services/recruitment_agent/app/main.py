@@ -8,10 +8,6 @@ from config.constants import *
 import uvicorn
 from config.constants import *
 # This is required because we need to include model for sqlachemy identify and create tables automatically 
-import models.job_description
-import models.cv_application
-import models.interview_schedule
-import models.interview_question
 from fastapi.staticfiles import StaticFiles
 # === OpenTelemetry setup ===
 from metrics.otel_setup import setup_otel
@@ -22,8 +18,19 @@ logger = AppLogger(__name__)
 
 LoggingConfig.setup_logging(json_format=True)
 enable_otlp_logging(service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT)
-# Create tables automatically
+
+# Create tables automatically, then ensure backward-compatible columns exist
 DeclarativeBase.metadata.create_all(bind=engine)
+
+# Apply DB migrations on startup (SQL migration runner)
+try:
+    from sql_migrate_runner import main as _sql_migrate_run
+    logger.info("Running SQL migration runner on startup...")
+    _sql_migrate_run()
+    logger.info("SQL migrations applied.")
+except Exception as e:
+    logger.error(f"SQL migration runner failed: {e}")
+    raise
 
 app = FastAPI(
     title="Recruitment ATS",
