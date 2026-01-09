@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from routers import router
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,11 +9,23 @@ import uvicorn
 from metrics.otel_setup import setup_otel
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
+from services.genai import close_http_client
 
 logger = AppLogger(__name__)
 
 LoggingConfig.setup_logging(json_format=True)
 enable_otlp_logging(service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Agent Controller starting up...")
+    yield
+    # Shutdown - cleanup HTTP client connections
+    logger.info("Agent Controller shutting down, closing HTTP connections...")
+    await close_http_client()
+
 
 app = FastAPI(
     title="Agent Controller Service",
@@ -20,6 +33,7 @@ app = FastAPI(
     docs_url=f"{API_PREFIX}/docs",
     redoc_url=f"{API_PREFIX}/redoc",
     openapi_url=f"{API_PREFIX}/openapi.json",
+    lifespan=lifespan,
 )
 
 # Prometheus metrics endpoint

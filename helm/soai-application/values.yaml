@@ -87,6 +87,9 @@ server:
     httpsPort: "8433"
     httpNodePort: "30803"
     httpsNodePort: "30833"
+    # External URL for browser-accessible CV preview links (e.g., http://recruitment.example.com:8003)
+    # If not set, CV preview links will use relative paths
+    externalUrl: ""
     worker:
       name: recruitment-worker
 

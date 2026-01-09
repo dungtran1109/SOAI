@@ -33,6 +33,10 @@ class WebsocketMessageType(Enum):
 
     TOKEN_EXPIRED = "token.expired"
 
+    # Keep-alive ping/pong
+    PING = "ping"
+    PONG = "pong"
+
     ERROR = "error"
 
 

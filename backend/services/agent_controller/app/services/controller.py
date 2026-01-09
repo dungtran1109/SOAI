@@ -1,11 +1,12 @@
 import yaml
 import os
+import httpx
 from pathlib import Path
-import requests
 from string import Template
 from jsonschema import validate, ValidationError
 from config.log_config import AppLogger
 from schemas.response import make_standard_response
+from services.genai import get_http_client
 
 logger = AppLogger(__name__)
 
@@ -24,26 +25,40 @@ class AgentController:
             self.pipeline_config = yaml.safe_load(substituted)["pipeline"]
         self.pipeline_map = {step["task"]: step for step in self.pipeline_config}
 
-    def call_agent(
+    async def call_agent(
         self, endpoint: str, method: str, payload: dict = None, token: str = None
     ):
         method = method.upper()
         headers = {}
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        if method == "GET":
-            r = requests.get(endpoint, params=payload, headers=headers)
-        elif method == "POST":
-            r = requests.post(endpoint, json=payload, headers=headers)
-        elif method == "PUT":
-            r = requests.put(endpoint, json=payload, headers=headers)
-        elif method == "DELETE":
-            r = requests.delete(endpoint, json=payload, headers=headers)
-        else:
-            raise ValueError(f"Unsupported HTTP method: {method}")
-        return r.json()
 
-    def run(self, start_task: str, data: dict = None, token: str = None):
+        try:
+            client = await get_http_client()
+            if method == "GET":
+                r = await client.get(endpoint, params=payload, headers=headers)
+            elif method == "POST":
+                r = await client.post(endpoint, json=payload, headers=headers)
+            elif method == "PUT":
+                r = await client.put(endpoint, json=payload, headers=headers)
+            elif method == "DELETE":
+                r = await client.delete(endpoint, json=payload, headers=headers)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+
+            r.raise_for_status()
+            return r.json()
+        except httpx.TimeoutException as e:
+            logger.error(f"Timeout calling {endpoint}: {e}")
+            raise
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error calling {endpoint}: {e.response.status_code} - {e.response.text}")
+            raise
+        except httpx.RequestError as e:
+            logger.error(f"Request error calling {endpoint}: {e}")
+            raise
+
+    async def run(self, start_task: str, data: dict = None, token: str = None):
         task_name = start_task
         history = []
         payload = data or {}
@@ -67,10 +82,19 @@ class AgentController:
                         input_data=data,
                     )
 
-            # Call agent
-            result = self.call_agent(
-                step["endpoint"], step.get("method", "POST"), payload, token
-            )
+            # Call agent (async)
+            try:
+                result = await self.call_agent(
+                    step["endpoint"], step.get("method", "POST"), payload, token
+                )
+            except (httpx.HTTPStatusError, httpx.RequestError, httpx.TimeoutException) as e:
+                return make_standard_response(
+                    success=False,
+                    error=f"Agent call failed for {task_name}: {str(e)}",
+                    data=None,
+                    history=history,
+                    input_data=data,
+                )
 
             # Validate output if in schema
             if "output_schema" in step:

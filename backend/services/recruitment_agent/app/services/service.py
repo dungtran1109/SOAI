@@ -3,19 +3,20 @@ import os
 import subprocess
 import shutil
 import json
-import requests
-from typing import Optional, List
+import tempfile
+from typing import Optional, List, Tuple
 
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi import HTTPException, UploadFile
 from datetime import datetime
 from config.config import Settings
 from config.log_config import AppLogger
 from config.constants import *
 from utils.email_sender import EmailSender
-from services.genai import GenAI
+from services.genai import GenAI, get_sync_http_client
+from services.storage_service import get_storage, LocalStorage
 from agents.state import RecruitmentState
 from agents.graph import (
     build_recruitment_graph_matching,
@@ -61,140 +62,182 @@ class RecruitmentService:
     ):
         logger.info("Uploading and processing CV file.")
         try:
-            cv_dir = UPLOAD_DIR
-            original_path = os.path.join(cv_dir, file.filename)
-            with open(original_path, "wb") as f:
-                shutil.copyfileobj(file.file, f)
+            storage = get_storage()
+            original_filename = file.filename
 
+            # For non-PDF files, convert to PDF first using temp directory
             if not file.filename.lower().endswith(".pdf"):
-                try:
-                    subprocess.run(
-                        [
-                            "libreoffice",
-                            "--headless",
-                            "--convert-to",
-                            "pdf",
-                            "--outdir",
-                            cv_dir,
-                            original_path,
-                        ],
-                        check=True,
-                    )
-                    pdf_filename = file.filename.rsplit(".", 1)[0] + ".pdf"
-                    pdf_path = os.path.join(cv_dir, pdf_filename)
-                    if not os.path.exists(pdf_path):
-                        raise RuntimeError("PDF conversion failed.")
-                except Exception as e:
-                    logger.error(f"LibreOffice conversion failed: {e}")
-                    raise RuntimeError("Failed to convert CV to PDF.")
-            else:
-                pdf_filename = file.filename
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    temp_path = os.path.join(temp_dir, file.filename)
+                    with open(temp_path, "wb") as f:
+                        shutil.copyfileobj(file.file, f)
 
-            full_path = os.path.join(cv_dir, pdf_filename)
+                    try:
+                        subprocess.run(
+                            [
+                                "libreoffice",
+                                "--headless",
+                                "--convert-to",
+                                "pdf",
+                                "--outdir",
+                                temp_dir,
+                                temp_path,
+                            ],
+                            check=True,
+                        )
+                        pdf_filename = file.filename.rsplit(".", 1)[0] + ".pdf"
+                        pdf_path = os.path.join(temp_dir, pdf_filename)
+                        if not os.path.exists(pdf_path):
+                            raise RuntimeError("PDF conversion failed.")
+
+                        # Upload converted PDF to storage
+                        storage_key = LocalStorage.generate_storage_key(pdf_filename)
+                        with open(pdf_path, "rb") as pdf_file:
+                            storage.upload(pdf_file, storage_key, "application/pdf")
+
+                    except Exception as e:
+                        logger.error(f"LibreOffice conversion failed: {e}")
+                        raise RuntimeError("Failed to convert CV to PDF.")
+            else:
+                # Upload PDF directly to storage
+                storage_key = LocalStorage.generate_storage_key(file.filename)
+                file.file.seek(0)
+                storage.upload(file.file, storage_key, "application/pdf")
+
             from celery_tasks.pipeline import process_cv_pipeline
 
             cv_upload_total.inc()
             process_cv_pipeline.delay(
-                full_path, override_email, position_applied_for, username
+                storage_key=storage_key,
+                original_filename=original_filename,
+                email=override_email,
+                position=position_applied_for,
+                username=username,
             )
             return CVUploadResponseSchema(message="CV received and is being processed.")
         except Exception as e:
             logger.exception(f"Error processing CV: {e}")
             return CVUploadResponseSchema(message=f"Error processing CV: {str(e)}")
 
-    def upload_cv_from_file_path(
+    def process_cv_from_storage(
         self,
-        cv_file_path: str,
+        storage_key: str,
+        original_filename: str,
         override_email: str,
         position_applied_for: str,
         username: str,
         db: Session,
     ):
-        logger.info(f"[Worker] Processing CV: {cv_file_path}")
-        pipeline = build_recruitment_graph_matching(db)
-        state = RecruitmentState(cv_file_path=cv_file_path)
+        """
+        Process a CV that has been uploaded to local storage.
+        Downloads from storage to a temp file for processing.
+        """
+        logger.info(f"[Worker] Processing CV from storage: {storage_key}")
 
-        if override_email:
-            state.override_email = override_email
-        if position_applied_for:
-            state.position_applied_for = position_applied_for
+        storage = get_storage()
 
-        updated_state = pipeline.invoke(state.model_dump())
-        final_state = RecruitmentState(**updated_state)
+        # Download from storage to temp file for processing
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+            temp_path = temp_file.name
 
-        parsed_cv = final_state.parsed_cv or {}
-        candidate_name = parsed_cv.get("name", "Unknown Candidate")
-        matched = final_state.matched_jd or {}
-        email_to_check = final_state.override_email or parsed_cv.get("email")
-        final_state.parsed_cv["cv_file_name"] = os.path.basename(cv_file_path)
-
-        if not matched:
-            logger.info("No JD match from pipeline.")
-            return "No suitable JD match found."
-
-        candidate_experience = parsed_cv.get("experience_years", 0)
-        jd_experience_required = matched.get("experience_required", 0)
-
-        if abs(candidate_experience - jd_experience_required) > 1:
-            logger.info("Experience mismatch with JD requirements.")
-            return f"{FinalDecisionStatus.REJECTED.value}: Experience mismatch with JD requirements."
-
-        existing = (
-            db.query(CVApplication)
-            .filter(
-                CVApplication.candidate_name == candidate_name,
-                CVApplication.email == email_to_check,
-                CVApplication.matched_position == matched.get("position"),
-                CVApplication.status.in_(
-                    [
-                        FinalDecisionStatus.PENDING.value,
-                        FinalDecisionStatus.ACCEPTED.value,
-                    ]
-                ),
-            )
-            .first()
-        )
-        if existing:
-            logger.info("CV already exists in DB. Skipping.")
-            return "CV already exists in DB. Skipping."
-
-        matched_score = 0
-        justification = ""
-        score_breakdown = matched.get("score_breakdown")
-        if isinstance(score_breakdown, dict):
-            try:
-                matched_score = int(float(score_breakdown.get("total_score", 0)))
-            except Exception:
-                matched_score = 0
-            justification = str(score_breakdown.get("justification", "") or "")
-
-        cv = CVApplication(
-            candidate_name=candidate_name,
-            username=username,
-            email=email_to_check,
-            matched_position=matched.get("position", position_applied_for),
-            status=FinalDecisionStatus.PENDING.value,
-            skills=json.dumps(parsed_cv.get("skills", [])),
-            matched_jd_skills=json.dumps(matched.get("skills_required", [])),
-            matched_jd_experience_required=jd_experience_required,
-            experience_years=candidate_experience,
-            parsed_cv=json.dumps(parsed_cv),
-            is_matched=True,
-            matched_score=matched_score,
-            justification=justification,
-        )
-        db.add(cv)
-        db.commit()
-        logger.info("CV saved to database.")
-        # Index CV into Qdrant via Knowledge Base service
         try:
-            self.index_cv_embeddings(
-                cv_application=cv,
-                cv_file_path=cv_file_path,
+            storage.download_to_file(storage_key, temp_path)
+
+            pipeline = build_recruitment_graph_matching(db)
+            state = RecruitmentState(cv_file_path=temp_path)
+
+            if override_email:
+                state.override_email = override_email
+            if position_applied_for:
+                state.position_applied_for = position_applied_for
+
+            updated_state = pipeline.invoke(state.model_dump())
+            final_state = RecruitmentState(**updated_state)
+
+            parsed_cv = final_state.parsed_cv or {}
+            candidate_name = parsed_cv.get("name", "Unknown Candidate")
+            matched = final_state.matched_jd or {}
+            email_to_check = final_state.override_email or parsed_cv.get("email")
+            # Store both original filename and storage key
+            final_state.parsed_cv["cv_file_name"] = original_filename
+            final_state.parsed_cv["storage_key"] = storage_key
+
+            if not matched:
+                logger.info("No JD match from pipeline.")
+                return "No suitable JD match found."
+
+            candidate_experience = parsed_cv.get("experience_years", 0)
+            jd_experience_required = matched.get("experience_required", 0)
+
+            if abs(candidate_experience - jd_experience_required) > 1:
+                logger.info("Experience mismatch with JD requirements.")
+                return f"{FinalDecisionStatus.REJECTED.value}: Experience mismatch with JD requirements."
+
+            existing = (
+                db.query(CVApplication)
+                .filter(
+                    CVApplication.candidate_name == candidate_name,
+                    CVApplication.email == email_to_check,
+                    CVApplication.matched_position == matched.get("position"),
+                    CVApplication.status.in_(
+                        [
+                            FinalDecisionStatus.PENDING.value,
+                            FinalDecisionStatus.ACCEPTED.value,
+                        ]
+                    ),
+                )
+                .first()
             )
-        except Exception as e:
-            logger.error(f"Error indexing CV embeddings: {e}")
-        return f"CV processed successfully for candidate name: {candidate_name}"
+            if existing:
+                logger.info("CV already exists in DB. Skipping.")
+                return "CV already exists in DB. Skipping."
+
+            matched_score = 0
+            justification = ""
+            score_breakdown = matched.get("score_breakdown")
+            if isinstance(score_breakdown, dict):
+                try:
+                    matched_score = int(float(score_breakdown.get("total_score", 0)))
+                except Exception:
+                    matched_score = 0
+                justification = str(score_breakdown.get("justification", "") or "")
+
+            cv = CVApplication(
+                candidate_name=candidate_name,
+                username=username,
+                email=email_to_check,
+                matched_position=matched.get("position", position_applied_for),
+                status=FinalDecisionStatus.PENDING.value,
+                skills=json.dumps(parsed_cv.get("skills", [])),
+                matched_jd_skills=json.dumps(matched.get("skills_required", [])),
+                matched_jd_experience_required=jd_experience_required,
+                experience_years=candidate_experience,
+                parsed_cv=json.dumps(final_state.parsed_cv),
+                is_matched=True,
+                matched_score=matched_score,
+                justification=justification,
+                # Storage fields
+                storage_key=storage_key,
+                original_filename=original_filename,
+            )
+            db.add(cv)
+            db.commit()
+            logger.info("CV saved to database.")
+
+            # Index CV into Qdrant via Knowledge Base service
+            try:
+                self.index_cv_embeddings(
+                    cv_application=cv,
+                    cv_file_path=temp_path,
+                )
+            except Exception as e:
+                logger.error(f"Error indexing CV embeddings: {e}")
+
+            return f"CV processed successfully for candidate name: {candidate_name}"
+        finally:
+            # Clean up temp file
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
 
     def index_cv_embeddings(self, cv_application: CVApplication, cv_file_path: str):
         """Extract text, chunk, and send to Knowledge Base for embedding/upsert."""
@@ -207,9 +250,11 @@ class RecruitmentService:
             payloads = [
                 {
                     "candidate_id": cv_application.id,
+                    "candidate_name": cv_application.candidate_name,
                     "email": cv_application.email,
                     "position": cv_application.matched_position,
-                    "source_doc": os.path.basename(cv_file_path),
+                    "source_doc": cv_application.original_filename or os.path.basename(cv_file_path),
+                    "storage_key": cv_application.storage_key,
                 }
                 for _ in chunks
             ]
@@ -223,14 +268,11 @@ class RecruitmentService:
             url = (
                 f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
             )
-            kwargs = {
-                "url": url,
-                "json": request_body,
-                "headers": {"Content-Type": "application/json"},
-            }
-            if TLS_ENABLED and CA_PATH:
-                kwargs["verify"] = CA_PATH
-            resp = requests.post(**kwargs)
+            headers = {"Content-Type": "application/json"}
+
+            # Use httpx with connection pooling
+            client = get_sync_http_client()
+            resp = client.post(url, json=request_body, headers=headers)
             if resp.status_code == 200:
                 rag_ingest_total.inc(len(chunks))
                 logger.info(
@@ -302,45 +344,6 @@ class RecruitmentService:
             f"CV status updated to {cv_application.status} for candidate: {cv_application.candidate_name}"
         )
         return f"CV approval result: {final_state.final_decision}"
-
-    def index_cv_embeddings(self, cv_application: CVApplication, cv_file_path: str):
-        """Extract text, chunk, and send to Knowledge Base for embedding/upsert."""
-        try:
-            text = extract_text_from_pdf(cv_file_path)
-            chunks = chunk_text(text)
-            if not chunks:
-                logger.warn("No chunks produced for CV; skipping RAG ingestion.")
-                return
-            payloads = [
-                {
-                    "candidate_id": cv_application.id,
-                    "email": cv_application.email,
-                    "position": cv_application.matched_position,
-                    "source_doc": os.path.basename(cv_file_path),
-                }
-                for _ in chunks
-            ]
-
-            request_body = {
-                "texts": chunks,
-                "collection_name": QDRANT_COLLECTION,
-                "embedding_model": EMBEDDING_MODEL,
-                "payloads": payloads,
-            }
-            url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
-            kwargs = {"url": url, "json": request_body, "headers": {"Content-Type": "application/json"}}
-            if TLS_ENABLED and CA_PATH:
-                kwargs["verify"] = CA_PATH
-            resp = requests.post(**kwargs)
-            if resp.status_code == 200:
-                rag_ingest_total.inc(len(chunks))
-                logger.info(
-                    f"Indexed {len(chunks)} chunks for CV ID={cv_application.id} into collection {QDRANT_COLLECTION}"
-                )
-            else:
-                logger.error(f"Failed to add documents to KB: {resp.text}")
-        except Exception as e:
-            logger.error(f"Error during RAG ingestion: {e}")
 
     def upload_jd(self, jd_data_list: list, db: Session):
         logger.info("Uploading JD list.")
@@ -905,10 +908,28 @@ class RecruitmentService:
         )
 
     def preview_cv_file(self, cv_id: int, db: Session):
+        """Preview/download a CV file."""
         cv = db.query(CVApplication).filter_by(id=cv_id).first()
         if not cv:
             raise HTTPException(status_code=404, detail="CV not found.")
 
+        # Case 1: CV stored with storage_key
+        if cv.storage_key:
+            storage = get_storage()
+            file_path = storage._get_full_path(cv.storage_key)
+            filename = cv.original_filename or f"{cv.candidate_name.replace(' ', '_')}.pdf"
+
+            if not os.path.exists(file_path):
+                raise HTTPException(status_code=404, detail="CV file not found on server.")
+
+            return FileResponse(
+                path=str(file_path),
+                media_type="application/pdf",
+                filename=filename,
+                headers={"Content-Disposition": f'inline; filename="{filename}"'},
+            )
+
+        # Case 2: Legacy fallback - old CVs stored before storage abstraction
         parsed_cv = json.loads(cv.parsed_cv) if cv.parsed_cv else {}
         filename = (
             parsed_cv.get("cv_file_name")
@@ -925,6 +946,31 @@ class RecruitmentService:
             filename=filename,
             headers={"Content-Disposition": f'inline; filename="{filename}"'},
         )
+
+    def get_cv_link_by_candidate_name(self, candidate_name: str, db: Session) -> List[dict]:
+        """Search for CVs by candidate name and return preview endpoint URLs."""
+        cvs = (
+            db.query(CVApplication)
+            .filter(CVApplication.candidate_name.ilike(f"%{candidate_name}%"))
+            .all()
+        )
+
+        if not cvs:
+            return []
+
+        results = []
+        for cv in cvs:
+            result = {
+                "cv_id": cv.id,
+                "candidate_name": cv.candidate_name,
+                "email": cv.email,
+                "position": cv.matched_position,
+                "original_filename": cv.original_filename,
+                "preview_endpoint": f"{API_PREFIX}/cvs/{cv.id}/preview",
+            }
+            results.append(result)
+
+        return results
 
     def preview_jd_file(self, jd_id: int, db: Session):
         jd = db.query(JobDescription).filter_by(id=jd_id).first()

@@ -85,6 +85,11 @@
     {{- else }}
     value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpPort }}
     {{- end }}
+  # External URL for recruitment service (used for browser-accessible CV preview links)
+  {{- if $top.Values.server.recruitment.externalUrl }}
+  - name: RECRUITMENT_EXTERNAL_URL
+    value: {{ $top.Values.server.recruitment.externalUrl | quote }}
+  {{- end }}
   - name: EMBEDDING_MODEL
     value: {{ $top.Values.rag.embeddingModel | default "text-embedding-3-large" | quote }}
   - name: QDRANT_COLLECTION
