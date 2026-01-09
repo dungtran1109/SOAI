@@ -94,9 +94,7 @@ class RecruitmentService:
             from celery_tasks.pipeline import process_cv_pipeline
 
             cv_upload_total.inc()
-            process_cv_pipeline.delay(
-                full_path, override_email, jd_id, username
-            )
+            process_cv_pipeline.delay(full_path, override_email, jd_id, username)
             return CVUploadResponseSchema(message="CV received and is being processed.")
         except Exception as e:
             logger.exception(f"Error processing CV: {e}")
@@ -338,8 +336,14 @@ class RecruitmentService:
                 "embedding_model": EMBEDDING_MODEL,
                 "payloads": payloads,
             }
-            url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
-            kwargs = {"url": url, "json": request_body, "headers": {"Content-Type": "application/json"}}
+            url = (
+                f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/add/"
+            )
+            kwargs = {
+                "url": url,
+                "json": request_body,
+                "headers": {"Content-Type": "application/json"},
+            }
             if TLS_ENABLED and CA_PATH:
                 kwargs["verify"] = CA_PATH
             resp = requests.post(**kwargs)
@@ -710,7 +714,6 @@ class RecruitmentService:
         return result
 
     def list_all_cv_applications(self, db: Session, position: Optional[str] = None):
-        query = db.query(CVApplication)
         if not position or position.lower() == "null":
             query = db.query(CVApplication)
         else:
@@ -718,7 +721,7 @@ class RecruitmentService:
                 CVApplication.matched_position.ilike(f"%{position}%")
             )
         cvs = query.all()
-        logger.error(f"Fetched {len(cvs)} CV applications.")
+        logger.info(f"Fetched {len(cvs)} CV applications.")
         return [
             {
                 "id": cv.id,
