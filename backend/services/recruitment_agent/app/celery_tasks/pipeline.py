@@ -5,31 +5,53 @@ from config.log_config import AppLogger
 
 logger = AppLogger(__name__)
 
+
 @celery.task(name="celery_tasks.process_cv_pipeline", bind=True, max_retries=3)
-def process_cv_pipeline(self, cv_file_path: str, email: str, jd_id: int, username: str):
+def process_cv_pipeline(
+    self,
+    storage_key: str,
+    original_filename: str,
+    email: str,
+    jd_id: int,
+    username: str,
+):
     """
-    Celery task to process a CV file (already uploaded to disk) and run the matching pipeline.
+    Celery task to process a CV file from local storage and run the matching pipeline.
+
+    Args:
+        storage_key: Storage key for the CV file
+        original_filename: Original uploaded filename
+        email: Candidate email override
+        jd_id: Job description ID
+        username: User who uploaded the CV
     """
     db = DatabaseSession()
     try:
-        logger.info(f"[TASK] Start processing CV for jd_id: {jd_id} with cv_file: {cv_file_path}")
+        logger.info(
+            f"[TASK] Start processing CV for jd_id: {jd_id} with storage_key: {storage_key}"
+        )
         from services.service import RecruitmentService
+
         service = RecruitmentService()
-        task_result = service.upload_cv_from_file_path(
-            cv_file_path=cv_file_path,
+        task_result = service.process_cv_from_storage(
+            storage_key=storage_key,
+            original_filename=original_filename,
             override_email=email,
             jd_id=jd_id,
             username=username,
-            db=db
+            db=db,
         )
 
-        logger.info(f"[✓] CV processed successfully for: {cv_file_path}")
+        logger.info(f"[OK] CV processed successfully for storage_key: {storage_key}")
         return task_result
     except Exception as e:
-        logger.error(f"[✘] Failed to process CV for: {cv_file_path} | Error: {e}")
+        logger.error(
+            f"[ERROR] Failed to process CV for storage_key: {storage_key} | Error: {e}"
+        )
         self.retry(exc=e, countdown=10)
     finally:
         db.close()
+
 
 @celery.task(name="celery_tasks.approve_cv_task", bind=True, max_retries=3)
 def approve_cv_task(self, candidate_id: int):
@@ -39,6 +61,7 @@ def approve_cv_task(self, candidate_id: int):
     db = DatabaseSession()
     try:
         from services.service import RecruitmentService
+
         service = RecruitmentService()
         task_result = service.approve_cv(candidate_id=candidate_id, db=db)
         logger.info(f"[✓] Approved CV ID={candidate_id} successfully")
@@ -48,6 +71,7 @@ def approve_cv_task(self, candidate_id: int):
         self.retry(exc=e, countdown=10)
     finally:
         db.close()
+
 
 @celery.task(name="celery_tasks.accept_interview_task", bind=True, max_retries=3)
 def accept_interview_task(self, interview_data: dict):
@@ -62,10 +86,14 @@ def accept_interview_task(self, interview_data: dict):
         interview_schema = InterviewAcceptSchema(**interview_data)
         service = RecruitmentService()
         task_result = service.accept_interview(interview_data=interview_schema, db=db)
-        logger.info(f"[✓] Accepted Interview with candidate ID={interview_schema.candidate_id} successfully")
+        logger.info(
+            f"[✓] Accepted Interview with candidate ID={interview_schema.candidate_id} successfully"
+        )
         return task_result
     except Exception as e:
-        logger.error(f"[✘] Failed to accept Interview with candidateID={interview_schema.candidate_id}: {e}")
+        logger.error(
+            f"[✘] Failed to accept Interview with candidateID={interview_schema.candidate_id}: {e}"
+        )
         self.retry(exc=e, countdown=10)
     finally:
         db.close()

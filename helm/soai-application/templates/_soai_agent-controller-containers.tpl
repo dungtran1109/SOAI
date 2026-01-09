@@ -28,6 +28,8 @@
   resources:
 {{- include "soai-application.resources" (index $top.Values "resources" "agentcontroller") | indent 2 }}
   env:
+  - name: OTEL_ENDPOINT
+    value: {{ $g.otel.endpoint | default "otel-collector:4317" | quote }}
   - name: POD_NAME
     valueFrom:
       fieldRef:
@@ -42,8 +44,6 @@
     value: {{ $top.Values.server.agentcontroller.logLevel | default "INFO" | quote }}
   - name: GENAI_HOST
     value: {{ printf "%s:%s" (include "soai-genai.name" $top) (ternary $top.Values.server.genai.httpsPort $top.Values.server.genai.httpPort $g.security.tls.enabled) | quote }}
-  - name: CONSUL_HOST
-    value: {{ printf "%s:%s" (include "soai-consul.name" $top) $top.Values.server.consul.httpPort }}
   - name: SERVICE_NAME
     value: {{ include "soai-agent-controller.name" $top }}
   - name: SERVICE_PORT
@@ -63,14 +63,12 @@
   - name: TLS_ENABLED
     value: {{ ternary "true" "false" $g.security.tls.enabled | quote }}
   - name: REDIS_HOST
-    value: redis
+    value: {{ include "soai-redis.name" $top }}
   - name: REDIS_PORT
     value: {{ $top.Values.server.redis.port | quote }}
   # RAG settings from constants.py
   - name: RAG_ENABLED
     value: {{ $top.Values.rag.enabled | default false | quote }}
-  - name: RAG_UNGROUNDED_CONTINUATION
-    value: {{ $top.Values.rag.ungroundedContinuation | default false | quote }}
   - name: RAG_TOP_K
     value: {{ $top.Values.rag.topK | default 5 | quote }}
   - name: KNOWLEDGE_BASE_HOST
@@ -79,12 +77,11 @@
     {{- else }}
     value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpPort }}
     {{- end }}
-  - name: RECRUITMENT_HOST
-    {{- if $g.security.tls.enabled }}
-    value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpsPort }}
-    {{- else }}
-    value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpPort }}
-    {{- end }}
+  # External URL for recruitment service (used for browser-accessible CV preview links)
+  {{- if $top.Values.server.recruitment.externalUrl }}
+  - name: RECRUITMENT_EXTERNAL_URL
+    value: {{ $top.Values.server.recruitment.externalUrl | quote }}
+  {{- end }}
   - name: EMBEDDING_MODEL
     value: {{ $top.Values.rag.embeddingModel | default "text-embedding-3-large" | quote }}
   - name: QDRANT_COLLECTION

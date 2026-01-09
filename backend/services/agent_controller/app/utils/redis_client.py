@@ -7,10 +7,20 @@ from config.constants import (
 
 logger = logging.getLogger(__file__)
 
+# Connection pool for efficient connection reuse
+_redis_pool = redis.ConnectionPool(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db=0,
+    max_connections=20,
+    decode_responses=False,
+)
+
 
 class RedisClient:
     def __init__(self):
-        self.conn = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+        # Reuse connections from pool instead of creating new ones
+        self.conn = redis.StrictRedis(connection_pool=_redis_pool)
 
     def set_expired(self, key, data, expired_seconds):
         self.conn.set(key, data, ex=expired_seconds)
@@ -56,8 +66,8 @@ class RedisClient:
         return keys
 
     def __del__(self):
-        if self.conn:
-            self.conn.close()
+        # Connection is returned to pool automatically, no need to close
+        pass
 
     def json_get_and_delete(self, redis_key):
         data = None

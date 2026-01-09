@@ -22,9 +22,9 @@ receivers:
         - job_name: 'soai_services'
           metrics_path: /metrics
           static_configs:
-            - targets: 
-              - 'soai_gen_ai_provider:8004'
-              - 'soai_recruitment_agent:8003'
+            - targets:
+              - 'genai:8004'        # Use service name
+              - 'recruitment:8003'  # Use service name
           relabel_configs:
             - source_labels: [__address__]
               regex: '(.*):.*'
@@ -43,15 +43,14 @@ receivers:
           metrics_path: /actuator/prometheus
           static_configs:
             - targets:
-              - 'soai_authentication:9090'
+              - 'authentication:9090'  # Use service name (no underscores)
           relabel_configs:
             - source_labels: [__address__]
               regex: '(.*):.*'
               target_label: instance
-              replacement: '$${1}'
+              replacement: 'soai_authentication'
             - source_labels: [__address__]
               target_label: service
-              regex: 'authentication:.*'
               replacement: 'authentication_service'
 
 exporters:
@@ -64,18 +63,52 @@ exporters:
     logs_table_name: otel_logs
     traces_table_name: otel_traces
     metrics_table_name: otel_metrics
-    timeout: 5s
+    timeout: 30s
+    # TTL configuration - auto-delete old data to prevent unbounded growth
+    # Applies to all tables (logs, traces, metrics)
+    ttl: 168h  # 7 days retention
     retry_on_failure:
       enabled: true
       initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
+      max_interval: 60s
+      max_elapsed_time: 600s
 
 processors:
   memory_limiter:
     check_interval: 1s
     limit_mib: 1000
     spike_limit_mib: 200
+
+  # Filter out noisy health check and probe logs
+  filter/logs:
+    logs:
+      exclude:
+        match_type: regexp
+        bodies:
+          - '.*"GET /health.*'
+          - '.*"GET /api/v1/.*/health.*'
+          - '.*readiness.*'
+          - '.*liveness.*'
+          - '.*healthcheck.*'
+          - '.*GET /metrics.*'
+
+  # Sample DEBUG level logs (keep only 10%)
+  # INFO, WARN, ERROR logs are always kept
+  probabilistic_sampler/logs:
+    sampling_percentage: 100  # Base rate for all logs
+
+  # Tail sampling for traces - keep error traces and sample others
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100
+    expected_new_traces_per_sec: 10
+    policies:
+      - name: error-policy
+        type: status_code
+        status_code: {status_codes: [ERROR]}
+      - name: probabilistic-policy
+        type: probabilistic
+        probabilistic: {sampling_percentage: 20}
 
   k8sattributes:
     passthrough: true # Only keep this for docker environment
@@ -111,8 +144,13 @@ processors:
         key: service.instance.id
 
   batch:
-    send_batch_size: 10000
+    send_batch_size: 5000
     timeout: 10s
+
+  # Smaller batch for logs to reduce memory pressure
+  batch/logs:
+    send_batch_size: 2000
+    timeout: 5s
 
   transform:
     error_mode: ignore
@@ -161,10 +199,10 @@ service:
 
     traces:
       receivers: [otlp]
-      processors: [k8sattributes, batch]
+      processors: [memory_limiter, k8sattributes, tail_sampling, batch]
       exporters: [clickhouse]
 
     logs:
       receivers: [otlp]
-      processors: [k8sattributes, transform/logs, batch]
+      processors: [memory_limiter, filter/logs, k8sattributes, transform/logs, batch/logs]
       exporters: [clickhouse]

@@ -1,6 +1,10 @@
 global:
   otel:
     enabled: true
+    # OTEL Collector endpoint - adjust based on deployment
+    # Same namespace: otel-collector:4317
+    # Different namespace: otel-collector.<namespace>.svc.cluster.local:4317
+    endpoint: "otel-collector:4317"
   clickHouse:
     enabled: true
   grafana:
@@ -83,6 +87,9 @@ server:
     httpsPort: "8433"
     httpNodePort: "30803"
     httpsNodePort: "30833"
+    # External URL for browser-accessible CV preview links (e.g., http://recruitment.example.com:8003)
+    # If not set, CV preview links will use relative paths
+    externalUrl: ""
     worker:
       name: recruitment-worker
 
@@ -132,13 +139,6 @@ server:
     httpsPort: "8443"
     httpNodePort: "30800"
     httpsNodePort: "30844"
-
-  consul:
-    name: consul
-    replicaCount: 1
-    serviceType: LoadBalancer
-    httpPort: "8500"
-    httpNodePort: "30500"
 
 resources:
   initcontainer:
@@ -218,14 +218,6 @@ resources:
     requests:
       cpu: "100m"
       memory: "64Mi"
-  consul:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "100m"
-      memory: "256Mi"
-
 annotations: {}
 
 seccompProfile:
@@ -315,7 +307,6 @@ openai:
 
 rag:
   enabled: true
-  ungroundedContinuation: false
   topK: 5
   embeddingModel: "text-embedding-3-large"
   qdrantCollection: "cv_embeddings"

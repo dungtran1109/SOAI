@@ -1,16 +1,31 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 from config.constants import API_PREFIX
-from config.service_registration import ServiceRegistration
-from config.log_config import LoggingConfig, AppLogger
+from config.log_config import LoggingConfig, AppLogger, enable_otlp_logging
 from config.constants import *
 import uvicorn
-from config.constants import *
+from metrics.otel_setup import setup_otel
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+from services.genai import close_http_client
 
 logger = AppLogger(__name__)
 
 LoggingConfig.setup_logging(json_format=True)
+enable_otlp_logging(service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Agent Controller starting up...")
+    yield
+    # Shutdown - cleanup HTTP client connections
+    logger.info("Agent Controller shutting down, closing HTTP connections...")
+    await close_http_client()
+
 
 app = FastAPI(
     title="Agent Controller Service",
@@ -18,7 +33,13 @@ app = FastAPI(
     docs_url=f"{API_PREFIX}/docs",
     redoc_url=f"{API_PREFIX}/redoc",
     openapi_url=f"{API_PREFIX}/openapi.json",
+    lifespan=lifespan,
 )
+
+# Prometheus metrics endpoint
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # CORS
 app.add_middleware(
@@ -29,10 +50,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Setup OpenTelemetry
+setup_otel(app=app, service_name=SERVICE_NAME, otlp_endpoint=OTEL_ENDPOINT)
+
 # Mount router
 app.include_router(router, prefix=API_PREFIX, tags=["Controller API"])
-# Include health check router
-ServiceRegistration.register_service()
 
 if __name__ == "__main__":
     if TLS_ENABLED:

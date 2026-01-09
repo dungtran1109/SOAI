@@ -1,6 +1,5 @@
 import os
 
-CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost:8500")
 SERVICE_NAME = os.getenv("SERVICE_NAME", "gen-ai-service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8004))
 # TLS Configuration

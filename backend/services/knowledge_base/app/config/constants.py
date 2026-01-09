@@ -8,7 +8,6 @@ DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 MESSAGE_ADD_DOCUMENT_SUCCESS = "Document added successfully"
 MESSAGE_ADD_DOCUMENT_FAILED = "Failed to add document"
 # Configurations
-CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost:8500")
 SERVICE_NAME = os.getenv("SERVICE_NAME", "knowledge_base_service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8006))
 API_PREFIX = "/api/v1/knowledge-base"
@@ -25,3 +24,6 @@ LOG_DIR = "/tmp/logs"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 SERVICE_ID = "knowledge-base"
 LOG_VERSION = "1.0.0"
+
+# OpenTelemetry Configuration
+OTEL_ENDPOINT = os.getenv("OTEL_ENDPOINT", "otel-collector:4317")

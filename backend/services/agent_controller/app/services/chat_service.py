@@ -1,19 +1,14 @@
-import logging
-import requests
 from services.user_history_store import UserHistoryStore
-from services.genai import GenAI
+from services.genai import GenAI, get_http_client
+from services.cv_link_service import build_cv_preview_url
 from config.constants import (
     DEFAULT_MODEL,
     RAG_ENABLED,
-    RAG_UNGROUNDED_CONTINUATION,
     RAG_TOP_K,
-    RECRUITMENT_HOST,
     KNOWLEDGE_BASE_HOST,
     EMBEDDING_MODEL,
     QDRANT_COLLECTION,
     SCHEMA,
-    TLS_ENABLED,
-    CA_PATH,
 )
 from config.log_config import AppLogger
 
@@ -38,7 +33,7 @@ class ChatService:
         self.ai_service = GenAI(model=model)
 
     async def ask(self, user_input):
-        # Attempt RAG directly via Knowledge Base (no extra HTTP API)
+        # STEP 1: Attempt RAG directly via Knowledge Base (async HTTP)
         if RAG_ENABLED:
             try:
                 kb_body = {
@@ -50,35 +45,47 @@ class ChatService:
                 }
                 url = f"{SCHEMA}://{KNOWLEDGE_BASE_HOST}/api/v1/knowledge-base/documents/search/"
                 headers = {"Content-Type": "application/json"}
-                kwargs = {"url": url, "json": kb_body, "headers": headers}
-                if TLS_ENABLED and CA_PATH:
-                    kwargs["verify"] = CA_PATH
-                resp = requests.post(**kwargs)
+
+                # Use async httpx client
+                client = await get_http_client()
+                resp = await client.post(url, json=kb_body, headers=headers)
                 if resp.status_code == 200:
                     kb_data = resp.json().get("data", [])
-                    # Build grounded prompt with citations
+                    # Build grounded prompt with CV metadata and preview links
                     contexts = []
                     for item in kb_data:
                         text = item.get("page_content", "")
-                        cid = str(item.get("id", ""))
+                        payload = item.get("payload", {})
+                        candidate_name = payload.get("candidate_name", "Unknown")
+                        candidate_id = payload.get("candidate_id")
+                        position = payload.get("position", "N/A")
+
                         if text:
-                            contexts.append(f"[Chunk {cid}]\n{text}")
+                            # Build context with CV metadata
+                            context_parts = [f"**Candidate: {candidate_name}** (Position: {position})"]
+                            if candidate_id:
+                                preview_url = build_cv_preview_url(candidate_id)
+                                context_parts.append(f"CV Preview: {preview_url}")
+                            context_parts.append(f"Content:\n{text}")
+                            contexts.append("\n".join(context_parts))
 
                     system_prompt = (
-                        "You are an assistant answering recruitment questions grounded in provided CV excerpts. "
-                        "Cite chunk IDs (e.g., [Chunk abc]) when you use information. If no relevant context, say so."
+                        "You are a recruitment assistant with access to CV information. "
+                        "When answering questions about candidates, use the provided CV excerpts. "
+                        "Each context includes the candidate's name, position, CV preview link, and relevant content. "
+                        "If a user asks for a CV link or wants to view/download a CV, provide the CV Preview URL from the context. "
+                        "If no relevant context is found, let the user know you don't have information about that candidate."
                     )
-                    context_block = "\n\n".join(contexts)
+                    context_block = "\n\n---\n\n".join(contexts)
                     messages = [
                         {"role": "system", "content": system_prompt},
-                        {"role": "system", "content": f"Context:\n{context_block}"},
+                        {"role": "system", "content": f"CV Information:\n\n{context_block}"},
                         {"role": "user", "content": user_input},
                     ]
                     logger.info(f"RAG messages: {messages}")
                     # Invoke GenAI provider for grounded completion
                     answer = await self.ai_service.invoke(messages)
-                    citations_present = len(contexts) > 0
-                    if citations_present and answer:
+                    if answer:
                         self.history_store.add_history_messages(
                             [
                                 {"role": "user", "content": user_input},
@@ -86,20 +93,6 @@ class ChatService:
                             ]
                         )
                         return {"text": answer}
-                    else:
-                        # Fallback messaging when no valid info
-                        fallback = (
-                            "No relevant context found; please provide more details."
-                        )
-                        if not RAG_UNGROUNDED_CONTINUATION:
-                            self.history_store.add_history_messages(
-                                [
-                                    {"role": "user", "content": user_input},
-                                    {"role": "assistant", "content": fallback},
-                                ]
-                            )
-                            return {"text": fallback}
-                        # Continue ungrounded below
                 else:
                     logger.warn(
                         f"KB search failed status={resp.status_code}: {resp.text}"
@@ -117,7 +110,6 @@ class ChatService:
         messages.append({"role": "user", "content": user_input})
         ai_response = await self.ai_service.invoke(messages)
         logger.info(f"AI response: {ai_response}")
-        logger.info("AI response from GenAI: %s", ai_response)
         self.history_store.add_history_messages(
             [
                 {"role": "user", "content": user_input},

@@ -3,8 +3,6 @@ from routers import router
 from fastapi.middleware.cors import CORSMiddleware
 from config.constants import API_PREFIX
 from config.database import DeclarativeBase, engine
-from sqlalchemy import text
-from config.service_registration import ServiceRegistration
 from config.log_config import LoggingConfig, AppLogger, enable_otlp_logging
 from config.constants import *
 import uvicorn
@@ -64,8 +62,6 @@ app.add_middleware(
 
 # Mount router
 app.include_router(router, prefix=API_PREFIX, tags=["Recruitment"])
-# Include health check router
-ServiceRegistration.register_service()
 
 if __name__ == "__main__":
     if TLS_ENABLED:

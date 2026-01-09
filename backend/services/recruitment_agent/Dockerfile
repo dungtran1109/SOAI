@@ -11,7 +11,6 @@ WORKDIR /app
 
 # Copy requirements and install Python packages into isolated folder
 COPY --chmod=0755 --chown=${USER_ID}:0 requirements.txt ./
-COPY --chmod=0755 --chown=${USER_ID}:0 sql_migrations/ ./sql_migrations
 COPY --chmod=0755 --chown=${USER_ID}:0 .env ./
 RUN pip install --upgrade pip && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
@@ -45,7 +44,6 @@ RUN useradd -u ${USER_ID} -m -d /home/soai_user -s /usr/sbin/nologin soai_user
 # Copy Python dependencies and app code from builder
 COPY --from=builder /install /usr/local
 COPY --from=builder /app/app ./app
-COPY --from=builder /app/sql_migrations ./sql_migrations
 COPY --from=builder /app/.env .env
 
 RUN chown -R ${USER_ID}:${USER_ID} /app

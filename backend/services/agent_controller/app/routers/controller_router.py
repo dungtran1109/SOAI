@@ -11,12 +11,12 @@ agent_controller = AgentController()
 
 
 @router.post("/run/{start_task}")
-def run(
+async def run(
     start_task: str,
     data: dict = None,
     get_current_user: dict = Depends(JWTService.verify_jwt),
 ):
-    result = agent_controller.run(start_task, data, get_current_user.get("token"))
+    result = await agent_controller.run(start_task, data, get_current_user.get("token"))
     if not result.get("success"):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=result)
 
