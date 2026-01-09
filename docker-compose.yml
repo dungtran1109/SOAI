@@ -167,8 +167,6 @@ services:
       - OTEL_ENDPOINT=otel-collector:4317
       - LOG_LEVEL=DEBUG
       - RAG_ENABLED=true
-      - RAG_UNGROUNDED_CONTINUATION=false
-      - RECRUITMENT_HOST=soai_recruitment_agent:8003
       - RECRUITMENT_EXTERNAL_URL=http://localhost:8003
       - KNOWLEDGE_BASE_HOST=soai_knowledge_base:8006
     restart: always

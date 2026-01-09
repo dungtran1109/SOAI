@@ -307,7 +307,6 @@ openai:
 
 rag:
   enabled: true
-  ungroundedContinuation: false
   topK: 5
   embeddingModel: "text-embedding-3-large"
   qdrantCollection: "cv_embeddings"

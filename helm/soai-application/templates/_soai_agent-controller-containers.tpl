@@ -69,8 +69,6 @@
   # RAG settings from constants.py
   - name: RAG_ENABLED
     value: {{ $top.Values.rag.enabled | default false | quote }}
-  - name: RAG_UNGROUNDED_CONTINUATION
-    value: {{ $top.Values.rag.ungroundedContinuation | default false | quote }}
   - name: RAG_TOP_K
     value: {{ $top.Values.rag.topK | default 5 | quote }}
   - name: KNOWLEDGE_BASE_HOST
@@ -78,12 +76,6 @@
     value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpsPort }}
     {{- else }}
     value: {{ printf "%s:%s" (include "soai-knowledge-base.name" $top) $top.Values.server.knowledgebase.httpPort }}
-    {{- end }}
-  - name: RECRUITMENT_HOST
-    {{- if $g.security.tls.enabled }}
-    value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpsPort }}
-    {{- else }}
-    value: {{ printf "%s:%s" (include "soai-recruitment.name" $top) $top.Values.server.recruitment.httpPort }}
     {{- end }}
   # External URL for recruitment service (used for browser-accessible CV preview links)
   {{- if $top.Values.server.recruitment.externalUrl }}

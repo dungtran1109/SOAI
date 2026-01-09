@@ -54,32 +54,6 @@ async def preview_cv_file(cv_id: int, db: Session = Depends(get_db)):
     return recruitment_service.preview_cv_file(cv_id, db)
 
 
-@router.get("/cvs/{cv_id}/presigned-url")
-async def get_cv_presigned_url(
-    cv_id: int,
-    expiry: Optional[int] = Query(None, description="URL expiry time in seconds (default: 24 hours)"),
-    db: Session = Depends(get_db),
-    get_current_user: dict = Depends(JWTService.verify_jwt),
-):
-    """Generate a presigned URL for downloading a CV file from object storage."""
-    logger.debug(f"Generating presigned URL for CV ID: {cv_id}")
-    return recruitment_service.get_cv_presigned_url(cv_id, db, expiry)
-
-
-@router.get("/cvs/link-by-name")
-async def get_cv_link_by_name(
-    candidate_name: str = Query(..., description="Candidate name to search for"),
-    db: Session = Depends(get_db),
-    get_current_user: dict = Depends(JWTService.verify_jwt),
-):
-    """Search for CVs by candidate name and return presigned download URLs."""
-    logger.debug(f"Searching CV links for candidate name: {candidate_name}")
-    results = recruitment_service.get_cv_link_by_candidate_name(candidate_name, db)
-    if not results:
-        raise HTTPException(status_code=404, detail=f"No CVs found for candidate: {candidate_name}")
-    return results
-
-
 # === JD edit/delete ===
 # Only administrator can get the Job Description preview
 @router.get("/jds/{jd_id}/preview")

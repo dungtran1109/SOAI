@@ -947,31 +947,6 @@ class RecruitmentService:
             headers={"Content-Disposition": f'inline; filename="{filename}"'},
         )
 
-    def get_cv_link_by_candidate_name(self, candidate_name: str, db: Session) -> List[dict]:
-        """Search for CVs by candidate name and return preview endpoint URLs."""
-        cvs = (
-            db.query(CVApplication)
-            .filter(CVApplication.candidate_name.ilike(f"%{candidate_name}%"))
-            .all()
-        )
-
-        if not cvs:
-            return []
-
-        results = []
-        for cv in cvs:
-            result = {
-                "cv_id": cv.id,
-                "candidate_name": cv.candidate_name,
-                "email": cv.email,
-                "position": cv.matched_position,
-                "original_filename": cv.original_filename,
-                "preview_endpoint": f"{API_PREFIX}/cvs/{cv.id}/preview",
-            }
-            results.append(result)
-
-        return results
-
     def preview_jd_file(self, jd_id: int, db: Session):
         jd = db.query(JobDescription).filter_by(id=jd_id).first()
         if not jd:
