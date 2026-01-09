@@ -37,6 +37,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    volumes:
+      - mysql-data:/var/lib/mysql
     networks:
       - soai-net
 
@@ -119,6 +121,7 @@ services:
       - soai-net
     volumes:
       - ./backend/services/recruitment_agent:/app
+      - ./backend/services/recruitment_agent/alembic:/app/alembic
     depends_on:
       mysql:
         condition: service_healthy
@@ -285,6 +288,7 @@ services:
 volumes:
   clickhouse-data:
   qdrant_data:
+  mysql-data:
 
 networks:
   soai-net:

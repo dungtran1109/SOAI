@@ -6,19 +6,19 @@ from config.log_config import AppLogger
 logger = AppLogger(__name__)
 
 @celery.task(name="celery_tasks.process_cv_pipeline", bind=True, max_retries=3)
-def process_cv_pipeline(self, cv_file_path: str, email: str, position: str, username: str):
+def process_cv_pipeline(self, cv_file_path: str, email: str, jd_id: int, username: str):
     """
     Celery task to process a CV file (already uploaded to disk) and run the matching pipeline.
     """
     db = DatabaseSession()
     try:
-        logger.info(f"[TASK] Start processing CV for position: {position} with cv_file: {cv_file_path}")
+        logger.info(f"[TASK] Start processing CV for jd_id: {jd_id} with cv_file: {cv_file_path}")
         from services.service import RecruitmentService
         service = RecruitmentService()
         task_result = service.upload_cv_from_file_path(
             cv_file_path=cv_file_path,
             override_email=email,
-            position_applied_for=position,
+            jd_id=jd_id,
             username=username,
             db=db
         )

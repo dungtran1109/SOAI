@@ -56,7 +56,7 @@ class RecruitmentService:
         self,
         file,
         override_email: Optional[str] = None,
-        position_applied_for: Optional[str] = None,
+        jd_id: Optional[int] = None,
         username: Optional[str] = None,
     ):
         logger.info("Uploading and processing CV file.")
@@ -95,7 +95,7 @@ class RecruitmentService:
 
             cv_upload_total.inc()
             process_cv_pipeline.delay(
-                full_path, override_email, position_applied_for, username
+                full_path, override_email, jd_id, username
             )
             return CVUploadResponseSchema(message="CV received and is being processed.")
         except Exception as e:
@@ -106,7 +106,7 @@ class RecruitmentService:
         self,
         cv_file_path: str,
         override_email: str,
-        position_applied_for: str,
+        jd_id: int,
         username: str,
         db: Session,
     ):
@@ -116,8 +116,8 @@ class RecruitmentService:
 
         if override_email:
             state.override_email = override_email
-        if position_applied_for:
-            state.position_applied_for = position_applied_for
+        # jd_id is provided by client; make it available to the pipeline
+        state.jd_id = jd_id
 
         updated_state = pipeline.invoke(state.model_dump())
         final_state = RecruitmentState(**updated_state)
@@ -128,9 +128,16 @@ class RecruitmentService:
         email_to_check = final_state.override_email or parsed_cv.get("email")
         final_state.parsed_cv["cv_file_name"] = os.path.basename(cv_file_path)
 
-        if not matched:
-            logger.info("No JD match from pipeline.")
-            return "No suitable JD match found."
+        # Override matching with provided JD
+        selected_jd = db.query(JobDescription).filter_by(id=jd_id).first()
+        if not selected_jd:
+            logger.info("Provided jd_id not found.")
+            return "Invalid jd_id: Job Description not found."
+        matched = {
+            "position": selected_jd.position,
+            "skills_required": selected_jd.skills_required,
+            "experience_required": selected_jd.experience_required,
+        }
 
         candidate_experience = parsed_cv.get("experience_years", 0)
         jd_experience_required = matched.get("experience_required", 0)
@@ -168,11 +175,14 @@ class RecruitmentService:
                 matched_score = 0
             justification = str(score_breakdown.get("justification", "") or "")
 
+        # Persist provided jd_id
+        jd_id = selected_jd.id
+
         cv = CVApplication(
             candidate_name=candidate_name,
             username=username,
             email=email_to_check,
-            matched_position=matched.get("position", position_applied_for),
+            matched_position=matched.get("position", selected_jd.position),
             status=FinalDecisionStatus.PENDING.value,
             skills=json.dumps(parsed_cv.get("skills", [])),
             matched_jd_skills=json.dumps(matched.get("skills_required", [])),
@@ -182,6 +192,7 @@ class RecruitmentService:
             is_matched=True,
             matched_score=matched_score,
             justification=justification,
+            jd_id=jd_id,
         )
         db.add(cv)
         db.commit()
@@ -595,6 +606,7 @@ class RecruitmentService:
                 "justification": cv.justification,
                 "status": cv.status,
                 "datetime": cv.datetime,
+                "jd_id": getattr(cv, "jd_id", None),
             }
             for cv in pending_cvs
         ]
@@ -620,6 +632,7 @@ class RecruitmentService:
                 "justification": cv.justification,
                 "status": cv.status,
                 "datetime": cv.datetime,
+                "jd_id": getattr(cv, "jd_id", None),
             }
             for cv in approved_cvs
         ]
@@ -690,12 +703,14 @@ class RecruitmentService:
                     "justification": cv.justification,
                     "status": cv.status,
                     "parsed_cv": json.loads(cv.parsed_cv) if cv.parsed_cv else {},
+                    "jd_id": getattr(cv, "jd_id", None),
                 }
             )
         logger.debug(f"Found {len(result)} CV(s) for username '{username}'")
         return result
 
     def list_all_cv_applications(self, db: Session, position: Optional[str] = None):
+        query = db.query(CVApplication)
         if not position or position.lower() == "null":
             query = db.query(CVApplication)
         else:
@@ -703,7 +718,7 @@ class RecruitmentService:
                 CVApplication.matched_position.ilike(f"%{position}%")
             )
         cvs = query.all()
-        logger.info(f"Fetched {len(cvs)} CV applications.")
+        logger.error(f"Fetched {len(cvs)} CV applications.")
         return [
             {
                 "id": cv.id,
@@ -715,6 +730,7 @@ class RecruitmentService:
                 "justification": cv.justification,
                 "status": cv.status,
                 "datetime": cv.datetime,
+                "jd_id": getattr(cv, "jd_id", None),
             }
             for cv in cvs
         ]

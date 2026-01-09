@@ -10,15 +10,15 @@ class JDFetcherAgent(BaseAgent):
         self.db = db_session
 
     def run(self, state: RecruitmentState) -> RecruitmentState:
-        if not state.position_applied_for:
-            raise ValueError("Position to apply for must be provided!")
-
-        # Fetch all JDs matching the position
-        jd_records = (
-            self.db.query(JobDescription)
-            .filter_by(position=state.position_applied_for)
-            .all()
-        )
+        # Require a specific JD via jd_id
+        if not state.jd_id:
+            raise ValueError("jd_id must be provided!")
+        jd = self.db.query(JobDescription).filter_by(id=state.jd_id).first()
+        if not jd:
+            logger.warn(f"[JDFetcherAgent] Provided jd_id={state.jd_id} not found.")
+            state.jd_list = []
+            return state
+        jd_records = [jd]
 
         if not jd_records:
             state.jd_list = []
@@ -50,7 +50,7 @@ class JDFetcherAgent(BaseAgent):
                 })
 
         logger.info(
-            f"[JDFetcherAgent] Found {len(jd_list)} unique JD(s) for position: {state.position_applied_for}"
+            f"[JDFetcherAgent] Using provided jd_id={state.jd_id}; selected 1 JD"
         )
 
         state.jd_list = jd_list

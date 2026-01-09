@@ -86,11 +86,11 @@ export const getCVPreviewUrl = (cvId: number): string => {
  * @param email - Override email address (optional).
  * @returns Object includes a message after uploading CV.
  */
-export const uploadCV = async (file: File, position: string, email: string | null = null): Promise<{ message: string }> => {
+export const uploadCV = async (file: File, jdId: number, email: string | null = null): Promise<{ message: string }> => {
     try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('position_applied_for', position);
+        formData.append('jd_id', String(jdId));
         if (email) formData.append('override_email', email);
         return axiosClient.post('/cvs/upload', formData, {
             headers: {
@@ -98,7 +98,7 @@ export const uploadCV = async (file: File, position: string, email: string | nul
             },
         });
     } catch (error) {
-        console.error('[DEBUG uploadJDFile]', error);
+        console.error('[DEBUG uploadCV]', error);
         return { message: `${error}` };
     }
 };
