@@ -28,18 +28,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = f"{BASE_DIR}/cv_uploads"
 JD_PREVIEW_DIR = "/tmp/jd_previews"
 
-# MinIO / Object Storage Settings
-# Set OBJECT_STORAGE_ENABLED=true to use MinIO, false for local filesystem
-OBJECT_STORAGE_ENABLED = os.getenv("OBJECT_STORAGE_ENABLED", "false").lower() == "true"
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin123")
-MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "cv-storage")
-MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
-MINIO_PRESIGNED_URL_EXPIRY = int(os.getenv("MINIO_PRESIGNED_URL_EXPIRY", 86400))  # 24 hours in seconds
-# External URL for presigned URLs (when MinIO is behind a proxy/ingress)
-MINIO_EXTERNAL_ENDPOINT = os.getenv("MINIO_EXTERNAL_ENDPOINT", "")
-
 # DB Setting - MySQL
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")

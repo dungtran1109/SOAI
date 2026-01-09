@@ -140,11 +140,11 @@ async def realtime_stream(ws: WebSocket):
                 await ws.close(code=1000, reason="idle timeout")
                 return
 
-            msg = WebsocketMessage.from_json(frame)
-
-            # Handle pong response (client acknowledgment)
-            if msg.type == WebsocketMessageType.PONG if hasattr(WebsocketMessageType, 'PONG') else frame.get("type") == "pong":
+            # Handle pong response BEFORE parsing (to avoid enum error)
+            if frame.get("type") == "pong":
                 continue
+
+            msg = WebsocketMessage.from_json(frame)
 
             if msg.type == WebsocketMessageType.USER_INPUT_TEXT_COMMIT:
                 # msg.data can be a raw string or a dict with "text"

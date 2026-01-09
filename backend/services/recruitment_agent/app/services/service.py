@@ -16,7 +16,7 @@ from config.log_config import AppLogger
 from config.constants import *
 from utils.email_sender import EmailSender
 from services.genai import GenAI, get_sync_http_client
-from services.storage_service import get_storage, StorageBackend
+from services.storage_service import get_storage, LocalStorage
 from agents.state import RecruitmentState
 from agents.graph import (
     build_recruitment_graph_matching,
@@ -91,7 +91,7 @@ class RecruitmentService:
                             raise RuntimeError("PDF conversion failed.")
 
                         # Upload converted PDF to storage
-                        storage_key = StorageBackend.generate_storage_key(pdf_filename)
+                        storage_key = LocalStorage.generate_storage_key(pdf_filename)
                         with open(pdf_path, "rb") as pdf_file:
                             storage.upload(pdf_file, storage_key, "application/pdf")
 
@@ -100,7 +100,7 @@ class RecruitmentService:
                         raise RuntimeError("Failed to convert CV to PDF.")
             else:
                 # Upload PDF directly to storage
-                storage_key = StorageBackend.generate_storage_key(file.filename)
+                storage_key = LocalStorage.generate_storage_key(file.filename)
                 file.file.seek(0)
                 storage.upload(file.file, storage_key, "application/pdf")
 
@@ -109,7 +109,6 @@ class RecruitmentService:
             cv_upload_total.inc()
             process_cv_pipeline.delay(
                 storage_key=storage_key,
-                bucket_name=MINIO_BUCKET_NAME,
                 original_filename=original_filename,
                 email=override_email,
                 position=position_applied_for,
@@ -123,7 +122,6 @@ class RecruitmentService:
     def process_cv_from_storage(
         self,
         storage_key: str,
-        bucket_name: str,
         original_filename: str,
         override_email: str,
         position_applied_for: str,
@@ -131,8 +129,8 @@ class RecruitmentService:
         db: Session,
     ):
         """
-        Process a CV that has been uploaded to object storage.
-        Downloads from MinIO to a temp file for processing.
+        Process a CV that has been uploaded to local storage.
+        Downloads from storage to a temp file for processing.
         """
         logger.info(f"[Worker] Processing CV from storage: {storage_key}")
 
@@ -220,8 +218,6 @@ class RecruitmentService:
                 justification=justification,
                 # Storage fields
                 storage_key=storage_key,
-                bucket_name=bucket_name,
-                storage_backend="minio" if OBJECT_STORAGE_ENABLED else "local",
                 original_filename=original_filename,
             )
             db.add(cv)
@@ -258,10 +254,7 @@ class RecruitmentService:
                     "email": cv_application.email,
                     "position": cv_application.matched_position,
                     "source_doc": cv_application.original_filename or os.path.basename(cv_file_path),
-                    # Storage metadata for CV link retrieval
                     "storage_key": cv_application.storage_key,
-                    "bucket_name": cv_application.bucket_name,
-                    "storage_backend": cv_application.storage_backend,
                 }
                 for _ in chunks
             ]
@@ -915,22 +908,13 @@ class RecruitmentService:
         )
 
     def preview_cv_file(self, cv_id: int, db: Session):
+        """Preview/download a CV file."""
         cv = db.query(CVApplication).filter_by(id=cv_id).first()
         if not cv:
             raise HTTPException(status_code=404, detail="CV not found.")
 
-        # Case 1: CV stored in MinIO - redirect to presigned URL
-        if cv.storage_key and cv.storage_backend == "minio":
-            try:
-                storage = get_storage()
-                presigned_url = storage.get_presigned_url(cv.storage_key)
-                return RedirectResponse(url=presigned_url, status_code=302)
-            except Exception as e:
-                logger.error(f"Failed to generate presigned URL for CV {cv_id}: {e}")
-                raise HTTPException(status_code=500, detail="Failed to retrieve CV from storage.")
-
-        # Case 2: CV stored locally with new storage abstraction (storage_key set)
-        if cv.storage_key and cv.storage_backend == "local":
+        # Case 1: CV stored with storage_key
+        if cv.storage_key:
             storage = get_storage()
             file_path = storage._get_full_path(cv.storage_key)
             filename = cv.original_filename or f"{cv.candidate_name.replace(' ', '_')}.pdf"
@@ -945,7 +929,7 @@ class RecruitmentService:
                 headers={"Content-Disposition": f'inline; filename="{filename}"'},
             )
 
-        # Case 3: Legacy fallback - old CVs stored before storage abstraction
+        # Case 2: Legacy fallback - old CVs stored before storage abstraction
         parsed_cv = json.loads(cv.parsed_cv) if cv.parsed_cv else {}
         filename = (
             parsed_cv.get("cv_file_name")
@@ -963,38 +947,8 @@ class RecruitmentService:
             headers={"Content-Disposition": f'inline; filename="{filename}"'},
         )
 
-    def get_cv_presigned_url(self, cv_id: int, db: Session, expiry_seconds: int = None) -> dict:
-        """Generate a presigned URL for a CV file (only for MinIO storage)."""
-        cv = db.query(CVApplication).filter_by(id=cv_id).first()
-        if not cv:
-            raise HTTPException(status_code=404, detail="CV not found.")
-
-        if not cv.storage_key:
-            raise HTTPException(status_code=400, detail="CV does not have a storage key. Use the preview endpoint instead.")
-
-        # For local storage, presigned URLs are not supported - use preview endpoint
-        if cv.storage_backend != "minio":
-            raise HTTPException(
-                status_code=400,
-                detail=f"Presigned URLs are only available for MinIO storage. This CV uses '{cv.storage_backend}' storage. Use the preview endpoint: {API_PREFIX}/cvs/{cv_id}/preview"
-            )
-
-        try:
-            storage = get_storage()
-            presigned_url = storage.get_presigned_url(cv.storage_key, expiry_seconds)
-            return {
-                "cv_id": cv.id,
-                "candidate_name": cv.candidate_name,
-                "original_filename": cv.original_filename,
-                "presigned_url": presigned_url,
-                "expires_in_seconds": expiry_seconds or MINIO_PRESIGNED_URL_EXPIRY,
-            }
-        except Exception as e:
-            logger.error(f"Failed to generate presigned URL for CV {cv_id}: {e}")
-            raise HTTPException(status_code=500, detail="Failed to generate presigned URL.")
-
     def get_cv_link_by_candidate_name(self, candidate_name: str, db: Session) -> List[dict]:
-        """Search for CVs by candidate name and return presigned URLs (for MinIO) or preview endpoint (for local)."""
+        """Search for CVs by candidate name and return preview endpoint URLs."""
         cvs = (
             db.query(CVApplication)
             .filter(CVApplication.candidate_name.ilike(f"%{candidate_name}%"))
@@ -1005,7 +959,6 @@ class RecruitmentService:
             return []
 
         results = []
-
         for cv in cvs:
             result = {
                 "cv_id": cv.id,
@@ -1013,22 +966,8 @@ class RecruitmentService:
                 "email": cv.email,
                 "position": cv.matched_position,
                 "original_filename": cv.original_filename,
-                "presigned_url": None,
-                "storage_backend": cv.storage_backend or "local",
+                "preview_endpoint": f"{API_PREFIX}/cvs/{cv.id}/preview",
             }
-
-            # Only generate presigned URL for MinIO storage
-            if cv.storage_key and cv.storage_backend == "minio":
-                try:
-                    storage = get_storage()
-                    result["presigned_url"] = storage.get_presigned_url(cv.storage_key)
-                    result["expires_in_seconds"] = MINIO_PRESIGNED_URL_EXPIRY
-                except Exception as e:
-                    logger.error(f"Failed to generate presigned URL for CV {cv.id}: {e}")
-            else:
-                # For local storage, provide the preview endpoint path
-                result["preview_endpoint"] = f"{API_PREFIX}/cvs/{cv.id}/preview"
-
             results.append(result)
 
         return results

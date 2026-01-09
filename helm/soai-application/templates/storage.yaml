@@ -5,7 +5,6 @@
 {{- $serverName := include "soai-recruitment.name" . -}}
 {{- $authenticationName := include "soai-authentication.name" . -}}
 {{- $qdrantName := include "soai-qdrant.name" . -}}
-{{- $minioName := include "soai-minio.name" . -}}
 
 # StorageClass Definition
 {{- if .Values.storage.storageClass.enabled }}
@@ -107,23 +106,4 @@ spec:
   resources:
     requests:
       storage: {{ .Values.storage.persistentVolume.storageCapacity.qdrant | default "5Gi" }}
-{{- if $.Values.objectStorage.enabled }}
----
-# PersistentVolumeClaim for MinIO
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ $minioName }}-pvc
-  labels:
-    app: {{ $minioName }}
-spec:
-  {{- if .Values.storage.storageClass.enabled }}
-  storageClassName: {{ $storageClassName }}
-  {{- end }}
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.storage.persistentVolume.storageCapacity.minio | default "10Gi" }}
-{{- end }}
 {{- end }}

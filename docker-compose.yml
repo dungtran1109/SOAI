@@ -100,13 +100,6 @@ services:
       - DB_USERNAME=soai_user
       - DB_PASSWORD=soai_password
       - LOG_LEVEL=DEBUG
-      # Object Storage Configuration - set to false to use local filesystem
-      - OBJECT_STORAGE_ENABLED=true
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin123
-      - MINIO_BUCKET_NAME=cv-storage
-      - MINIO_PRESIGNED_URL_EXPIRY=86400
     restart: always
     ports:
       - "8003:8003"
@@ -123,8 +116,6 @@ services:
         condition: service_started
       recruitment_worker:
         condition: service_started
-      minio:
-        condition: service_healthy
 
   recruitment_worker:
     container_name: soai_recruitment_worker
@@ -150,13 +141,6 @@ services:
       - SERVICE_NAME=soai_recruitment_agent_worker
       - SERVICE_PORT=8003
       - OTEL_ENDPOINT=otel-collector:4317
-      # Object Storage Configuration - set to false to use local filesystem
-      - OBJECT_STORAGE_ENABLED=true
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin123
-      - MINIO_BUCKET_NAME=cv-storage
-      - MINIO_PRESIGNED_URL_EXPIRY=86400
     volumes:
       - ./backend/services/recruitment_agent:/app
     depends_on:
@@ -164,10 +148,9 @@ services:
         condition: service_started
       mysql:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     networks:
       - soai-net
+
   agent_controller:
     container_name: soai_agent_controller
     image: soai-agent_controller:latest
@@ -186,6 +169,7 @@ services:
       - RAG_ENABLED=true
       - RAG_UNGROUNDED_CONTINUATION=false
       - RECRUITMENT_HOST=soai_recruitment_agent:8003
+      - RECRUITMENT_EXTERNAL_URL=http://localhost:8003
       - KNOWLEDGE_BASE_HOST=soai_knowledge_base:8006
     restart: always
     ports:
@@ -201,6 +185,7 @@ services:
         condition: service_started
       recruitment:
         condition: service_started
+
   redis:
     container_name: soai_redis
     image: redis/redis-stack-server:latest
@@ -249,6 +234,7 @@ services:
     restart: always
     networks:
       - soai-net
+
   qdrant:
     image: soai_qdrant:latest
     container_name: soai_qdrant
@@ -266,6 +252,7 @@ services:
     restart: always
     networks:
       - soai-net
+
   knowledge_base:
     image: soai_knowledge_base:latest
     container_name: soai_knowledge_base
@@ -285,31 +272,10 @@ services:
       - soai-net
     volumes:
       - ./backend/services/knowledge_base:/app
-  minio:
-    image: minio/minio:latest
-    container_name: soai_minio
-    command: server /data --console-address ":9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin123
-    ports:
-      - "9010:9000"
-      - "9011:9001"
-    volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-    networks:
-      - soai-net
 
 volumes:
   clickhouse-data:
   qdrant_data:
-  minio_data:
 
 networks:
   soai-net:

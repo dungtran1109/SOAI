@@ -9,18 +9,16 @@ logger = AppLogger(__name__)
 def process_cv_pipeline(
     self,
     storage_key: str,
-    bucket_name: str,
     original_filename: str,
     email: str,
     position: str,
     username: str,
 ):
     """
-    Celery task to process a CV file from object storage and run the matching pipeline.
+    Celery task to process a CV file from local storage and run the matching pipeline.
 
     Args:
-        storage_key: Object key in MinIO storage
-        bucket_name: Storage bucket name
+        storage_key: Storage key for the CV file
         original_filename: Original uploaded filename
         email: Candidate email override
         position: Position applied for
@@ -33,7 +31,6 @@ def process_cv_pipeline(
         service = RecruitmentService()
         task_result = service.process_cv_from_storage(
             storage_key=storage_key,
-            bucket_name=bucket_name,
             original_filename=original_filename,
             override_email=email,
             position_applied_for=position,

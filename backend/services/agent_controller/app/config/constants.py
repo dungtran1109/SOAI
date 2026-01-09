@@ -5,6 +5,8 @@ load_dotenv()
 # Configurations
 GENAI_HOST = os.getenv("GENAI_HOST", "localhost:8004")
 RECRUITMENT_HOST = os.getenv("RECRUITMENT_HOST", "soai_recruitment_agent:8003")
+# External URL for browser-accessible recruitment service (for CV preview links)
+RECRUITMENT_EXTERNAL_URL = os.getenv("RECRUITMENT_EXTERNAL_URL", "http://localhost:8003")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 SERVICE_NAME = os.getenv("SERVICE_NAME", "agent_controller_service")
