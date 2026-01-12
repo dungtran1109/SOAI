@@ -17,7 +17,7 @@ import { toast } from 'react-toastify';
 
 const cx = classNames.bind(styles);
 
-const UserProfile = () => {
+const UserProfilePage = () => {
     const [jobs, setJobs] = useState<AppliedJob[]>([]);
     const [jdFilter, dispatchJDFilter] = useReducer(jdFilterReducer, initJDFilterValue);
     const [cvFilter, dispatchCVFilter] = useReducer(cvFilterReducer, initCVFilterValue);
@@ -139,4 +139,4 @@ const UserProfile = () => {
     );
 };
 
-export default UserProfile;
+export default UserProfilePage;

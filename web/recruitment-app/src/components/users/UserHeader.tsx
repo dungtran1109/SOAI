@@ -1,8 +1,8 @@
+import { useDispatch } from 'react-redux';
+import { setUserLogout } from '../../services/redux/authSlices/authSlice';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { PUBLIC_ROUTE } from '../../shared/constants/routes';
 import { FiLogOut, FiUser } from 'react-icons/fi';
-import { logout } from '../../services/api/authApi';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/users/userHeader.module.scss';
 import logo from '../../assets/images/logo.png';
@@ -12,20 +12,10 @@ const cx = classNames.bind(styles);
 
 const UserHeader = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    const handleLogout = (): void => {
-        const response = logout();
-        if (response.ok) {
-            toast.success(`Goodbye 👋, See you later.`, {
-                position: 'top-center',
-                hideProgressBar: true,
-            });
-        } else {
-            toast.error(response.message, {
-                position: 'top-center',
-                hideProgressBar: true,
-            });
-        }
+    const handleUserLogout = (): void => {
+        dispatch(setUserLogout());
     };
 
     return (
@@ -54,7 +44,7 @@ const UserHeader = () => {
                         <Link className={cx('header__dropdown-link')} to={PUBLIC_ROUTE.profile}>
                             <FiUser size={15} /> <span>My profile</span>
                         </Link>
-                        <Link className={cx('header__dropdown-link')} to={PUBLIC_ROUTE.signin} onClick={handleLogout}>
+                        <Link className={cx('header__dropdown-link')} to={PUBLIC_ROUTE.signin} onClick={handleUserLogout}>
                             <FiLogOut size={15} /> <span>Sign out</span>
                         </Link>
                     </nav>

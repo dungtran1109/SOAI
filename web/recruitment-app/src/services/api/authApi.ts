@@ -1,7 +1,5 @@
-import Cookies from 'js-cookie';
 import axiosClient from '../axios/axiosClient';
 import { AUTH_API_BASE_URL } from '../../shared/constants/baseUrls';
-import { COOKIE_TOKEN_NAME } from '../../shared/constants/browserStorages';
 import type { Account, User } from '../../shared/types/adminTypes';
 import type { SigninData, SignupData, SigninResponse } from '../../shared/types/authTypes';
 
@@ -31,21 +29,6 @@ export const signup = async (registerData: SignupData): Promise<void> => {
         });
     } catch (error) {
         throw new Error(`Failed to register a new account: ${error}`);
-    }
-};
-
-/**
- * Logout current accout.
- */
-export const logout = (): { ok: boolean; message: string } => {
-    try {
-        if (Cookies.get(COOKIE_TOKEN_NAME)) {
-            Cookies.remove(COOKIE_TOKEN_NAME);
-        }
-        return { ok: true, message: 'Logout successfully.' };
-    } catch (err) {
-        console.error('[DEBUG logout]', err);
-        return { ok: false, message: 'Logout unsuccessfully.' };
     }
 };
 

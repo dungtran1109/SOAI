@@ -1,54 +1,37 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
 import { signin, signup } from '../services/api/authApi';
 import { COOKIE_TOKEN_NAME } from '../shared/constants/browserStorages';
 import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../shared/constants/routes';
 import { authFormReducer, initAuthFormValue } from '../services/reducer/formReducer/authForm';
-import type { SigninData, SignupData, TokenDecoded } from '../shared/types/authTypes';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserLogin } from '../services/redux/authSlices/authSlice';
+import { getUserRole, isAuthenticated } from '../shared/helpers/authUtils';
+import type { RootState } from '../services/redux/store';
+import type { SigninData, SignupData } from '../shared/types/authTypes';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/auths/authPage.module.scss';
 import Cookies from 'js-cookie';
 
 const cx = classNames.bind(styles);
-
-interface CookieJSONParsed {
-    token: string;
-    expiresAt: string;
-    tokenType: string;
-}
-
 interface AuthProps {
     isSignin: boolean;
 }
 
 const AuthPage = ({ isSignin = false }: AuthProps) => {
-    const [formValue, dispatch] = useReducer(authFormReducer, initAuthFormValue);
-    const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const userAuthen = useSelector((state: RootState) => state.authenSession);
+    const [formValue, dispatchFormValue] = useReducer(authFormReducer, initAuthFormValue);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        const cookie = Cookies.get(COOKIE_TOKEN_NAME);
-        if (cookie) {
-            try {
-                const parsed: CookieJSONParsed = JSON.parse(decodeURIComponent(cookie));
-                const token = parsed.token;
-                if (token) {
-                    const decoded: TokenDecoded = jwtDecode(token);
-
-                    if (decoded.exp * 1000 > Date.now()) {
-                        navigate(decoded.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
-                    } else {
-                        Cookies.remove(COOKIE_TOKEN_NAME);
-                    }
-                }
-            } catch {
-                Cookies.remove(COOKIE_TOKEN_NAME);
-            }
+        if (userAuthen.isAuthen) {
+            navigate(userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
         }
         setLoading(false);
-    }, [navigate]);
+    }, [navigate, userAuthen.isAuthen, userAuthen.role]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
@@ -64,10 +47,10 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
             role: formValue.role,
         };
 
-        dispatch({ type: 'ERROR', payload: '' });
+        dispatchFormValue({ type: 'ERROR', payload: '' });
 
         if (!isSignin && formValue.password !== formValue.confirmPassword) {
-            dispatch({ type: 'ERROR', payload: 'Your confirmed password unmatched.' });
+            dispatchFormValue({ type: 'ERROR', payload: 'Your confirmed password unmatched.' });
         } else {
             setLoading(true);
             try {
@@ -80,15 +63,15 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                         sameSite: 'Strict',
                     });
 
-                    const decoded = jwtDecode<TokenDecoded>(response.token);
-                    navigate(decoded.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
+                    dispatch(setUserLogin({ isAuthen: isAuthenticated(), role: getUserRole() }));
+                    navigate(userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
                 } else {
                     await signup(signUpPayload);
-                    dispatch({ type: 'RESET' });
+                    dispatchFormValue({ type: 'RESET' });
                     navigate(PUBLIC_ROUTE.signin);
                 }
             } catch {
-                dispatch({
+                dispatchFormValue({
                     type: 'ERROR',
                     payload: isSignin ? 'Login failed, username or password is incorrect.' : 'Signup failed, please check again.',
                 });
@@ -121,7 +104,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                     type="email"
                                     autoComplete="off"
                                     value={formValue.email}
-                                    onChange={(e) => dispatch({ type: 'EMAIL', payload: e.target.value })}
+                                    onChange={(e) => dispatchFormValue({ type: 'EMAIL', payload: e.target.value })}
                                     placeholder="Enter email"
                                     required
                                     className={cx('form-group__wrapper-entry', 'form-group__wrapper-entry--padding')}
@@ -141,7 +124,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                 type="text"
                                 autoComplete="off"
                                 value={formValue.userName}
-                                onChange={(e) => dispatch({ type: 'USER_NAME', payload: e.target.value })}
+                                onChange={(e) => dispatchFormValue({ type: 'USER_NAME', payload: e.target.value })}
                                 placeholder="Enter username"
                                 required
                                 className={cx('form-group__wrapper-entry', 'form-group__wrapper-entry--padding')}
@@ -159,7 +142,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                 type={formValue.showPassword ? 'text' : 'password'}
                                 autoComplete="off"
                                 value={formValue.password}
-                                onChange={(e) => dispatch({ type: 'PASSWORD', payload: e.target.value })}
+                                onChange={(e) => dispatchFormValue({ type: 'PASSWORD', payload: e.target.value })}
                                 placeholder="Enter password"
                                 required
                                 minLength={6}
@@ -167,9 +150,15 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                             />
                             {!!formValue.password &&
                                 (formValue.showPassword ? (
-                                    <FiEyeOff className={cx('form-group__wrapper-icon')} onClick={() => dispatch({ type: 'SHOW_PASSWORD', payload: false })} />
+                                    <FiEyeOff
+                                        className={cx('form-group__wrapper-icon')}
+                                        onClick={() => dispatchFormValue({ type: 'SHOW_PASSWORD', payload: false })}
+                                    />
                                 ) : (
-                                    <FiEye className={cx('form-group__wrapper-icon')} onClick={() => dispatch({ type: 'SHOW_PASSWORD', payload: true })} />
+                                    <FiEye
+                                        className={cx('form-group__wrapper-icon')}
+                                        onClick={() => dispatchFormValue({ type: 'SHOW_PASSWORD', payload: true })}
+                                    />
                                 ))}
                         </div>
                     </div>
@@ -185,7 +174,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                     type={formValue.showConfirmPassword ? 'text' : 'password'}
                                     autoComplete="off"
                                     value={formValue.confirmPassword}
-                                    onChange={(e) => dispatch({ type: 'CONFIRM_PASSWORD', payload: e.target.value })}
+                                    onChange={(e) => dispatchFormValue({ type: 'CONFIRM_PASSWORD', payload: e.target.value })}
                                     placeholder="Confirm your password"
                                     required
                                     minLength={6}
@@ -195,12 +184,12 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                     (formValue.showConfirmPassword ? (
                                         <FiEyeOff
                                             className={cx('form-group__wrapper-icon')}
-                                            onClick={() => dispatch({ type: 'SHOW_CONFIRM_PASSWORD', payload: false })}
+                                            onClick={() => dispatchFormValue({ type: 'SHOW_CONFIRM_PASSWORD', payload: false })}
                                         />
                                     ) : (
                                         <FiEye
                                             className={cx('form-group__wrapper-icon')}
-                                            onClick={() => dispatch({ type: 'SHOW_CONFIRM_PASSWORD', payload: true })}
+                                            onClick={() => dispatchFormValue({ type: 'SHOW_CONFIRM_PASSWORD', payload: true })}
                                         />
                                     ))}
                             </div>
@@ -216,7 +205,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                 <select
                                     id="role"
                                     value={formValue.role}
-                                    onChange={(e) => dispatch({ type: 'ROLE', payload: e.target.value as typeof formValue.role })}
+                                    onChange={(e) => dispatchFormValue({ type: 'ROLE', payload: e.target.value as typeof formValue.role })}
                                     className={cx('form-group__wrapper-entry')}
                                 >
                                     <option value="USER" className={cx('form-group__wrapper-entry-option')}>
@@ -236,7 +225,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                                 id="rememberMe"
                                 type="checkbox"
                                 checked={formValue.rememberMe}
-                                onChange={(e) => dispatch({ type: 'REMEMBER_ME', payload: e.target.checked })}
+                                onChange={(e) => dispatchFormValue({ type: 'REMEMBER_ME', payload: e.target.checked })}
                             />
                             <label htmlFor="rememberMe">Remember me</label>
                         </div>
@@ -253,14 +242,14 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                     {isSignin ? (
                         <p>
                             Don't have an account?{' '}
-                            <Link to="/signup" onClick={() => dispatch({ type: 'RESET' })} className={cx('auth__footer-link')}>
+                            <Link to="/signup" onClick={() => dispatchFormValue({ type: 'RESET' })} className={cx('auth__footer-link')}>
                                 Sign up
                             </Link>
                         </p>
                     ) : (
                         <p>
                             Already have an account?{' '}
-                            <Link to="/signin" onClick={() => dispatch({ type: 'RESET' })} className={cx('auth__footer-link')}>
+                            <Link to="/signin" onClick={() => dispatchFormValue({ type: 'RESET' })} className={cx('auth__footer-link')}>
                                 Sign in
                             </Link>
                         </p>

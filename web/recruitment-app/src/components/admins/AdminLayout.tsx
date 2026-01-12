@@ -1,8 +1,7 @@
-import React from 'react';
-import { toast } from 'react-toastify';
 import { FiLogOut } from 'react-icons/fi';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { logout } from '../../services/api/authApi';
+import { useDispatch } from 'react-redux';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { setUserLogout } from '../../services/redux/authSlices/authSlice';
 import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../../shared/constants/routes';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminLayout.module.scss';
@@ -21,27 +20,16 @@ const navMenu = [
 ];
 
 interface AdminLayoutProps {
-    children: React.ReactNode;
     disableChatbox?: boolean;
 }
 
-const AdminLayout = ({ children, disableChatbox = false }: AdminLayoutProps) => {
+const AdminLayout = ({ disableChatbox = false }: AdminLayoutProps) => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    const handleLogout = (): void => {
-        const response = logout();
-        if (response.ok) {
-            navigate(PUBLIC_ROUTE.signin);
-            toast.success(`Goodbye 👋, See you later.`, {
-                position: 'top-center',
-                hideProgressBar: true,
-            });
-        } else {
-            toast.error(response.message, {
-                position: 'top-center',
-                hideProgressBar: true,
-            });
-        }
+    const handleUserLogout = (): void => {
+        dispatch(setUserLogout());
+        navigate(PUBLIC_ROUTE.signin);
     };
 
     return (
@@ -71,13 +59,15 @@ const AdminLayout = ({ children, disableChatbox = false }: AdminLayoutProps) => 
                             <p className={cx('sidebar__footer-account-name')}>Admin</p>
                             <p className={cx('sidebar__footer-account-email')}>smart.recruit.ai@gmail.com</p>
                         </div>
-                        <button className={cx('sidebar__logout-btn')} onClick={handleLogout} title="Logout">
+                        <button className={cx('sidebar__logout-btn')} onClick={handleUserLogout} title="Logout">
                             <FiLogOut size={18} />
                         </button>
                     </div>
                 </nav>
 
-                <div className={cx('admin-layout__content')}>{children}</div>
+                <div className={cx('admin-layout__content')}>
+                    <Outlet />
+                </div>
             </div>
             {!disableChatbox && <ChatPopup />}
         </>
