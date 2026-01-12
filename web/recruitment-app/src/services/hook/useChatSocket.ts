@@ -74,112 +74,112 @@ const useChatSocket = (endpointURL: string) => {
     }, []);
 
     // Connect/reconnect to WebSocket
-    const connectWebSocket = useCallback(async (isReconnect: boolean = false): Promise<void> => {
-        if (connectingRef.current || !isMountedRef.current) return;
-        connectingRef.current = true;
+    const connectWebSocket = useCallback(
+        async (isReconnect: boolean = false): Promise<void> => {
+            if (connectingRef.current || !isMountedRef.current) return;
+            connectingRef.current = true;
 
-        try {
-            // Get user and chat IDs (use cached values on reconnect)
-            if (!isReconnect || !userIdRef.current) {
-                userIdRef.current = await getUserId();
-            }
-            if (userIdRef.current === null || !isMountedRef.current) {
-                connectingRef.current = false;
-                return;
-            }
+            try {
+                // Get user and chat IDs (use cached values on reconnect)
+                if (!isReconnect || !userIdRef.current) {
+                    userIdRef.current = await getUserId();
+                }
+                if (userIdRef.current === null || !isMountedRef.current) {
+                    connectingRef.current = false;
+                    return;
+                }
 
-            if (!isReconnect || !chatIdRef.current) {
-                chatIdRef.current = await getChatId(userIdRef.current);
-            }
-            if (!isMountedRef.current) {
-                connectingRef.current = false;
-                return;
-            }
-
-            // Only fetch history on initial connection
-            if (!isReconnect) {
-                const chatHistories = await getChatHistory(userIdRef.current, chatIdRef.current);
+                if (!isReconnect || !chatIdRef.current) {
+                    chatIdRef.current = await getChatId(userIdRef.current);
+                }
                 if (!isMountedRef.current) {
                     connectingRef.current = false;
                     return;
                 }
-                dispatch(setMessages(chatHistories));
-            }
 
-            const socket = new WebSocket(endpointURL);
-            socketRef.current = socket;
-
-            socket.onopen = (): void => {
-                connectingRef.current = false;
-                reconnectAttemptRef.current = 0; // Reset reconnect attempts on successful connection
-
-                if (!isMountedRef.current) {
-                    socket.close();
-                    return;
+                // Only fetch history on initial connection
+                if (!isReconnect) {
+                    const chatHistories = await getChatHistory(userIdRef.current, chatIdRef.current);
+                    if (!isMountedRef.current) {
+                        connectingRef.current = false;
+                        return;
+                    }
+                    dispatch(setMessages(chatHistories));
                 }
 
-                console.log('WebSocket connected' + (isReconnect ? ' (reconnected)' : ''));
+                const socket = new WebSocket(endpointURL);
+                socketRef.current = socket;
 
-                socket.send(
-                    JSON.stringify({
-                        type: 'user.connect',
-                        data: {
-                            conversation_id: chatIdRef.current,
-                            user_id: userIdRef.current,
-                            token: getToken(),
-                        },
-                    }),
-                );
+                socket.onopen = (): void => {
+                    connectingRef.current = false;
+                    reconnectAttemptRef.current = 0; // Reset reconnect attempts on successful connection
 
-                // Process any queued messages
-                processMessageQueue();
-            };
+                    if (!isMountedRef.current) {
+                        socket.close();
+                        return;
+                    }
 
-            socket.onmessage = (event): void => {
-                if (!isMountedRef.current) return;
-                const msg: WSMessage = JSON.parse(event.data);
+                    console.log('WebSocket connected' + (isReconnect ? ' (reconnected)' : ''));
 
-                // Handle ping/pong for keep-alive
-                if (msg.type === 'ping') {
-                    socket.send(JSON.stringify({ type: 'pong' }));
-                    return;
-                }
-
-                dispatch(pushMessage({ role: CHAT_ROLE.AI, content: msg.data }));
-                dispatch(setDoneResponse());
-            };
-
-            socket.onerror = (err): void => {
-                console.error('WS error', err);
-                connectingRef.current = false;
-            };
-
-            socket.onclose = (event): void => {
-                console.log('WS closed', event.code, event.reason);
-                connectingRef.current = false;
-                socketRef.current = null;
-
-                // Attempt reconnection if component is still mounted
-                if (isMountedRef.current && reconnectAttemptRef.current < RECONNECT_MAX_ATTEMPTS) {
-                    const delay = Math.min(
-                        RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttemptRef.current),
-                        RECONNECT_MAX_DELAY
+                    socket.send(
+                        JSON.stringify({
+                            type: 'user.connect',
+                            data: {
+                                conversation_id: chatIdRef.current,
+                                user_id: userIdRef.current,
+                                token: getToken(),
+                            },
+                        }),
                     );
-                    reconnectAttemptRef.current++;
-                    console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptRef.current}/${RECONNECT_MAX_ATTEMPTS})`);
 
-                    reconnectTimeoutRef.current = setTimeout(() => {
-                        connectWebSocket(true);
-                    }, delay);
-                } else if (reconnectAttemptRef.current >= RECONNECT_MAX_ATTEMPTS) {
-                    console.error('Max reconnection attempts reached');
-                }
-            };
-        } catch (err) {
-            console.error('Error during WebSocket connection:', err);
-            connectingRef.current = false;
-        }
-    }, [dispatch, endpointURL, processMessageQueue]);
+                    // Process any queued messages
+                    processMessageQueue();
+                };
+
+                socket.onmessage = (event): void => {
+                    if (!isMountedRef.current) return;
+                    const msg: WSMessage = JSON.parse(event.data);
+
+                    // Handle ping/pong for keep-alive
+                    if (msg.type === 'ping') {
+                        socket.send(JSON.stringify({ type: 'pong' }));
+                        return;
+                    }
+
+                    dispatch(pushMessage({ role: CHAT_ROLE.AI, content: msg.data }));
+                    dispatch(setDoneResponse());
+                };
+
+                socket.onerror = (err): void => {
+                    console.error('WS error', err);
+                    connectingRef.current = false;
+                };
+
+                socket.onclose = (event): void => {
+                    console.log('WS closed', event.code, event.reason);
+                    connectingRef.current = false;
+                    socketRef.current = null;
+
+                    // Attempt reconnection if component is still mounted
+                    if (isMountedRef.current && reconnectAttemptRef.current < RECONNECT_MAX_ATTEMPTS) {
+                        const delay = Math.min(RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttemptRef.current), RECONNECT_MAX_DELAY);
+                        reconnectAttemptRef.current++;
+                        console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptRef.current}/${RECONNECT_MAX_ATTEMPTS})`);
+
+                        reconnectTimeoutRef.current = setTimeout(() => {
+                            connectWebSocket(true);
+                        }, delay);
+                    } else if (reconnectAttemptRef.current >= RECONNECT_MAX_ATTEMPTS) {
+                        console.error('Max reconnection attempts reached');
+                    }
+                };
+            } catch (err) {
+                console.error('Error during WebSocket connection:', err);
+                connectingRef.current = false;
+            }
+        },
+        [dispatch, endpointURL, processMessageQueue],
+    );
 
     useEffect(() => {
         isMountedRef.current = true;
@@ -197,74 +197,77 @@ const useChatSocket = (endpointURL: string) => {
         };
     }, [connectWebSocket]);
 
-    const wsSendMsg = useCallback((content: string): void => {
-        // Add message to UI immediately
-        dispatch(pushMessage({ role: CHAT_ROLE.USER, content }));
-        dispatch(setWaitingResponse());
+    const wsSendMsg = useCallback(
+        (content: string): void => {
+            // Add message to UI immediately
+            dispatch(pushMessage({ role: CHAT_ROLE.USER, content }));
+            dispatch(setWaitingResponse());
 
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-            try {
-                socketRef.current.send(
-                    JSON.stringify({
-                        type: 'user.input_text.commit',
-                        data: content,
-                    }),
-                );
-            } catch (err) {
-                console.error('Failed to send message:', err);
-                // Queue message for retry
+            if (socketRef.current?.readyState === WebSocket.OPEN) {
+                try {
+                    socketRef.current.send(
+                        JSON.stringify({
+                            type: 'user.input_text.commit',
+                            data: content,
+                        }),
+                    );
+                } catch (err) {
+                    console.error('Failed to send message:', err);
+                    // Queue message for retry
+                    messageQueueRef.current.push({ content, retries: 0 });
+                }
+            } else {
+                console.warn('WS not ready, queuing message for retry');
                 messageQueueRef.current.push({ content, retries: 0 });
-            }
-        } else {
-            console.warn('WS not ready, queuing message for retry');
-            messageQueueRef.current.push({ content, retries: 0 });
 
-            // If not currently connecting, trigger a reconnection
-            if (!connectingRef.current && isMountedRef.current) {
-                connectWebSocket(true);
-            }
-
-            // Set up retry with timeout
-            const retryInterval = setInterval(() => {
-                if (!isMountedRef.current) {
-                    clearInterval(retryInterval);
-                    return;
+                // If not currently connecting, trigger a reconnection
+                if (!connectingRef.current && isMountedRef.current) {
+                    connectWebSocket(true);
                 }
 
-                const queuedMsg = messageQueueRef.current.find((m: QueuedMessage) => m.content === content);
-                if (!queuedMsg) {
-                    clearInterval(retryInterval);
-                    return;
-                }
-
-                if (socketRef.current?.readyState === WebSocket.OPEN) {
-                    try {
-                        socketRef.current.send(
-                            JSON.stringify({
-                                type: 'user.input_text.commit',
-                                data: content,
-                            }),
-                        );
-                        // Remove from queue
-                        messageQueueRef.current = messageQueueRef.current.filter((m: QueuedMessage) => m.content !== content);
-                        console.log('Successfully sent queued message');
+                // Set up retry with timeout
+                const retryInterval = setInterval(() => {
+                    if (!isMountedRef.current) {
                         clearInterval(retryInterval);
-                    } catch (err) {
+                        return;
+                    }
+
+                    const queuedMsg = messageQueueRef.current.find((m: QueuedMessage) => m.content === content);
+                    if (!queuedMsg) {
+                        clearInterval(retryInterval);
+                        return;
+                    }
+
+                    if (socketRef.current?.readyState === WebSocket.OPEN) {
+                        try {
+                            socketRef.current.send(
+                                JSON.stringify({
+                                    type: 'user.input_text.commit',
+                                    data: content,
+                                }),
+                            );
+                            // Remove from queue
+                            messageQueueRef.current = messageQueueRef.current.filter((m: QueuedMessage) => m.content !== content);
+                            console.log('Successfully sent queued message');
+                            clearInterval(retryInterval);
+                        } catch {
+                            queuedMsg.retries++;
+                        }
+                    } else {
                         queuedMsg.retries++;
                     }
-                } else {
-                    queuedMsg.retries++;
-                }
 
-                if (queuedMsg.retries >= MESSAGE_MAX_RETRIES) {
-                    console.error('Max retries reached for message, removing from queue');
-                    messageQueueRef.current = messageQueueRef.current.filter((m: QueuedMessage) => m.content !== content);
-                    dispatch(setDoneResponse()); // Reset waiting state
-                    clearInterval(retryInterval);
-                }
-            }, MESSAGE_RETRY_DELAY);
-        }
-    }, [dispatch, connectWebSocket]);
+                    if (queuedMsg.retries >= MESSAGE_MAX_RETRIES) {
+                        console.error('Max retries reached for message, removing from queue');
+                        messageQueueRef.current = messageQueueRef.current.filter((m: QueuedMessage) => m.content !== content);
+                        dispatch(setDoneResponse()); // Reset waiting state
+                        clearInterval(retryInterval);
+                    }
+                }, MESSAGE_RETRY_DELAY);
+            }
+        },
+        [dispatch, connectWebSocket],
+    );
 
     return wsSendMsg;
 };

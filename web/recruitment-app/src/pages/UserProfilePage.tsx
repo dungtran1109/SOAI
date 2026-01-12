@@ -1,19 +1,19 @@
-import { Col, Container, Row } from '../components/layouts';
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { toast } from 'react-toastify';
 import { FaBell } from 'react-icons/fa';
 import { FiActivity, FiBarChart } from 'react-icons/fi';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { getUserAppliedJobs } from '../services/api/cvApi';
 import { uploadProofImages } from '../services/api/proofApi';
+import { Col, Container, Row } from '../components/layouts';
 import { initJDFilterValue, jdFilterReducer } from '../services/reducer/filterReducer/jdFilter';
 import { initCVFilterValue, cvFilterReducer } from '../services/reducer/filterReducer/cvFilter';
 import { STATUS } from '../shared/types/adminTypes';
 import type { AppliedJob } from '../shared/types/userTypes';
 import classNames from 'classnames/bind';
-import styles from '../assets/styles/users/userProfile.module.scss';
+import styles from '../assets/styles/users/userProfilePage.module.scss';
 import UserAvatar from '../assets/images/user-default.png';
 import UserAppliedJobCard from '../components/users/UserProfileJobCard';
 import UserFooter from '../components/users/UserFooter';
-import { toast } from 'react-toastify';
 
 const cx = classNames.bind(styles);
 
