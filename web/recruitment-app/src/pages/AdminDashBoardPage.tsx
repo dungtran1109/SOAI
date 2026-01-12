@@ -6,6 +6,7 @@ import styles from '../assets/styles/admins/adminDashBoardPage.module.scss';
 import userIcon from '../assets/icons/user.png';
 import cvIcon from '../assets/icons/file-text.png';
 import jdIcon from '../assets/icons/briefcase.png';
+import interviewIcon from '../assets/icons/interview.png';
 import AdminCVList from '../components/admins/AdminCVList';
 import AdminJDList from '../components/admins/AdminJDList';
 import AdminAccountList from '../components/admins/AdminAccountList';
@@ -18,18 +19,21 @@ const AdminDashBoardPage = () => {
 
     return (
         <div className={cx('admin-dashboard')}>
-            <h1 className={cx('admin-dashboard__item', 'admin-dashboard__item--title')}>Welcome, Admin</h1>
+            <h1 className={cx('admin-dashboard__item', 'admin-dashboard__item--title')}>Welcome Admin</h1>
             <p className={cx('admin-dashboard__item', 'admin-dashboard__item--subtitle')}>Monitor all candidate applications and interview tasks here.</p>
 
             <Row space={10} className={cx('admin-dashboard__item')}>
-                <Col size={{ lg: 4, xl: 4 }}>
-                    <StatsCard label="Total CVs" count={statistics.cvCount} icon={cvIcon} />
+                <Col size={{ md: 6, lg: 3, xl: 3 }}>
+                    <StatsCard label="Candidate CVs" count={statistics.cvCount} icon={cvIcon} />
                 </Col>
-                <Col size={{ lg: 4, xl: 4 }}>
-                    <StatsCard label="Total Users" count={statistics.accountCount} icon={userIcon} />
+                <Col size={{ md: 6, lg: 3, xl: 3 }}>
+                    <StatsCard label="Upcoming Interviews" count={statistics.interviewCount} icon={interviewIcon} />
                 </Col>
-                <Col size={{ lg: 4, xl: 4 }}>
-                    <StatsCard label="Job Descriptions" count={statistics.jobCount} icon={jdIcon} />
+                <Col size={{ md: 6, lg: 3, xl: 3 }}>
+                    <StatsCard label="Open Jobs" count={statistics.jobCount} icon={jdIcon} />
+                </Col>
+                <Col size={{ md: 6, lg: 3, xl: 3 }}>
+                    <StatsCard label="Total Accounts" count={statistics.accountCount} icon={userIcon} />
                 </Col>
             </Row>
 

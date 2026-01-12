@@ -20,6 +20,8 @@ import classNames from 'classnames/bind';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import styles from '../../assets/styles/admins/adminInterviewList.module.scss';
 import dataEmpty from '../../assets/images/data-empty.png';
+import { useDispatch } from 'react-redux';
+import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 
 const cx = classNames.bind({ ...frameStyles, ...styles });
 
@@ -43,6 +45,7 @@ const AdminInterviewList = () => {
     const [approvedCVs, setApprovedCVs] = useState<CV[]>([]);
     const [interviews, setInterviews] = useState<Interview[]>([]);
     const [filter, dispatchFilter] = useReducer(interviewFilterReducer, initInterviewFilterValue);
+    const dispatch = useDispatch();
 
     // States of modals
     const [schedule, setSchedule] = useState<InterviewScheduleModal | null>(null);
@@ -62,6 +65,7 @@ const AdminInterviewList = () => {
         const fetchInterviews = async () => {
             try {
                 const result = await getInterviews();
+                dispatch(setNumberOfInterview(result.length));
                 setInterviews(result);
             } catch (error) {
                 console.error('Failed to fetch interview session:', error);
@@ -70,7 +74,7 @@ const AdminInterviewList = () => {
 
         fetchApprovedCVs();
         fetchInterviews();
-    }, []);
+    }, [dispatch]);
 
     useEffect(() => {
         fetchApprovedCVsAndInterviews();
@@ -215,7 +219,7 @@ const AdminInterviewList = () => {
         <>
             <div className={cx('admin-frame')}>
                 <div className={cx('admin-frame-header')}>
-                    <h2 className={cx('admin-frame-header__title')}>Interview Management</h2>
+                    <h2 className={cx('admin-frame-header__title')}>Interview Schedules</h2>
                     <p className={cx('admin-frame-header__subtitle')}>Setup interview sessions with approved CVs by the system.</p>
                 </div>
 

@@ -14,7 +14,7 @@ const App = () => {
     return (
         <BrowserRouter>
             <Routes>
-                <Route element={<UserLayout />}>
+                <Route>
                     {authRoutes.map((route) => {
                         const Component = route.component;
                         return <Route path={route.path} element={<Component isSignin={route.isSignin} />} />;

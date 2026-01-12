@@ -12,7 +12,7 @@ const cx = classNames.bind({ ...frameStyles, ...styles });
 
 const AdminJDPage = () => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [addCV, setAddCV] = useState<boolean>(false);
+    const [isAddCV, setIsAddCV] = useState<boolean>(false);
 
     const handleUploadJSONFile = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
         const file = e.target.files?.[0];
@@ -36,7 +36,7 @@ const AdminJDPage = () => {
     const handleAddJD = useCallback(async (jd: JD): Promise<void> => {
         if (Object.keys(jd).length > 0) {
             await createJD(jd);
-            setAddCV(false);
+            setIsAddCV(false);
             toast.success('Saved', {
                 position: 'top-center',
                 hideProgressBar: true,
@@ -56,13 +56,23 @@ const AdminJDPage = () => {
                     <label htmlFor="jd-upload-input" className={cx('add-jd__btn', 'add-jd__btn--json')}>
                         Upload JSON
                     </label>
-                    <button className={cx('add-jd__btn', 'add-jd__btn--ui')} onClick={() => setAddCV(true)}>
+                    <button className={cx('add-jd__btn', 'add-jd__btn--ui')} onClick={() => setIsAddCV(true)}>
                         + Add JD
                     </button>
                 </section>
             </div>
 
-            {addCV ? <AdminJDForm onSubmit={handleAddJD} onCancel={() => setAddCV(false)} /> : <AdminJDList />}
+            {isAddCV ? (
+                <div className={cx('admin-frame')}>
+                    <div className={cx('admin-frame-header')}>
+                        <h2 className={cx('admin-frame-header__title')}>+ Add Jobs</h2>
+                        <p className={cx('admin-frame-header__subtitle')}>Post a new job opening to start hiring qualified candidates.</p>
+                    </div>
+                    <AdminJDForm onSubmit={handleAddJD} onCancel={() => setIsAddCV(false)} />
+                </div>
+            ) : (
+                <AdminJDList />
+            )}
         </>
     );
 };
