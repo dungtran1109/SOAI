@@ -4,13 +4,14 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { PUBLIC_ROUTE } from '../../shared/constants/routes';
 import { FiLogOut, FiUser } from 'react-icons/fi';
 import classNames from 'classnames/bind';
-import styles from '../../assets/styles/users/userHeader.module.scss';
+import styles from '../../assets/styles/users/userLayout.module.scss';
 import logo from '../../assets/images/logo.png';
 import userDefaultImage from '../../assets/images/user-default.png';
+import UserFooter from './UserFooter';
 
 const cx = classNames.bind(styles);
 
-const UserHeader = () => {
+const UserLayout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -50,9 +51,12 @@ const UserHeader = () => {
                     </nav>
                 </div>
             </header>
+
             <Outlet />
+
+            <UserFooter />
         </>
     );
 };
 
-export default UserHeader;
+export default UserLayout;

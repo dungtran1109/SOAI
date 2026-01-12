@@ -5,7 +5,7 @@ import { authRoutes } from './routes/publicRoutes';
 import { useSelector } from 'react-redux';
 import { PUBLIC_ROUTE } from './shared/constants/routes';
 import type { RootState } from './services/redux/store';
-import UserHeader from './components/users/UserHeader';
+import UserLayout from './components/users/UserLayout';
 import AdminLayout from './components/admins/AdminLayout';
 
 const App = () => {
@@ -14,7 +14,7 @@ const App = () => {
     return (
         <BrowserRouter>
             <Routes>
-                <Route element={<UserHeader />}>
+                <Route element={<UserLayout />}>
                     {authRoutes.map((route) => {
                         const Component = route.component;
                         return <Route path={route.path} element={<Component isSignin={route.isSignin} />} />;
@@ -28,7 +28,7 @@ const App = () => {
                     })}
                 </Route>
 
-                <Route element={userAuthen.isAuthen && userAuthen.role === userRoute.role ? <UserHeader /> : <Navigate to={PUBLIC_ROUTE.signin} replace />}>
+                <Route element={userAuthen.isAuthen && userAuthen.role === userRoute.role ? <UserLayout /> : <Navigate to={PUBLIC_ROUTE.signin} replace />}>
                     {userRoute.routes.map((route) => {
                         const Component = route.component;
                         return <Route key={route.id} path={route.path} element={<Component />} />;

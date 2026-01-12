@@ -38,13 +38,16 @@
 }
 
 .sidebar__nav-link {
-    display: block;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
     padding: 10px;
+    font-size: 15px;
+    font-weight: 500;
     color: #d1d5db;
     border-radius: 8px;
     transition: background-color 0.2s, color 0.2s;
-    font-size: 15px;
-    font-weight: 500;
 
     &:hover {
         text-decoration: none;
