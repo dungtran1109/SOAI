@@ -10,7 +10,6 @@ const cx = classNames.bind(styles);
 const UserFooter = () => {
     return (
         <div className={cx('footer-frame')}>
-            <p className={cx('separate-line')}></p>
             <footer className={cx('footer')}>
                 <Container>
                     <Row space={10}>

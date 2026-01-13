@@ -84,6 +84,7 @@ const useChatSocket = (endpointURL: string) => {
                 if (!isReconnect || !userIdRef.current) {
                     userIdRef.current = await getUserId();
                 }
+
                 if (userIdRef.current === null || !isMountedRef.current) {
                     connectingRef.current = false;
                     return;
@@ -92,6 +93,7 @@ const useChatSocket = (endpointURL: string) => {
                 if (!isReconnect || !chatIdRef.current) {
                     chatIdRef.current = await getChatId(userIdRef.current);
                 }
+
                 if (!isMountedRef.current) {
                     connectingRef.current = false;
                     return;
