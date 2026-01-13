@@ -10,7 +10,6 @@ import classNames from 'classnames/bind';
 import styles from '../assets/styles/users/userJobPage.module.scss';
 import logo from '../assets/images/logo.png';
 import UserJobCard from '../components/users/UserJobCard';
-import UserFooter from '../components/users/UserFooter';
 
 const cx = classNames.bind(styles);
 
@@ -187,8 +186,6 @@ const UserJobPage = () => {
                     )}
                 </Row>
             </Container>
-
-            <UserFooter />
         </>
     );
 };

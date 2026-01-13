@@ -4,6 +4,21 @@ import { COOKIE_TOKEN_NAME } from '../constants/browserStorages';
 import type { TokenDecoded, Role } from '../types/authTypes';
 
 /**
+ * Logout current accout.
+ * @returns  Object includes a message after user logout.
+ */
+export const logout = (): { ok: boolean; message: string } => {
+    try {
+        if (Cookies.get(COOKIE_TOKEN_NAME)) {
+            Cookies.remove(COOKIE_TOKEN_NAME);
+        }
+        return { ok: true, message: 'Logout successfully.' };
+    } catch {
+        return { ok: false, message: 'Logout unsuccessfully.' };
+    }
+};
+
+/**
  * Get stored authentication token.
  * @returns Authentication token.
  */
@@ -37,12 +52,12 @@ export const isAuthenticated = (): boolean => {
  * Get current account role from token.
  * @returns Current account role.
  */
-export const getUserRole = (): Role => {
+export const getUserRole = (): Role | null => {
     try {
         const decoded: TokenDecoded = jwtDecode(getToken() || '');
-        return decoded.role || 'USER';
+        return decoded.role || null;
     } catch {
-        return 'USER';
+        return null;
     }
 };
 

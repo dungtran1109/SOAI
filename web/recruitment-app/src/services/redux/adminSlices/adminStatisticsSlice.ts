@@ -4,12 +4,14 @@ export interface AdminStatistics {
     cvCount: number;
     jobCount: number;
     accountCount: number;
+    interviewCount: number;
 }
 
 const initialState: AdminStatistics = {
     cvCount: 0,
     jobCount: 0,
     accountCount: 0,
+    interviewCount: 0,
 };
 
 export const adminStatisticsSlice = createSlice({
@@ -36,9 +38,16 @@ export const adminStatisticsSlice = createSlice({
                 accountCount: action.payload,
             };
         },
+
+        setNumberOfInterview: (state, action: PayloadAction<number>): AdminStatistics => {
+            return {
+                ...state,
+                interviewCount: action.payload,
+            };
+        },
     },
 });
 
-export const { setNumberOfCV, setNumberOfJob, setNumberOfAccount } = adminStatisticsSlice.actions;
+export const { setNumberOfCV, setNumberOfJob, setNumberOfAccount, setNumberOfInterview } = adminStatisticsSlice.actions;
 
 export default adminStatisticsSlice.reducer;
