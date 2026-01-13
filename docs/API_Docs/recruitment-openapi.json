@@ -1,0 +1,1328 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Recruitment ATS",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/metrics": {
+            "get": {
+                "summary": "Metrics",
+                "operationId": "metrics_metrics_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/cvs/upload": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Upload Cv",
+                "operationId": "upload_cv_api_v1_recruitment_cvs_upload_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_cv_api_v1_recruitment_cvs_upload_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/recruitment/jds/upload": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Upload Jd",
+                "operationId": "upload_jd_api_v1_recruitment_jds_upload_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_jd_api_v1_recruitment_jds_upload_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/recruitment/interviews/schedule": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Schedule Interview",
+                "operationId": "schedule_interview_api_v1_recruitment_interviews_schedule_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InterviewScheduleCreateSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/recruitment/interviews": {
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Get Interviews",
+                "operationId": "get_interviews_api_v1_recruitment_interviews_get",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "interview_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Optional interview date filter in format YYYY-MM-DD",
+                            "title": "Interview Date"
+                        },
+                        "description": "Optional interview date filter in format YYYY-MM-DD"
+                    },
+                    {
+                        "name": "candidate_name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Optional candidate name filter",
+                            "title": "Candidate Name"
+                        },
+                        "description": "Optional candidate name filter"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Delete All Interviews",
+                "operationId": "delete_all_interviews_api_v1_recruitment_interviews_delete",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "candidate_name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Optional candidate name filter",
+                            "title": "Candidate Name"
+                        },
+                        "description": "Optional candidate name filter"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/interviews/{interview_id}": {
+            "delete": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Delete Interview",
+                "operationId": "delete_interview_api_v1_recruitment_interviews__interview_id__delete",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "interview_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Interview Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Update Interview",
+                "operationId": "update_interview_api_v1_recruitment_interviews__interview_id__put",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "interview_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Interview Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "title": "Update Data"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/interviews/accept": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Accept Interview",
+                "operationId": "accept_interview_api_v1_recruitment_interviews_accept_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InterviewAcceptSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/recruitment/interviews/{interview_id}/cancel": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Cancel Interview",
+                "operationId": "cancel_interview_api_v1_recruitment_interviews__interview_id__cancel_post",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "interview_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Interview Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/jds": {
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Get Jds",
+                "operationId": "get_jds_api_v1_recruitment_jds_get",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "position",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Optional position filter",
+                            "title": "Position"
+                        },
+                        "description": "Optional position filter"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/interview-questions/{cv_id}/questions": {
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Get Questions For Cv",
+                "operationId": "get_questions_for_cv_api_v1_recruitment_interview_questions__cv_id__questions_get",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "cv_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Cv Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InterviewQuestionSchema"
+                                    },
+                                    "title": "Response Get Questions For Cv Api V1 Recruitment Interview Questions  Cv Id  Questions Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/interview-questions/{question_id}/edit": {
+            "put": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Edit Question",
+                "operationId": "edit_question_api_v1_recruitment_interview_questions__question_id__edit_put",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "question_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Question Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_edit_question_api_v1_recruitment_interview_questions__question_id__edit_put"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/interview-questions/{cv_id}/questions/regenerate": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Regenerate Questions",
+                "operationId": "regenerate_questions_api_v1_recruitment_interview_questions__cv_id__questions_regenerate_post",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "cv_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Cv Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "title": "Response Regenerate Questions Api V1 Recruitment Interview Questions  Cv Id  Questions Regenerate Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/cvs/{candidate_id}/approve": {
+            "post": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Approve Cv",
+                "operationId": "approve_cv_api_v1_recruitment_cvs__candidate_id__approve_post",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "candidate_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Candidate Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/cvs/pending": {
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Get Pending Cv List",
+                "operationId": "get_pending_cv_list_api_v1_recruitment_cvs_pending_get",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "candidate_name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Optional candidate name filter",
+                            "title": "Candidate Name"
+                        },
+                        "description": "Optional candidate name filter"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/cvs/{cv_id}": {
+            "put": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Update Cv",
+                "operationId": "update_cv_api_v1_recruitment_cvs__cv_id__put",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "cv_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Cv Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "title": "Update Data"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Delete Cv",
+                "operationId": "delete_cv_api_v1_recruitment_cvs__cv_id__delete",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "cv_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Cv Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Get Cv By Id",
+                "operationId": "get_cv_by_id_api_v1_recruitment_cvs__cv_id__get",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "cv_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Cv Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/cvs/position": {
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "List All Cvs",
+                "operationId": "list_all_cvs_api_v1_recruitment_cvs_position_get",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "position",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Optional position filter",
+                            "title": "Position"
+                        },
+                        "description": "Optional position filter"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/jds/{jd_id}": {
+            "put": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Edit Jd",
+                "operationId": "edit_jd_api_v1_recruitment_jds__jd_id__put",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "jd_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Jd Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "title": "Update Data"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Delete Jd",
+                "operationId": "delete_jd_api_v1_recruitment_jds__jd_id__delete",
+                "security": [
+                    {
+                        "CustomHTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "jd_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Jd Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CVUploadResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/recruitment/health": {
+            "get": {
+                "tags": [
+                    "Recruitment"
+                ],
+                "summary": "Health Check",
+                "operationId": "health_check_api_v1_recruitment_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Body_edit_question_api_v1_recruitment_interview_questions__question_id__edit_put": {
+                "properties": {
+                    "new_question": {
+                        "type": "string",
+                        "title": "New Question"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "new_question"
+                ],
+                "title": "Body_edit_question_api_v1_recruitment_interview_questions__question_id__edit_put"
+            },
+            "Body_upload_cv_api_v1_recruitment_cvs_upload_post": {
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "File"
+                    },
+                    "override_email": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Override Email"
+                    },
+                    "position_applied_for": {
+                        "type": "string",
+                        "title": "Position Applied For"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "file",
+                    "position_applied_for"
+                ],
+                "title": "Body_upload_cv_api_v1_recruitment_cvs_upload_post"
+            },
+            "Body_upload_jd_api_v1_recruitment_jds_upload_post": {
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "File"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "file"
+                ],
+                "title": "Body_upload_jd_api_v1_recruitment_jds_upload_post"
+            },
+            "CVUploadResponseSchema": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message"
+                ],
+                "title": "CVUploadResponseSchema"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "InterviewAcceptSchema": {
+                "properties": {
+                    "candidate_id": {
+                        "type": "integer",
+                        "title": "Candidate Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "candidate_id"
+                ],
+                "title": "InterviewAcceptSchema"
+            },
+            "InterviewQuestionSchema": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "cv_application_id": {
+                        "type": "integer",
+                        "title": "Cv Application Id"
+                    },
+                    "original_question": {
+                        "type": "string",
+                        "title": "Original Question"
+                    },
+                    "edited_question": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Edited Question"
+                    },
+                    "is_edited": {
+                        "type": "boolean",
+                        "title": "Is Edited"
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "Source"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "cv_application_id",
+                    "original_question",
+                    "edited_question",
+                    "is_edited",
+                    "source"
+                ],
+                "title": "InterviewQuestionSchema"
+            },
+            "InterviewScheduleCreateSchema": {
+                "properties": {
+                    "candidate_name": {
+                        "type": "string",
+                        "title": "Candidate Name"
+                    },
+                    "interviewer_name": {
+                        "type": "string",
+                        "title": "Interviewer Name"
+                    },
+                    "interview_datetime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Interview Datetime"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "candidate_name",
+                    "interviewer_name",
+                    "interview_datetime"
+                ],
+                "title": "InterviewScheduleCreateSchema"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        },
+        "securitySchemes": {
+            "CustomHTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}
