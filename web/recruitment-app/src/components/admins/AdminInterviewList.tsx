@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
 import { FiMoreVertical, FiTrash2, FiTrendingUp } from 'react-icons/fi';
+import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 import { FaCalendarAlt, FaCommentDots, FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
 import { getApprovedCVs } from '../../services/api/cvApi';
 import {
@@ -16,13 +18,11 @@ import {
 import { Button, ReviewModal, Spinner, Row, Col } from '../layouts';
 import { STATUS } from '../../shared/types/adminTypes';
 import { initInterviewFilterValue, interviewFilterReducer } from '../../services/reducer/filterReducer/interviewFilter';
-import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status } from '../../shared/types/adminTypes';
+import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status, InterviewScoreCard } from '../../shared/types/adminTypes';
 import classNames from 'classnames/bind';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import styles from '../../assets/styles/admins/adminInterviewList.module.scss';
 import dataEmpty from '../../assets/images/data-empty.png';
-import { useDispatch } from 'react-redux';
-import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 
 const cx = classNames.bind({ ...frameStyles, ...styles });
 
@@ -46,7 +46,7 @@ interface InterviewScoreCardModal {
     interviewSession: Interview;
     interviewScoreCardTemplate: File | null;
     interviewScoreCardTranscript: File | null;
-    interviewScoreCards: InterviewQuestion[];
+    interviewScoreCard: InterviewScoreCard | null;
 }
 
 const AdminInterviewList = () => {
@@ -217,7 +217,7 @@ const AdminInterviewList = () => {
             interviewSession: interviewSession,
             interviewScoreCardTranscript: null,
             interviewScoreCardTemplate: null,
-            interviewScoreCards: [],
+            interviewScoreCard: null,
         });
     };
 
@@ -237,16 +237,27 @@ const AdminInterviewList = () => {
         e: React.ChangeEvent<HTMLInputElement>,
         type: 'SCORE_CARD_TEMPLATE' | 'SCORE_CARD_TRANSCRIPT',
     ): Promise<void> => {
-        // TODO: Check if user already auth or not
         const file = e.target.files?.[0];
         if (!file || !scoreCard) return;
+        if (
+            ![
+                'text/plain',
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/vtt',
+            ].includes(file.type)
+        ) {
+            throw new Error('File type is not allowed.');
+        }
+
         try {
             if (type === 'SCORE_CARD_TEMPLATE') {
+                if (['text/vtt'].includes(file.type)) {
+                    throw new Error('Template does not support VTT files.');
+                }
                 setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTemplate: file } : prevState));
             } else {
-                if (!['text/vtt'].includes(file.type)) {
-                    throw new Error('Invalid template file type! Only .vtt documents are allowed.');
-                }
                 setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTranscript: file } : prevState));
             }
         } catch (error) {
@@ -261,8 +272,10 @@ const AdminInterviewList = () => {
         async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
             e.preventDefault();
             if (!scoreCard?.interviewScoreCardTemplate || !scoreCard?.interviewScoreCardTranscript) return;
-            const response = await generateScoreCards(1, scoreCard.interviewScoreCardTemplate, scoreCard.interviewScoreCardTranscript);
-            console.log('Score Card Response: ', response);
+            // TODO: HARD_CODE_JD_ID will be read from /api/v1/recruitment/interviews response
+            const HARD_CODE_JD_ID = 2;
+            const response = await generateScoreCards(HARD_CODE_JD_ID, scoreCard.interviewScoreCardTemplate, scoreCard.interviewScoreCardTranscript);
+            setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response } : prev));
         },
         [scoreCard],
     );
@@ -279,216 +292,216 @@ const AdminInterviewList = () => {
         }
     };
 
-    console.log('approvedCVs:', approvedCVs);
-    console.log('interviews', interviews);
-
     return (
-        <div className={cx('admin-frame')}>
-            <div className={cx('admin-frame-header')}>
-                <h2 className={cx('admin-frame-header__title')}>Interview Schedules</h2>
-                <p className={cx('admin-frame-header__subtitle')}>Setup interview sessions with approved CVs by the system.</p>
+        <>
+            <div className={cx('admin-frame')}>
+                <div className={cx('admin-frame-header')}>
+                    <h2 className={cx('admin-frame-header__title')}>Interview Schedules</h2>
+                    <p className={cx('admin-frame-header__subtitle')}>Setup interview sessions with approved CVs by the system.</p>
+                </div>
+
+                <Row space={10} className={cx('admin-frame-filter')}>
+                    <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
+                        <input
+                            id="interview-list-candidate-name"
+                            type="text"
+                            placeholder="Search by candidate name"
+                            className={cx('admin-frame-filter__entry')}
+                            onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
+                        />
+                    </Col>
+                </Row>
+
+                <Row space={20} className={cx('interview')}>
+                    <Col size={{ md: 4, lg: 4, xl: 4 }} className={cx('interview-col')}>
+                        <h3 className={cx('interview-col__title', 'interview-col__title--pending')}>Scheduling Interviews</h3>
+
+                        <section className={cx('interview-col__section')}>
+                            {filteredApprovedCVs.map((cv) => (
+                                <div key={cv.id} className={cx('interview-col__card')}>
+                                    <div className={cx('interview-col__card-header')}>
+                                        <h3>{cv.candidate_name.toUpperCase()}</h3>
+
+                                        <section className={cx('card-header-popup')}>
+                                            <div className={cx('card-header-popup__icon')}>
+                                                <FiMoreVertical size={18} />
+                                            </div>
+
+                                            <div className={cx('card-header-popup__selection')}>
+                                                <p className={cx('card-header-popup__selection-option')} onClick={() => openScheduleModal(cv)}>
+                                                    <FaCalendarAlt
+                                                        size={12}
+                                                        className={cx(
+                                                            'card-header-popup__selection-option-icon',
+                                                            'card-header-popup__selection-option-icon--schedule',
+                                                        )}
+                                                    />
+                                                    Schedule session
+                                                </p>
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    <div className={cx('interview-col__card-content')}>
+                                        <p className={cx('interview-col__card-content-item')}>
+                                            <strong>Position:</strong> {cv.position}
+                                        </p>
+                                        <p className={cx('interview-col__card-content-item')}>
+                                            <strong>Score:</strong> {cv.matched_score}
+                                        </p>
+                                        <p className={cx('interview-col__card-content-item')}>
+                                            <strong>Email:</strong> {cv.email}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </section>
+                    </Col>
+
+                    <Col size={{ md: 4, lg: 4, xl: 4 }} className={cx('interview-col')}>
+                        <h3 className={cx('interview-col__title', 'interview-col__title--accepted')}>Upcoming Interviews</h3>
+
+                        <section className={cx('interview-col__section')}>
+                            {filteredInterviews.map(
+                                (interview) =>
+                                    interview.status === 'Pending' && (
+                                        <div key={interview.id} className={cx('interview-col__card')}>
+                                            <div className={cx('interview-col__card-header')}>
+                                                <h3>{interview.candidate_name.toUpperCase()}</h3>
+
+                                                <section className={cx('card-header-popup')}>
+                                                    <div className={cx('card-header-popup__icon')}>
+                                                        <FiMoreVertical size={18} />
+                                                    </div>
+
+                                                    <div className={cx('card-header-popup__selection')}>
+                                                        <p className={cx('card-header-popup__selection-option')}>
+                                                            <FaPen
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--edit',
+                                                                )}
+                                                            />
+                                                            Edit session
+                                                        </p>
+                                                        <p
+                                                            className={cx('card-header-popup__selection-option')}
+                                                            onClick={() => openInterviewQuestionModal(interview)}
+                                                        >
+                                                            <FaQuestionCircle
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--question',
+                                                                )}
+                                                            />
+                                                            Sample questions
+                                                        </p>
+                                                        <p className={cx('card-header-popup__selection-option')} onClick={() => openSessionModal(interview)}>
+                                                            <FaRegEdit
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--assessment',
+                                                                )}
+                                                            />
+                                                            Assessment
+                                                        </p>
+                                                        <p className={cx('card-header-popup__selection-option')} onClick={() => openScoreCardModal(interview)}>
+                                                            <FiTrendingUp
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--score-card',
+                                                                )}
+                                                            />
+                                                            Score Card
+                                                        </p>
+                                                    </div>
+                                                </section>
+                                            </div>
+
+                                            {/* TODO: Replace the missed information */}
+                                            <div className={cx('interview-col__card-content')}>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Position:</strong> React Web Developer (Frontend)
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Interviewer:</strong> {interview.interviewer_name}
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Venue:</strong> Online - MS Teams
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Datetime:</strong> {new Date(interview.interview_datetime).toLocaleString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ),
+                            )}
+                        </section>
+                    </Col>
+
+                    <Col size={{ md: 4, lg: 4, xl: 4 }} className={cx('interview-col')}>
+                        <h3 className={cx('interview-col__title', 'interview-col__title--result')}>Result of Interviews</h3>
+
+                        <section className={cx('interview-col__section')}>
+                            {filteredInterviews.map(
+                                (interview) =>
+                                    interview.status !== 'Pending' && (
+                                        <div key={interview.id} className={cx('interview-col__card')}>
+                                            <div className={cx('interview-col__card-header')}>
+                                                <h3>
+                                                    {interview.status === 'Accepted' && <span title="Passed">⭐ ⭐</span>}{' '}
+                                                    {interview.candidate_name.toUpperCase()}
+                                                </h3>
+
+                                                <section className={cx('card-header-popup')}>
+                                                    <div className={cx('card-header-popup__icon')}>
+                                                        <FiMoreVertical size={18} />
+                                                    </div>
+
+                                                    <div className={cx('card-header-popup__selection')}>
+                                                        <p className={cx('card-header-popup__selection-option')} onClick={() => deleteInterviewCard(interview)}>
+                                                            <FiTrash2
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--delete',
+                                                                )}
+                                                            />
+                                                            Delete candidate
+                                                        </p>
+                                                    </div>
+                                                </section>
+                                            </div>
+
+                                            {/* TODO: Replace the missed information */}
+                                            <div className={cx('interview-col__card-content')}>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Position:</strong> React Web Developer (Frontend)
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Interviewer:</strong> {interview.interviewer_name}
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Venue:</strong> Online - MS Teams
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Datetime:</strong> {new Date(interview.interview_datetime).toLocaleString()}
+                                                </p>
+                                                <p className={cx('interview-col__card-content-item')}>
+                                                    <strong>Status:</strong> {interview.status}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ),
+                            )}
+                        </section>
+                    </Col>
+                </Row>
             </div>
-
-            <Row space={10} className={cx('admin-frame-filter')}>
-                <Col size={{ sm: 5, md: 3, lg: 3, xl: 3 }}>
-                    <input
-                        id="interview-list-candidate-name"
-                        type="text"
-                        placeholder="Search by candidate name"
-                        className={cx('admin-frame-filter__entry')}
-                        onChange={(e) => dispatchFilter({ type: 'CANDIDATE_NAME', payload: e.target.value })}
-                    />
-                </Col>
-            </Row>
-
-            <Row space={20} className={cx('interview')}>
-                <Col size={{ md: 4, lg: 4, xl: 4 }} className={cx('interview-col')}>
-                    <h3 className={cx('interview-col__title', 'interview-col__title--pending')}>Scheduling Interviews</h3>
-
-                    <section className={cx('interview-col__section')}>
-                        {filteredApprovedCVs.map((cv) => (
-                            <div key={cv.id} className={cx('interview-col__card')}>
-                                <div className={cx('interview-col__card-header')}>
-                                    <h3>{cv.candidate_name.toUpperCase()}</h3>
-
-                                    <section className={cx('card-header-popup')}>
-                                        <div className={cx('card-header-popup__icon')}>
-                                            <FiMoreVertical size={18} />
-                                        </div>
-
-                                        <div className={cx('card-header-popup__selection')}>
-                                            <p className={cx('card-header-popup__selection-option')} onClick={() => openScheduleModal(cv)}>
-                                                <FaCalendarAlt
-                                                    size={12}
-                                                    className={cx(
-                                                        'card-header-popup__selection-option-icon',
-                                                        'card-header-popup__selection-option-icon--schedule',
-                                                    )}
-                                                />
-                                                Schedule session
-                                            </p>
-                                        </div>
-                                    </section>
-                                </div>
-
-                                <div className={cx('interview-col__card-content')}>
-                                    <p className={cx('interview-col__card-content-item')}>
-                                        <strong>Position:</strong> {cv.position}
-                                    </p>
-                                    <p className={cx('interview-col__card-content-item')}>
-                                        <strong>Score:</strong> {cv.matched_score}
-                                    </p>
-                                    <p className={cx('interview-col__card-content-item')}>
-                                        <strong>Email:</strong> {cv.email}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </section>
-                </Col>
-
-                <Col size={{ md: 4, lg: 4, xl: 4 }} className={cx('interview-col')}>
-                    <h3 className={cx('interview-col__title', 'interview-col__title--accepted')}>Upcoming Interviews</h3>
-
-                    <section className={cx('interview-col__section')}>
-                        {filteredInterviews.map(
-                            (interview) =>
-                                interview.status === 'Pending' && (
-                                    <div key={interview.id} className={cx('interview-col__card')}>
-                                        <div className={cx('interview-col__card-header')}>
-                                            <h3>{interview.candidate_name.toUpperCase()}</h3>
-
-                                            <section className={cx('card-header-popup')}>
-                                                <div className={cx('card-header-popup__icon')}>
-                                                    <FiMoreVertical size={18} />
-                                                </div>
-
-                                                <div className={cx('card-header-popup__selection')}>
-                                                    <p className={cx('card-header-popup__selection-option')}>
-                                                        <FaPen
-                                                            size={12}
-                                                            className={cx(
-                                                                'card-header-popup__selection-option-icon',
-                                                                'card-header-popup__selection-option-icon--edit',
-                                                            )}
-                                                        />
-                                                        Edit session
-                                                    </p>
-                                                    <p
-                                                        className={cx('card-header-popup__selection-option')}
-                                                        onClick={() => openInterviewQuestionModal(interview)}
-                                                    >
-                                                        <FaQuestionCircle
-                                                            size={12}
-                                                            className={cx(
-                                                                'card-header-popup__selection-option-icon',
-                                                                'card-header-popup__selection-option-icon--question',
-                                                            )}
-                                                        />
-                                                        Sample questions
-                                                    </p>
-                                                    <p className={cx('card-header-popup__selection-option')} onClick={() => openSessionModal(interview)}>
-                                                        <FaRegEdit
-                                                            size={12}
-                                                            className={cx(
-                                                                'card-header-popup__selection-option-icon',
-                                                                'card-header-popup__selection-option-icon--assessment',
-                                                            )}
-                                                        />
-                                                        Assessment
-                                                    </p>
-                                                    <p className={cx('card-header-popup__selection-option')} onClick={() => openScoreCardModal(interview)}>
-                                                        <FiTrendingUp
-                                                            size={12}
-                                                            className={cx(
-                                                                'card-header-popup__selection-option-icon',
-                                                                'card-header-popup__selection-option-icon--score-card',
-                                                            )}
-                                                        />
-                                                        Score Card
-                                                    </p>
-                                                </div>
-                                            </section>
-                                        </div>
-
-                                        {/* TODO: Replace the missed information */}
-                                        <div className={cx('interview-col__card-content')}>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Position:</strong> React Web Developer (Frontend)
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Interviewer:</strong> {interview.interviewer_name}
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Venue:</strong> Online - MS Teams
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Datetime:</strong> {new Date(interview.interview_datetime).toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ),
-                        )}
-                    </section>
-                </Col>
-
-                <Col size={{ md: 4, lg: 4, xl: 4 }} className={cx('interview-col')}>
-                    <h3 className={cx('interview-col__title', 'interview-col__title--result')}>Result of Interviews</h3>
-
-                    <section className={cx('interview-col__section')}>
-                        {filteredInterviews.map(
-                            (interview) =>
-                                interview.status !== 'Pending' && (
-                                    <div key={interview.id} className={cx('interview-col__card')}>
-                                        <div className={cx('interview-col__card-header')}>
-                                            <h3>
-                                                {interview.status === 'Accepted' && <span title="Passed">⭐ ⭐</span>} {interview.candidate_name.toUpperCase()}
-                                            </h3>
-
-                                            <section className={cx('card-header-popup')}>
-                                                <div className={cx('card-header-popup__icon')}>
-                                                    <FiMoreVertical size={18} />
-                                                </div>
-
-                                                <div className={cx('card-header-popup__selection')}>
-                                                    <p className={cx('card-header-popup__selection-option')} onClick={() => deleteInterviewCard(interview)}>
-                                                        <FiTrash2
-                                                            size={12}
-                                                            className={cx(
-                                                                'card-header-popup__selection-option-icon',
-                                                                'card-header-popup__selection-option-icon--delete',
-                                                            )}
-                                                        />
-                                                        Delete candidate
-                                                    </p>
-                                                </div>
-                                            </section>
-                                        </div>
-
-                                        {/* TODO: Replace the missed information */}
-                                        <div className={cx('interview-col__card-content')}>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Position:</strong> React Web Developer (Frontend)
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Interviewer:</strong> {interview.interviewer_name}
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Venue:</strong> Online - MS Teams
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Datetime:</strong> {new Date(interview.interview_datetime).toLocaleString()}
-                                            </p>
-                                            <p className={cx('interview-col__card-content-item')}>
-                                                <strong>Status:</strong> {interview.status}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ),
-                        )}
-                    </section>
-                </Col>
-            </Row>
 
             {/* Scheduling interview session for approved CVs - Scheduling Interviews column */}
             <ReviewModal
@@ -729,11 +742,7 @@ const AdminInterviewList = () => {
             </ReviewModal>
 
             {/* Interview Score Card - Upcoming Interviews column */}
-            <ReviewModal
-                title={`Interview score card of ${scoreCard?.interviewSession.candidate_name || 'Unknown'}`}
-                open={!!scoreCard}
-                onClose={closeScoreCardModal}
-            >
+            <ReviewModal title={`Score card of ${scoreCard?.interviewSession.candidate_name || 'Unknown'}`} open={!!scoreCard} onClose={closeScoreCardModal}>
                 {scoreCard && (
                     <>
                         <div className={cx('common-info')}>
@@ -755,69 +764,72 @@ const AdminInterviewList = () => {
                         <hr style={{ margin: '20px 0 30px' }} />
 
                         <div>
-                            {
-                                scoreCard.interviewScoreCards.length === 0 ? (
-                                    <form onSubmit={handleGetScoreCards}>
-                                        <div className={cx('form__group')}>
-                                            <label htmlFor="interview-score-card-template" className={cx('form__group-label')}>
-                                                Score card template:
-                                            </label>
-                                            <input
-                                                type="file"
-                                                accept=".vtt"
-                                                id="interview-score-card-template"
-                                                onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TEMPLATE')}
-                                                className={cx('form__group-entry--file')}
-                                            />
-                                        </div>
-                                        <div className={cx('form__group')}>
-                                            <label htmlFor="interview-score-card-transcript" className={cx('form__group-label')}>
-                                                Interview transcript (.vtt):
-                                            </label>
-                                            <input
-                                                type="file"
-                                                accept=".vtt"
-                                                id="interview-score-card-transcript"
-                                                onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TRANSCRIPT')}
-                                                className={cx('form__group-entry--file')}
-                                            />
-                                        </div>
-
-                                        <button
-                                            disabled={!(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript)}
-                                            className={cx('form__submit-btn', {
-                                                'form__submit-btn--disable': !(
-                                                    scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript
-                                                ),
-                                            })}
-                                            type="submit"
-                                        >
-                                            Submit
-                                        </button>
-                                    </form>
-                                ) : (
-                                    <div className={cx('no-question')}>
-                                        <p>Available Score Cards.</p>
+                            {!scoreCard.interviewScoreCard ? (
+                                <form onSubmit={handleGetScoreCards}>
+                                    <div className={cx('form__group')}>
+                                        <label htmlFor="interview-score-card-template" className={cx('form__group-label')}>
+                                            Score card template:
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt"
+                                            id="interview-score-card-template"
+                                            onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TEMPLATE')}
+                                            className={cx('form__group-entry--file')}
+                                        />
                                     </div>
-                                )
-                                // scoreCard.interviewScoreCards.map((question, index) => (
-                                //     <section key={question.id} className={cx('question')}>
-                                //         <strong className={cx('question__item', 'question__item--ask')}>
-                                //             <FaQuestionCircle className={cx('question__icon', 'question__icon--ask')} />
-                                //             Question {index + 1}: {question.original_question}
-                                //         </strong>
-                                //         <p className={cx('question__item')}>
-                                //             <FaCommentDots className={cx('question__icon', 'question__icon--answer')} />
-                                //             {question.answer}
-                                //         </p>
-                                //     </section>
-                                // ))
-                            }
+                                    <div className={cx('form__group')}>
+                                        <label htmlFor="interview-score-card-transcript" className={cx('form__group-label')}>
+                                            Interview transcript:
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt,.vtt"
+                                            id="interview-score-card-transcript"
+                                            onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TRANSCRIPT')}
+                                            className={cx('form__group-entry--file')}
+                                        />
+                                    </div>
+
+                                    <button
+                                        disabled={!(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript)}
+                                        className={cx('form__submit-btn', {
+                                            'form__submit-btn--disable': !(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript),
+                                        })}
+                                        type="submit"
+                                    >
+                                        Submit
+                                    </button>
+                                </form>
+                            ) : (
+                                <table className={cx('admin-table')}>
+                                    <thead>
+                                        <tr>
+                                            <th className={cx('admin-table__column-title')}>Description</th>
+                                            <th className={cx('admin-table__column-title')}>Confidence</th>
+                                            <th className={cx('admin-table__column-title')}>Proposal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {Object.keys(scoreCard.interviewScoreCard.proposed_grades).map((cardItem) => {
+                                            return (
+                                                <tr key={cardItem}>
+                                                    <td className={cx('admin-table__column-value')}>{cardItem}</td>
+                                                    <td className={cx('admin-table__column-value')}>{scoreCard.interviewScoreCard?.confidence[cardItem]}</td>
+                                                    <td className={cx('admin-table__column-value')}>
+                                                        {scoreCard.interviewScoreCard?.proposed_grades[cardItem]}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     </>
                 )}
             </ReviewModal>
-        </div>
+        </>
     );
 };
 

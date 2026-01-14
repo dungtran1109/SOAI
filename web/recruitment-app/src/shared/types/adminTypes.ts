@@ -83,3 +83,9 @@ export interface InterviewQuestion {
     answer: string;
     source: string;
 }
+
+export interface InterviewScoreCard {
+    confidence: { [key: string]: number };
+    proposed_grades: { [key: string]: number };
+    notes: string;
+}

@@ -1,4 +1,4 @@
-import type { Interview, InterviewSchedule, InterviewSession, InterviewQuestion } from '../../shared/types/adminTypes';
+import type { Interview, InterviewSchedule, InterviewSession, InterviewQuestion, InterviewScoreCard } from '../../shared/types/adminTypes';
 import axiosClient from '../axios/axiosClient';
 
 /**
@@ -120,17 +120,19 @@ export const getAvailableInterviewQuestions = async (cvId: number): Promise<Inte
  * @param transcriptFile - The interview session record.
  * @returns List of score cards.
  */
-export const generateScoreCards = async (jdId: number, templateFile: File, transcriptFile: File): Promise<InterviewQuestion[]> => {
-    const param = {
-        jdId,
-        templateFile,
-        transcriptFile,
-    };
-
+export const generateScoreCards = async (jdId: number, templateFile: File, transcriptFile: File): Promise<InterviewScoreCard | null> => {
     try {
-        return axiosClient.post(`/scorecards/auto-fill`, param);
+        const formData = new FormData();
+        formData.append('jdId', String(jdId));
+        formData.append('templateFile', templateFile);
+        formData.append('transcriptFile', transcriptFile);
+        return axiosClient.post('/scorecards/auto-fill', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     } catch (error) {
         console.error('[DEBUG generateScoreCards]', error);
-        return [];
+        return null;
     }
 };
