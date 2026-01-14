@@ -112,3 +112,25 @@ export const getAvailableInterviewQuestions = async (cvId: number): Promise<Inte
         return [];
     }
 };
+
+/**
+ * Get scord card after interviewing cadidate.
+ * @param jdId - ID of job description which candidate already applied.
+ * @param templateFile - The score card template.
+ * @param transcriptFile - The interview session record.
+ * @returns List of score cards.
+ */
+export const generateScoreCards = async (jdId: number, templateFile: File, transcriptFile: File): Promise<InterviewQuestion[]> => {
+    const param = {
+        jdId,
+        templateFile,
+        transcriptFile,
+    };
+
+    try {
+        return axiosClient.post(`/scorecards/auto-fill`, param);
+    } catch (error) {
+        console.error('[DEBUG generateScoreCards]', error);
+        return [];
+    }
+};

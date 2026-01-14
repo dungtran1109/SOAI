@@ -24,7 +24,7 @@ const AdminLayout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const location = useLocation();
-    const [disableAIChat, setDisableAIChat] = useState(false);
+    const [disableAIChat, setDisableAIChat] = useState<boolean>(false);
 
     useEffect(() => {
         setDisableAIChat(location.pathname === PRIVATE_ADMIN_ROUTE.aiAssistant);
