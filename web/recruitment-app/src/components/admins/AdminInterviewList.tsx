@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
-import { FiMoreVertical, FiTrash2, FiTrendingUp } from 'react-icons/fi';
+import { FiMoreVertical, FiTrash2, FiTwitch } from 'react-icons/fi';
 import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 import { FaCalendarAlt, FaCommentDots, FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
 import { getApprovedCVs } from '../../services/api/cvApi';
@@ -272,9 +272,11 @@ const AdminInterviewList = () => {
         async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
             e.preventDefault();
             if (!scoreCard?.interviewScoreCardTemplate || !scoreCard?.interviewScoreCardTranscript) return;
-            // TODO: HARD_CODE_JD_ID will be read from /api/v1/recruitment/interviews response
-            const HARD_CODE_JD_ID = 2;
-            const response = await generateScoreCards(HARD_CODE_JD_ID, scoreCard.interviewScoreCardTemplate, scoreCard.interviewScoreCardTranscript);
+            const response = await generateScoreCards(
+                scoreCard.interviewSession.jd_id,
+                scoreCard.interviewScoreCardTemplate,
+                scoreCard.interviewScoreCardTranscript,
+            );
             setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response } : prev));
         },
         [scoreCard],
@@ -396,7 +398,17 @@ const AdminInterviewList = () => {
                                                                     'card-header-popup__selection-option-icon--question',
                                                                 )}
                                                             />
-                                                            Sample questions
+                                                            Sample question
+                                                        </p>
+                                                        <p className={cx('card-header-popup__selection-option')} onClick={() => openScoreCardModal(interview)}>
+                                                            <FiTwitch
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--score-card',
+                                                                )}
+                                                            />
+                                                            Score card
                                                         </p>
                                                         <p className={cx('card-header-popup__selection-option')} onClick={() => openSessionModal(interview)}>
                                                             <FaRegEdit
@@ -408,16 +420,6 @@ const AdminInterviewList = () => {
                                                             />
                                                             Assessment
                                                         </p>
-                                                        <p className={cx('card-header-popup__selection-option')} onClick={() => openScoreCardModal(interview)}>
-                                                            <FiTrendingUp
-                                                                size={12}
-                                                                className={cx(
-                                                                    'card-header-popup__selection-option-icon',
-                                                                    'card-header-popup__selection-option-icon--score-card',
-                                                                )}
-                                                            />
-                                                            Score Card
-                                                        </p>
                                                     </div>
                                                 </section>
                                             </div>
@@ -425,7 +427,7 @@ const AdminInterviewList = () => {
                                             {/* TODO: Replace the missed information */}
                                             <div className={cx('interview-col__card-content')}>
                                                 <p className={cx('interview-col__card-content-item')}>
-                                                    <strong>Position:</strong> React Web Developer (Frontend)
+                                                    <strong>Position:</strong> {interview.position}
                                                 </p>
                                                 <p className={cx('interview-col__card-content-item')}>
                                                     <strong>Interviewer:</strong> {interview.interviewer_name}
@@ -622,8 +624,7 @@ const AdminInterviewList = () => {
                                 <strong>Name:</strong> {session.formData.candidate_name}
                             </p>
                             <p className={cx('common-info__personal-data')}>
-                                {/* TODO: Should show position instead of cv_application_id */}
-                                <strong>Position:</strong> {session.formData.cv_application_id}
+                                <strong>Position:</strong> {session.formData.position}
                             </p>
                             <p className={cx('common-info__personal-data')}>
                                 <strong>Interviewer:</strong> {session.formData.interviewer_name}
@@ -695,8 +696,7 @@ const AdminInterviewList = () => {
                                 <strong>Name:</strong> {questions.interviewSession.candidate_name}
                             </p>
                             <p className={cx('common-info__personal-data')}>
-                                {/* TODO: Should show position instead of cv_application_id */}
-                                <strong>Position:</strong> {questions.interviewSession.cv_application_id}
+                                <strong>Position:</strong> {questions.interviewSession.position}
                             </p>
                             <p className={cx('common-info__personal-data')}>
                                 <strong>Interviewer:</strong> {questions.interviewSession.interviewer_name}
@@ -750,8 +750,7 @@ const AdminInterviewList = () => {
                                 <strong>Name:</strong> {scoreCard?.interviewSession.candidate_name}
                             </p>
                             <p className={cx('common-info__personal-data')}>
-                                {/* TODO: Should show position instead of cv_application_id */}
-                                <strong>Position:</strong> {scoreCard?.interviewSession.cv_application_id}
+                                <strong>Position:</strong> {scoreCard?.interviewSession.position}
                             </p>
                             <p className={cx('common-info__personal-data')}>
                                 <strong>Interviewer:</strong> {scoreCard?.interviewSession.interviewer_name}
