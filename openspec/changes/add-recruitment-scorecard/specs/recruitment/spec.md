@@ -89,3 +89,26 @@ The system SHALL auto-fill a scorecard by processing uploaded artifacts: job des
 #### Scenario: Validation errors on artifacts
 - **WHEN** the template schema does not match expected format, or files are invalid/too large
 - **THEN** the API returns 4xx with details and does not proceed to auto-fill
+## MODIFIED Requirements
+
+### Requirement: Interview Listing Returns JD Context
+The system SHALL include job description ID and position in the interview listing response to enable scorecard linkage.
+
+#### Scenario: Get interviews with JD context
+- **WHEN** an administrator requests `GET /api/v1/recruitment/interviews`
+- **THEN** each interview record includes `jd_id` and `position` derived from the associated CV application
+
+#### Scenario: Filter interviews with JD context
+- **WHEN** filtering by `interview_date` or `candidate_name`
+- **THEN** the filtered results still include `jd_id` and `position` fields for each interview
+
+### Requirement: Approved CV Listing Returns JD Reference
+The system SHALL include job description ID in the approved CV listing response for tracking and scorecard association.
+
+#### Scenario: Get approved CVs with JD reference
+- **WHEN** an administrator requests `GET /api/v1/recruitment/cvs/approved`
+- **THEN** each approved CV record includes `jd_id` field
+
+#### Scenario: Filter approved CVs with JD reference
+- **WHEN** filtering by `candidate_name`
+- **THEN** the filtered results include `jd_id` for each approved CV

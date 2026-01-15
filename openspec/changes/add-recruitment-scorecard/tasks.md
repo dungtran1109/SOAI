@@ -4,6 +4,9 @@
 - [ ] 0.3 Confirm use of existing GenAI Provider `POST /api/v1/gen-ai/chat` for extraction (no new provider endpoint in v1).
 
 ## 1. Implementation
+- [x] 1.0 Update existing APIs for scorecard context:
+  - [x] 1.0.1 Modify `GET /api/v1/recruitment/interviews` to include `jd_id` and `position` in response (join through `cv_application_id`).
+  - [x] 1.0.2 Verify `GET /api/v1/recruitment/cvs/approved` includes `jd_id` in response (already implemented, document for completeness).
 - [ ] 1.1 Define DB schema: `scorecard_templates`, `scorecards`, `transcriptions` with FKs to `interviews`, `job_descriptions`, and `users`.
 - [ ] 1.2 Implement template upload API (multipart JSON) and storage; versioning strategy.
 - [ ] 1.3 Implement scorecard CRUD APIs: create/update grades, notes, decisions per `interviewId`.

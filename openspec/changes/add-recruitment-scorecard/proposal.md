@@ -29,6 +29,9 @@ All uploads MUST be validated for type, size limits, and safety; unsupported typ
 ## Impact
 - Affected specs: `recruitment` capability.
 - Affected code: Recruitment Agent (routers, models, services, Celery tasks), DB schema (new tables for `scorecard`, `scorecard_template`, `transcription`), possibly storage dirs for uploads.
+- API Modifications:
+  - `GET /api/v1/recruitment/interviews` response enhanced to include `jd_id` and `position` (derived from associated CV application) for scorecard linkage.
+  - `GET /api/v1/recruitment/cvs/approved` response already includes `jd_id` field (documented for clarity and scorecard association).
 - Frontend: New views/components to upload templates, fill scorecards, and view transcriptions.
 - Observability: Additional traces/metrics for scorecard lifecycle.
 

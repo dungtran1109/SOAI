@@ -7,6 +7,9 @@ Recruitment Agent requires a first-class scorecard feature to capture interview 
 
 ## Decisions
 - Endpoints live under `/api/v1/recruitment/scorecards/*` for scorecards and `/api/v1/recruitment/transcriptions/*` for transcriptions; templates at `/api/v1/recruitment/scorecards/templates/*`.
+- Existing endpoints enhanced for scorecard context:
+  - `GET /api/v1/recruitment/interviews` response includes `jd_id` and `position` (obtained from related CV application via `cv_application_id` FK) to enable scorecard-to-JD linkage.
+  - `GET /api/v1/recruitment/cvs/approved` response includes `jd_id` for tracking and scorecard association.
  - Template format: Accept TXT/PDF/DOCX uploads; parse to an internal JSON schema with sections/fields; store raw file and parsed schema + metadata.
 - Grading: Support numeric and categorical values; accept free-form notes; decisions captured as enum (`Accepted/Rejected/Pending`).
  - Storage: Use MySQL tables; large file blobs stored in filesystem/PV path `UPLOAD_DIR` when necessary; references kept in DB. Persist original uploads (TXT/PDF/DOCX/VTT) and parsed artifacts.
