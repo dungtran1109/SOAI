@@ -130,7 +130,7 @@ const AdminCVList = ({ disableColumns = [] }: AdminCVListProps) => {
         <div className={cx('admin-cv-list')}>
             <div className={cx('admin-frame')}>
                 <div className={cx('admin-frame-header')}>
-                    <h2 className={cx('admin-frame-header__title')}>CV Management</h2>
+                    <h2 className={cx('admin-frame-header__title')}>Candidate CVs</h2>
                     <p className={cx('admin-frame-header__subtitle')}>Manage all candidate CVs submitted to the system.</p>
                 </div>
 
