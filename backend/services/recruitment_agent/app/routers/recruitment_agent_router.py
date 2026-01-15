@@ -472,7 +472,7 @@ async def auto_fill_scorecard(
     gradeFile: Optional[UploadFile] = File(None),
     mode: Optional[str] = Form("genai"),
     model: Optional[str] = Form(None),
-    get_current_user: dict = JWTService.require_role("USER"),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
     db: Session = Depends(get_db),
 ):
     async def _save(path_dir: str, up: UploadFile) -> str:
