@@ -1,4 +1,4 @@
-import type { Interview, InterviewSchedule, InterviewSession, InterviewQuestion } from '../../shared/types/adminTypes';
+import type { Interview, InterviewSchedule, InterviewSession, InterviewQuestion, InterviewScoreCard } from '../../shared/types/adminTypes';
 import axiosClient from '../axios/axiosClient';
 
 /**
@@ -110,5 +110,29 @@ export const getAvailableInterviewQuestions = async (cvId: number): Promise<Inte
     } catch (error) {
         console.error('[DEBUG getAvailableInterviewQuestions]', error);
         return [];
+    }
+};
+
+/**
+ * Get scord card after interviewing cadidate.
+ * @param jdId - ID of job description which candidate already applied.
+ * @param templateFile - The score card template.
+ * @param transcriptFile - The interview session record.
+ * @returns List of score cards.
+ */
+export const generateScoreCards = async (jdId: number, templateFile: File, transcriptFile: File): Promise<InterviewScoreCard | null> => {
+    try {
+        const formData = new FormData();
+        formData.append('jdId', String(jdId));
+        formData.append('templateFile', templateFile);
+        formData.append('transcriptFile', transcriptFile);
+        return axiosClient.post('/scorecards/auto-fill', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    } catch (error) {
+        console.error('[DEBUG generateScoreCards]', error);
+        return null;
     }
 };

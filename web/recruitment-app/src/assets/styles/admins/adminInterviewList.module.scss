@@ -114,6 +114,10 @@
     color: $success-color;
 }
 
+.card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--score-card {
+    color: $error-color;
+}
+
 .card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--delete {
     color: $error-color;
 }
@@ -161,6 +165,10 @@
     border-radius: 8px;
     border: 1px solid #d1d5db;
     background-color: transparent;
+}
+
+.form__group-entry--file {
+    margin-left: 10px;
 }
 
 .form__confirm {

@@ -58,6 +58,8 @@ export interface JD {
 export interface Interview {
     id: number;
     cv_application_id: number;
+    jd_id: number;
+    position: string;
     candidate_name: string;
     interview_datetime: string;
     interviewer_name: string;
@@ -82,4 +84,10 @@ export interface InterviewQuestion {
     is_edited: boolean;
     answer: string;
     source: string;
+}
+
+export interface InterviewScoreCard {
+    confidence: { [key: string]: number };
+    proposed_grades: { [key: string]: number };
+    notes: string;
 }
