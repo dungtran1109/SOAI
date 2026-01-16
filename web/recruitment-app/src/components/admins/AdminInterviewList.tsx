@@ -47,6 +47,7 @@ interface InterviewScoreCardModal {
     interviewScoreCardTemplate: File | null;
     interviewScoreCardTranscript: File | null;
     interviewScoreCard: InterviewScoreCard | null;
+    isGenerating: boolean;
 }
 
 const AdminInterviewList = () => {
@@ -218,6 +219,7 @@ const AdminInterviewList = () => {
             interviewScoreCardTranscript: null,
             interviewScoreCardTemplate: null,
             interviewScoreCard: null,
+            isGenerating: false,
         });
     };
 
@@ -271,13 +273,14 @@ const AdminInterviewList = () => {
     const handleGetScoreCards = useCallback(
         async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
             e.preventDefault();
+            setScoreCard((prev) => (prev ? { ...prev, isGenerating: true } : prev));
             if (!scoreCard?.interviewScoreCardTemplate || !scoreCard?.interviewScoreCardTranscript) return;
             const response = await generateScoreCards(
                 scoreCard.interviewSession.jd_id,
                 scoreCard.interviewScoreCardTemplate,
                 scoreCard.interviewScoreCardTranscript,
             );
-            setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response } : prev));
+            setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response, isGenerating: false } : prev));
         },
         [scoreCard],
     );
@@ -791,13 +794,19 @@ const AdminInterviewList = () => {
                                     </div>
 
                                     <button
-                                        disabled={!(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript)}
+                                        disabled={
+                                            !(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript && !scoreCard.isGenerating)
+                                        }
                                         className={cx('form__submit-btn', {
-                                            'form__submit-btn--disable': !(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript),
+                                            'form__submit-btn--disable': !(
+                                                scoreCard.interviewScoreCardTranscript &&
+                                                scoreCard.interviewScoreCardTranscript &&
+                                                !scoreCard.isGenerating
+                                            ),
                                         })}
                                         type="submit"
                                     >
-                                        Submit
+                                        {!scoreCard.isGenerating ? 'Submit' : 'Generating...'}
                                     </button>
                                 </form>
                             ) : (
