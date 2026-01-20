@@ -46,6 +46,7 @@ interface InterviewScoreCardModal {
     interviewSession: Interview;
     interviewScoreCardTemplate: File | null;
     interviewScoreCardTranscript: File | null;
+    interviewScoreCardGrade: File | null;
     interviewScoreCard: InterviewScoreCard | null;
     isGenerating: boolean;
 }
@@ -218,6 +219,7 @@ const AdminInterviewList = () => {
             interviewSession: interviewSession,
             interviewScoreCardTranscript: null,
             interviewScoreCardTemplate: null,
+            interviewScoreCardGrade: null,
             interviewScoreCard: null,
             isGenerating: false,
         });
@@ -237,7 +239,7 @@ const AdminInterviewList = () => {
 
     const handleUploadInterviewScoreCard = async (
         e: React.ChangeEvent<HTMLInputElement>,
-        type: 'SCORE_CARD_TEMPLATE' | 'SCORE_CARD_TRANSCRIPT',
+        type: 'SCORE_CARD_TEMPLATE' | 'SCORE_CARD_TRANSCRIPT' | 'SCORE_CARD_GRADE',
     ): Promise<void> => {
         const file = e.target.files?.[0];
         if (!file || !scoreCard) return;
@@ -259,8 +261,14 @@ const AdminInterviewList = () => {
                     throw new Error('Template does not support VTT files.');
                 }
                 setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTemplate: file } : prevState));
-            } else {
+            } else if (type === 'SCORE_CARD_TRANSCRIPT') {
                 setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTranscript: file } : prevState));
+            } else {
+                // Grade file: allow txt, pdf, doc, docx
+                if (['text/vtt'].includes(file.type)) {
+                    throw new Error('Grade file does not support VTT files.');
+                }
+                setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardGrade: file } : prevState));
             }
         } catch (error) {
             toast.warning((error as Error).message, {
@@ -279,6 +287,7 @@ const AdminInterviewList = () => {
                 scoreCard.interviewSession.jd_id,
                 scoreCard.interviewScoreCardTemplate,
                 scoreCard.interviewScoreCardTranscript,
+                scoreCard.interviewScoreCardGrade || undefined,
             );
             setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response, isGenerating: false } : prev));
         },
@@ -792,14 +801,28 @@ const AdminInterviewList = () => {
                                             className={cx('form__group-entry--file')}
                                         />
                                     </div>
+                                    <div className={cx('form__group')}>
+                                        <label htmlFor="interview-score-card-grade" className={cx('form__group-label')}>
+                                            Grade file (optional):
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt"
+                                            id="interview-score-card-grade"
+                                            onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_GRADE')}
+                                            className={cx('form__group-entry--file')}
+                                        />
+                                    </div>
 
                                     <button
-                                        disabled={
-                                            !(scoreCard.interviewScoreCardTranscript && scoreCard.interviewScoreCardTranscript && !scoreCard.isGenerating)
-                                        }
+                                        disabled={!(
+                                            scoreCard.interviewScoreCardTemplate &&
+                                            scoreCard.interviewScoreCardTranscript &&
+                                            !scoreCard.isGenerating
+                                        )}
                                         className={cx('form__submit-btn', {
                                             'form__submit-btn--disable': !(
-                                                scoreCard.interviewScoreCardTranscript &&
+                                                scoreCard.interviewScoreCardTemplate &&
                                                 scoreCard.interviewScoreCardTranscript &&
                                                 !scoreCard.isGenerating
                                             ),
@@ -810,28 +833,34 @@ const AdminInterviewList = () => {
                                     </button>
                                 </form>
                             ) : (
-                                <table className={cx('admin-table')}>
-                                    <thead>
-                                        <tr>
-                                            <th className={cx('admin-table__column-title')}>Description</th>
-                                            <th className={cx('admin-table__column-title')}>Confidence</th>
-                                            <th className={cx('admin-table__column-title')}>Proposal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.keys(scoreCard.interviewScoreCard.proposed_grades).map((cardItem) => {
-                                            return (
-                                                <tr key={cardItem}>
-                                                    <td className={cx('admin-table__column-value')}>{cardItem}</td>
-                                                    <td className={cx('admin-table__column-value')}>{scoreCard.interviewScoreCard?.confidence[cardItem]}</td>
-                                                    <td className={cx('admin-table__column-value')}>
-                                                        {scoreCard.interviewScoreCard?.proposed_grades[cardItem]}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                scoreCard.interviewScoreCard && (scoreCard.interviewScoreCard as any).scorecard ? (
+                                    <div className={cx('text-view')}>
+                                        <pre style={{ whiteSpace: 'pre-wrap' }}>{(scoreCard.interviewScoreCard as any).scorecard}</pre>
+                                    </div>
+                                ) : (
+                                    <table className={cx('admin-table')}>
+                                        <thead>
+                                            <tr>
+                                                <th className={cx('admin-table__column-title')}>Description</th>
+                                                <th className={cx('admin-table__column-title')}>Confidence</th>
+                                                <th className={cx('admin-table__column-title')}>Proposal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.keys(scoreCard.interviewScoreCard.proposed_grades).map((cardItem) => {
+                                                return (
+                                                    <tr key={cardItem}>
+                                                        <td className={cx('admin-table__column-value')}>{cardItem}</td>
+                                                        <td className={cx('admin-table__column-value')}>{scoreCard.interviewScoreCard?.confidence[cardItem]}</td>
+                                                        <td className={cx('admin-table__column-value')}>
+                                                            {scoreCard.interviewScoreCard?.proposed_grades[cardItem]}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )
                             )}
                         </div>
                     </>
