@@ -35,12 +35,19 @@ class GenAI:
         self.model = model
         self.temperature = temperature
 
-    def invoke(self, message) -> str:
+    def invoke(self, message=None, messages=None) -> str:
         """
         Send a message to the GenAI agent and return the response.
         Uses httpx with connection pooling for better performance.
+        
+        Args:
+            message: Single user message string (legacy support)
+            messages: List of message dicts with 'role' and 'content' (preferred)
         """
-        messages = [{"role": "user", "content": message}]
+        if messages is None:
+            if message is None:
+                raise ValueError("Either message or messages must be provided")
+            messages = [{"role": "user", "content": message}]
 
         url = f"{SCHEMA}://{GENAI_HOST}/api/v1/gen-ai/chat"
         payload = {

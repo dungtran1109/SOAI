@@ -6,8 +6,6 @@ from config.database import DeclarativeBase, engine
 from config.log_config import LoggingConfig, AppLogger, enable_otlp_logging
 from config.constants import *
 import uvicorn
-from config.constants import *
-# This is required because we need to include model for sqlachemy identify and create tables automatically 
 from fastapi.staticfiles import StaticFiles
 # === OpenTelemetry setup ===
 from metrics.otel_setup import setup_otel

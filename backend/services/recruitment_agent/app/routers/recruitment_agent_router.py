@@ -1,4 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, Body, Query, HTTPException
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    Form,
+    Depends,
+    Body,
+    Query,
+    HTTPException,
+)
 from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from config.database import DatabaseSession
@@ -14,6 +23,11 @@ from services.jwt_service import JWTService
 from config.log_config import AppLogger
 from schemas.interview_question_schema import InterviewQuestionSchema
 from celery_tasks.pipeline import *
+from services.genai import GenAI
+from utils.utils import extract_text_from_pdf, ensure_text, clean_json_from_text
+from config.constants import UPLOAD_DIR
+from models.job_description import JobDescription
+import os, subprocess, json
 
 logger = AppLogger(__name__)
 router = APIRouter()
@@ -446,3 +460,232 @@ async def upload_proof_images(
         f"USER '{get_current_user.get('sub')}' is calling POST /cvs/{cv_id}/proofs/upload"
     )
     return recruitment_service.upload_proof_images(cv_id=cv_id, files=files)
+
+
+# === Scorecard Auto-Fill (single multipart upload) ===
+@router.post("/scorecards/auto-fill")
+async def auto_fill_scorecard(
+    jdFile: Optional[UploadFile] = File(None),
+    jdId: Optional[int] = Form(None),
+    templateFile: UploadFile = File(...),
+    transcriptFile: UploadFile = File(...),
+    gradeFile: Optional[UploadFile] = File(None),
+    mode: Optional[str] = Form("genai"),
+    model: Optional[str] = Form(None),
+    get_current_user: dict = JWTService.require_role("ADMIN"),
+    db: Session = Depends(get_db),
+):
+    async def _save(path_dir: str, up: UploadFile) -> str:
+        os.makedirs(path_dir, exist_ok=True)
+        path = os.path.join(path_dir, up.filename)
+        content = await up.read()
+        with open(path, "wb") as f:
+            f.write(content)
+        return path
+
+    async def _parse_txt(path: str) -> str:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            return ensure_text(f.read())
+
+    async def _convert_docx_to_pdf(path: str) -> str:
+        outdir = os.path.dirname(path)
+        subprocess.run(
+            [
+                "libreoffice",
+                "--headless",
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                outdir,
+                path,
+            ],
+            check=True,
+        )
+        pdf_path = os.path.splitext(path)[0] + ".pdf"
+        if not os.path.exists(pdf_path):
+            raise RuntimeError("DOCX to PDF conversion failed")
+        return pdf_path
+
+    async def _parse_file(up: UploadFile) -> str:
+        saved = await _save(os.path.join(UPLOAD_DIR, "autofill"), up)
+        ext = os.path.splitext(saved)[1].lower()
+        if ext == ".txt":
+            return await _parse_txt(saved)
+        if ext == ".pdf":
+            return ensure_text(extract_text_from_pdf(saved))
+        if ext == ".docx":
+            pdf_path = await _convert_docx_to_pdf(saved)
+            return ensure_text(extract_text_from_pdf(pdf_path))
+        if ext == ".vtt":
+            # Minimal VTT parsing: strip indices and timestamps
+            lines = []
+            with open(saved, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    s = line.strip()
+                    if "-->" in s or s.isdigit():
+                        continue
+                    if s:
+                        lines.append(s)
+            return "\n".join(lines)
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
+
+    # Parse JD input: prefer file over ID
+    if jdFile is not None:
+        jd_text = await _parse_file(jdFile)
+    else:
+        if jdId is None:
+            raise HTTPException(
+                status_code=400, detail="Either jdFile or jdId is required"
+            )
+        jd = db.query(JobDescription).filter_by(id=jdId).first()
+        if not jd:
+            raise HTTPException(status_code=404, detail="Job Description not found")
+        # Normalize JD content to text
+        parts = [
+            f"Position: {jd.position}",
+            f"Level: {jd.level}",
+            f"Experience Required: {jd.experience_required}",
+            f"Location: {jd.location}",
+            f"Recruiter: {jd.recruiter or ''}",
+            f"Hiring Manager: {jd.hiring_manager or ''}",
+            "--- Company Description ---",
+            ensure_text(jd.company_description or ""),
+            "--- Job Description ---",
+            ensure_text(jd.job_description or ""),
+            "--- Responsibilities ---",
+            ensure_text(jd.responsibilities or ""),
+            "--- Qualifications ---",
+            ensure_text(jd.qualifications or ""),
+            "--- Additional Information ---",
+            ensure_text(jd.additional_information or ""),
+        ]
+        jd_text = "\n".join([p for p in parts if p is not None])
+    tpl_text = await _parse_file(templateFile)
+    tr_text = await _parse_file(transcriptFile)
+    grade_text = await _parse_file(gradeFile) if gradeFile is not None else ""
+
+    # GenAI path
+    if (mode or "genai") == "genai":
+        try:
+            system_prompt = f"""
+You are an AI interview evaluation assistant.
+
+Your task is to generate a structured interview summary and fill a scorecard template
+STRICTLY based on the provided inputs:
+- Job Description
+- Interview Transcript
+- Grade (optional)
+- Scorecard Template
+
+════════════════════
+GENERAL RULES
+════════════════════
+1. Read the FULL Job Description and Interview Transcript before generating any output.
+2. Use ONLY information explicitly stated in the Job Description or Interview Transcript.
+3. Do NOT infer, assume, guess, rephrase, or add new information.
+4. Do NOT include opinions, explanations, or ratings unless explicitly requested.
+5. Follow the output format EXACTLY as specified.
+
+════════════════════
+MISSING INFORMATION RULE
+════════════════════
+If any category or field is NOT explicitly mentioned or cannot be clearly derived from
+the Job Description or Interview Transcript, output EXACTLY:
+
+N/A (not mentioned in Interview Transcript or Job Description)
+
+If a grade is NOT provided via {grade_text}, use the same N/A text for that grade.
+
+════════════════════
+OUTPUT STRUCTURE (STRICT)
+════════════════════
+
+Start with the following header on the FIRST LINE ONLY:
+
+**AI-Generated Summary: Interview**
+
+Then output ONE blank line.
+
+After that:
+- Output ONLY the Category and Content pairs defined in the Scorecard Template.
+- Each category must contain exactly two lines:
+  1. Category name
+  2. Filled content
+- REMOVE all ratings, explanations, or extra text.
+- Preserve the original order and wording of the template.
+- Do NOT add or remove categories.
+
+════════════════════
+SCORECARD TEMPLATE TO FILL
+════════════════════
+
+{tpl_text}
+
+════════════════════
+EVALUATION & GRADE SECTION
+════════════════════
+
+**Candidate Evaluation & Grade**
+
+For each section below:
+- Use the provided grade if available.
+- If not available, use the exact N/A rule.
+- Explanation must be based ONLY on explicit evidence.
+
+Client & Commercial (C&C)
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+Leadership of self and others
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+Soft Skills
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+TEAM
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+Technical Knowledge
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+════════════════════
+FINAL GRADE
+════════════════════
+
+**Final Grade**
+**<ONE overall grade or N/A>**
+<OUTPUT>
+"""
+
+            user_payload = f"""
+Job Description:
+{jd_text}
+
+Interview Transcript:
+{tr_text}
+
+Grade (if provided):
+{grade_text}
+"""
+
+            ga = GenAI()
+            logger.debug("Invoking GenAI for scorecard auto-fill...")
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_payload},
+            ]
+            # Invoke GenAI with validated messages
+            resp = ga.invoke(messages=messages)
+            content = ensure_text(resp)
+
+            # Return the full formatted response
+            return {
+                "scorecard": content,
+            }
+        except Exception as e:
+            logger.error(f"GenAI auto-fill failed, falling back: {e}")
+            return {"error": f"GenAI auto-fill failed: {str(e)}"}

@@ -561,12 +561,32 @@ class RecruitmentService:
                 InterviewSchedule.candidate_name.ilike(f"%{candidate_name}%")
             )
 
-        interviews = (
-            db.query(InterviewSchedule).filter(and_(*filters)).all()
-            if filters
-            else db.query(InterviewSchedule).all()
+        # Join with CVApplication to get jd_id and position
+        query = db.query(InterviewSchedule, CVApplication).join(
+            CVApplication, InterviewSchedule.cv_application_id == CVApplication.id
         )
-        logger.info(f"Fetched {len(interviews)} interviews.")
+        
+        if filters:
+            query = query.filter(and_(*filters))
+        
+        results = query.all()
+        
+        # Format response with jd_id and position
+        interviews = []
+        for interview, cv_app in results:
+            interview_dict = {
+                "id": interview.id,
+                "candidate_name": interview.candidate_name,
+                "interviewer_name": interview.interviewer_name,
+                "interview_datetime": interview.interview_datetime,
+                "status": interview.status,
+                "cv_application_id": interview.cv_application_id,
+                "jd_id": cv_app.jd_id,
+                "position": cv_app.matched_position,
+            }
+            interviews.append(interview_dict)
+        
+        logger.info(f"Fetched {len(interviews)} interviews with JD context.")
         return interviews
 
     def get_all_jds(self, db: Session, position: Optional[str] = None):

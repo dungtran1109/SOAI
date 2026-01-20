@@ -114,6 +114,10 @@
     color: $success-color;
 }
 
+.card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--score-card {
+    color: $error-color;
+}
+
 .card-header-popup__selection-option-icon.card-header-popup__selection-option-icon--delete {
     color: $error-color;
 }
@@ -161,6 +165,10 @@
     border-radius: 8px;
     border: 1px solid #d1d5db;
     background-color: transparent;
+}
+
+.form__group-entry--file {
+    margin-left: 10px;
 }
 
 .form__confirm {
@@ -257,4 +265,39 @@
 
 .question__icon.question__icon--answer {
     color: #6b7280;
+}
+
+.score-card {
+    border-radius: 4px;
+    border: 1px solid #cdd5e6;
+}
+
+.score-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    padding: 12px 10px;
+    background-color: #8faff5;
+}
+
+.score-card__body {
+    margin: 10px;
+}
+
+.score-card__header-title {
+    color: $text-white-color;
+    align-content: center;
+}
+
+.score-card__header-action {
+    display: flex;
+    gap: 6px;
+}
+
+.score-card__header-action button {
+    padding: 4px;
+    outline: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }

@@ -58,6 +58,8 @@ export interface JD {
 export interface Interview {
     id: number;
     cv_application_id: number;
+    jd_id: number;
+    position: string;
     candidate_name: string;
     interview_datetime: string;
     interviewer_name: string;

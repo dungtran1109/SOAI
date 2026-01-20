@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import { FiMoreVertical, FiTrash2 } from 'react-icons/fi';
+import { useDispatch } from 'react-redux';
+import { FiCopy, FiDownload, FiMoreVertical, FiTrash2, FiTwitch } from 'react-icons/fi';
+import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 import { FaCalendarAlt, FaCommentDots, FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
 import { getApprovedCVs } from '../../services/api/cvApi';
 import {
@@ -11,17 +13,17 @@ import {
     deleteInterview,
     generateInterviewQuestions,
     getAvailableInterviewQuestions,
+    generateScoreCards,
 } from '../../services/api/interviewApi';
 import { Button, ReviewModal, Spinner, Row, Col } from '../layouts';
 import { STATUS } from '../../shared/types/adminTypes';
 import { initInterviewFilterValue, interviewFilterReducer } from '../../services/reducer/filterReducer/interviewFilter';
 import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status } from '../../shared/types/adminTypes';
+import ReactMarkdown from 'react-markdown';
 import classNames from 'classnames/bind';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import styles from '../../assets/styles/admins/adminInterviewList.module.scss';
 import dataEmpty from '../../assets/images/data-empty.png';
-import { useDispatch } from 'react-redux';
-import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 
 const cx = classNames.bind({ ...frameStyles, ...styles });
 
@@ -41,6 +43,15 @@ interface InterviewQuestionModal {
     isGenerating: boolean;
 }
 
+interface InterviewScoreCardModal {
+    interviewSession: Interview;
+    interviewScoreCardTemplate: File | null;
+    interviewScoreCardTranscript: File | null;
+    interviewScoreCardGrade: File | null;
+    interviewScoreCard: string;
+    isGenerating: boolean;
+}
+
 const AdminInterviewList = () => {
     const [approvedCVs, setApprovedCVs] = useState<CV[]>([]);
     const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -51,6 +62,7 @@ const AdminInterviewList = () => {
     const [schedule, setSchedule] = useState<InterviewScheduleModal | null>(null);
     const [session, setSession] = useState<InterviewSessionModal | null>(null);
     const [questions, setQuestions] = useState<InterviewQuestionModal | null>(null);
+    const [scoreCard, setScoreCard] = useState<InterviewScoreCardModal | null>(null);
 
     const fetchApprovedCVsAndInterviews = useCallback(() => {
         const fetchApprovedCVs = async () => {
@@ -203,6 +215,108 @@ const AdminInterviewList = () => {
         }
     };
 
+    const openScoreCardModal = (interviewSession: Interview): void => {
+        setScoreCard({
+            interviewSession: interviewSession,
+            interviewScoreCardTranscript: null,
+            interviewScoreCardTemplate: null,
+            interviewScoreCardGrade: null,
+            interviewScoreCard: '',
+            isGenerating: false,
+        });
+    };
+
+    const closeScoreCardModal = useCallback((): void => {
+        if (scoreCard) {
+            if (scoreCard.interviewScoreCardTemplate || scoreCard.interviewScoreCardTranscript) {
+                if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                    setScoreCard(null);
+                }
+            } else {
+                setScoreCard(null);
+            }
+        }
+    }, [scoreCard]);
+
+    const handleUploadInterviewScoreCard = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+        type: 'SCORE_CARD_TEMPLATE' | 'SCORE_CARD_TRANSCRIPT' | 'SCORE_CARD_GRADE',
+    ): Promise<void> => {
+        const file = e.target.files?.[0];
+        if (!file || !scoreCard) return;
+        if (
+            ![
+                'text/plain',
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/vtt',
+            ].includes(file.type)
+        ) {
+            throw new Error('File type is not allowed.');
+        }
+
+        try {
+            if (type === 'SCORE_CARD_TEMPLATE') {
+                if (['text/vtt'].includes(file.type)) {
+                    throw new Error('Template does not support VTT files.');
+                }
+                setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTemplate: file } : prevState));
+            } else if (type === 'SCORE_CARD_TRANSCRIPT') {
+                setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTranscript: file } : prevState));
+            } else if (type === 'SCORE_CARD_GRADE') {
+                if (['text/vtt'].includes(file.type)) {
+                    throw new Error('Grade file does not support VTT files.');
+                }
+                setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardGrade: file } : prevState));
+            }
+        } catch (error) {
+            toast.warning((error as Error).message, {
+                position: 'top-center',
+                hideProgressBar: true,
+            });
+        }
+    };
+
+    const handleGetScoreCard = useCallback(
+        async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+            e.preventDefault();
+            setScoreCard((prev) => (prev ? { ...prev, isGenerating: true } : prev));
+            if (!scoreCard?.interviewScoreCardTemplate || !scoreCard?.interviewScoreCardTranscript) return;
+            const response = await generateScoreCards(
+                scoreCard.interviewSession.jd_id,
+                scoreCard.interviewScoreCardTemplate,
+                scoreCard.interviewScoreCardTranscript,
+                scoreCard.interviewScoreCardGrade,
+            );
+            setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response, isGenerating: false } : prev));
+        },
+        [scoreCard],
+    );
+
+    const handleCopyScoreCard = useCallback(() => {
+        if (scoreCard?.interviewScoreCard) {
+            navigator.clipboard.writeText(scoreCard.interviewScoreCard).then(
+                () => toast.success('Copied scorecard to clipboard.', { position: 'top-center', hideProgressBar: true }),
+                () => toast.error('Failed to copy scorecard.', { position: 'top-center', hideProgressBar: true }),
+            );
+        }
+    }, [scoreCard]);
+
+    const handleDownloadScoreCard = useCallback(() => {
+        if (scoreCard?.interviewScoreCard) {
+            const blob = new Blob([scoreCard.interviewScoreCard], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scorecard_${scoreCard.interviewSession.candidate_name}_${scoreCard.interviewSession.position}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+    }, [scoreCard]);
+
     const deleteInterviewCard = async (interviewCard: Interview) => {
         if (window.confirm(`Are you sure to delete the interview session of ${interviewCard.candidate_name}?`)) {
             const response = await deleteInterview(interviewCard.id);
@@ -319,7 +433,17 @@ const AdminInterviewList = () => {
                                                                     'card-header-popup__selection-option-icon--question',
                                                                 )}
                                                             />
-                                                            Sample questions
+                                                            Sample question
+                                                        </p>
+                                                        <p className={cx('card-header-popup__selection-option')} onClick={() => openScoreCardModal(interview)}>
+                                                            <FiTwitch
+                                                                size={12}
+                                                                className={cx(
+                                                                    'card-header-popup__selection-option-icon',
+                                                                    'card-header-popup__selection-option-icon--score-card',
+                                                                )}
+                                                            />
+                                                            Score card
                                                         </p>
                                                         <p className={cx('card-header-popup__selection-option')} onClick={() => openSessionModal(interview)}>
                                                             <FaRegEdit
@@ -338,7 +462,7 @@ const AdminInterviewList = () => {
                                             {/* TODO: Replace the missed information */}
                                             <div className={cx('interview-col__card-content')}>
                                                 <p className={cx('interview-col__card-content-item')}>
-                                                    <strong>Position:</strong> React Web Developer (Frontend)
+                                                    <strong>Position:</strong> {interview.position}
                                                 </p>
                                                 <p className={cx('interview-col__card-content-item')}>
                                                     <strong>Interviewer:</strong> {interview.interviewer_name}
@@ -414,230 +538,343 @@ const AdminInterviewList = () => {
                         </section>
                     </Col>
                 </Row>
+            </div>
 
-                {/* Scheduling interview session for approved CVs - Scheduling Interviews column */}
-                <ReviewModal title={`Schedule Interview for ${schedule?.formData.candidate_name}`} open={!!schedule} onClose={closeScheduleModal} width={700}>
-                    {schedule && (
-                        <>
-                            <div className={cx('common-info')}>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Name:</strong> {schedule.formData.candidate_name}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Email:</strong> {schedule.formData.email}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Position:</strong> {schedule.formData.position}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Score:</strong> {schedule.formData.matched_score}
-                                </p>
-                            </div>
-                            <hr style={{ margin: '20px 0 30px' }} />
-                            <form onSubmit={handleInterviewSchedule}>
-                                <Row space={10} className={cx('form__group')}>
-                                    <Col size={{ md: 6, lg: 7, xl: 6 }}>
-                                        <input
-                                            type="email"
-                                            value={schedule.formData.interviewer_name}
-                                            onChange={(e) =>
-                                                setSchedule({
-                                                    ...schedule,
-                                                    formData: {
-                                                        ...schedule.formData,
-                                                        interviewer_name: e.target.value,
-                                                    },
-                                                })
-                                            }
-                                            className={cx('form__group-entry')}
-                                            placeholder="Email of Interviewer"
-                                            required
-                                        />
-                                    </Col>
+            {/* Scheduling interview session for approved CVs - Scheduling Interviews column */}
+            <ReviewModal
+                title={`Schedule Interview for ${schedule?.formData.candidate_name || 'Unknown'}`}
+                open={!!schedule}
+                onClose={closeScheduleModal}
+                width={700}
+            >
+                {schedule && (
+                    <>
+                        <div className={cx('common-info')}>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Name:</strong> {schedule.formData.candidate_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Email:</strong> {schedule.formData.email}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Position:</strong> {schedule.formData.position}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Score:</strong> {schedule.formData.matched_score}
+                            </p>
+                        </div>
 
-                                    <Col size={{ md: 6, lg: 5, xl: 6 }}>
-                                        <input
-                                            type="datetime-local"
-                                            value={schedule.formData.interview_datetime}
-                                            onChange={(e) =>
-                                                setSchedule({
-                                                    ...schedule,
-                                                    formData: {
-                                                        ...schedule.formData,
-                                                        interview_datetime: e.target.value,
-                                                    },
-                                                })
-                                            }
-                                            className={cx('form__group-entry')}
-                                            placeholder="Datetime"
-                                            required
-                                        />
-                                    </Col>
-                                </Row>
+                        <hr style={{ margin: '20px 0 30px' }} />
 
-                                <div className={cx('form__group')}>
+                        <form onSubmit={handleInterviewSchedule}>
+                            <Row space={10} className={cx('form__group')}>
+                                <Col size={{ md: 6, lg: 7, xl: 6 }}>
                                     <input
-                                        type="text"
-                                        value={schedule.formData.interview_location}
+                                        type="email"
+                                        value={schedule.formData.interviewer_name}
                                         onChange={(e) =>
                                             setSchedule({
                                                 ...schedule,
                                                 formData: {
                                                     ...schedule.formData,
-                                                    interview_location: e.target.value,
+                                                    interviewer_name: e.target.value,
                                                 },
                                             })
                                         }
                                         className={cx('form__group-entry')}
-                                        placeholder="Location"
+                                        placeholder="Email of Interviewer"
                                         required
                                     />
-                                </div>
+                                </Col>
 
-                                <label className={cx('form__confirm')}>
-                                    <input type="checkbox" onChange={(e) => setSchedule({ ...schedule, formConfirm: e.target.checked })} />I agree so that
-                                    sending an email to the candidate and interviewer based on the information.
-                                </label>
-
-                                <button
-                                    disabled={!schedule.formConfirm}
-                                    className={cx('form__submit-btn', {
-                                        'form__submit-btn--disable': !schedule.formConfirm,
-                                    })}
-                                    type="submit"
-                                >
-                                    Send
-                                </button>
-                            </form>
-                        </>
-                    )}
-                </ReviewModal>
-
-                {/* Assess interview session - Upcoming Interviews column */}
-                <ReviewModal title={`Interview Assessment for ${session?.formData.candidate_name}`} open={!!session} onClose={closeSessionModal} width={700}>
-                    {session && (
-                        <>
-                            <div className={cx('common-info')}>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Name:</strong> {session.formData.candidate_name}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    {/* TODO: Should show position instead of cv_application_id */}
-                                    <strong>Position:</strong> {session.formData.cv_application_id}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Interviewer:</strong> {session.formData.interviewer_name}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Datetime:</strong> {new Date(session.formData.interview_datetime).toLocaleString()}
-                                </p>
-                            </div>
-                            <hr style={{ margin: '20px 0 30px' }} />
-                            <form onSubmit={handleInterviewSession}>
-                                <div className={cx('form__group')}>
-                                    <label htmlFor="result-of-interview" className={cx('form__group-label')}>
-                                        Result of Interview
-                                    </label>
-                                    <select
-                                        id="result-of-interview"
-                                        className={cx('form__group-entry')}
+                                <Col size={{ md: 6, lg: 5, xl: 6 }}>
+                                    <input
+                                        type="datetime-local"
+                                        value={schedule.formData.interview_datetime}
                                         onChange={(e) =>
-                                            setSession({
-                                                ...session,
+                                            setSchedule({
+                                                ...schedule,
                                                 formData: {
-                                                    ...session.formData,
-                                                    status: e.target.value as Status,
+                                                    ...schedule.formData,
+                                                    interview_datetime: e.target.value,
                                                 },
                                             })
                                         }
-                                    >
-                                        {STATUS.map((status) => (
-                                            <option key={status} value={status}>
-                                                {status}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className={cx('form__group')}>
-                                    <label htmlFor="comment-of-interview" className={cx('form__group-label')}>
-                                        Comment
-                                    </label>
-                                    <textarea id="comment-of-interview" className={cx('form__group-entry')} />
-                                </div>
+                                        className={cx('form__group-entry')}
+                                        placeholder="Datetime"
+                                        required
+                                    />
+                                </Col>
+                            </Row>
 
-                                <label className={cx('form__confirm')}>
-                                    <input type="checkbox" onChange={(e) => setSession({ ...session, formConfirm: e.target.checked })} />I agree so that notice
-                                    this result to the candidate.
-                                </label>
-
-                                <button
-                                    disabled={!session.formConfirm}
-                                    className={cx('form__submit-btn', {
-                                        'form__submit-btn--disable': !session.formConfirm,
-                                    })}
-                                    type="submit"
-                                >
-                                    Send
-                                </button>
-                            </form>
-                        </>
-                    )}
-                </ReviewModal>
-
-                {/* Interview questions - Upcoming Interviews column */}
-                <ReviewModal title={`Interview Questions`} open={!!questions} onClose={closeInterviewQuestionModal}>
-                    {questions && (
-                        <>
-                            <div className={cx('common-info')}>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Name:</strong> {questions.interviewSession.candidate_name}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    {/* TODO: Should show position instead of cv_application_id */}
-                                    <strong>Position:</strong> {questions.interviewSession.cv_application_id}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Interviewer:</strong> {questions.interviewSession.interviewer_name}
-                                </p>
-                                <p className={cx('common-info__personal-data')}>
-                                    <strong>Datetime:</strong> {new Date(questions.interviewSession.interview_datetime).toLocaleString()}
-                                </p>
+                            <div className={cx('form__group')}>
+                                <input
+                                    type="text"
+                                    value={schedule.formData.interview_location}
+                                    onChange={(e) =>
+                                        setSchedule({
+                                            ...schedule,
+                                            formData: {
+                                                ...schedule.formData,
+                                                interview_location: e.target.value,
+                                            },
+                                        })
+                                    }
+                                    className={cx('form__group-entry')}
+                                    placeholder="Location"
+                                    required
+                                />
                             </div>
-                            <hr style={{ margin: '20px 0 30px' }} />
 
-                            {questions.isGenerating ? (
-                                <Spinner label="Generating interview questions, please wait for some times!" />
-                            ) : (
-                                <div>
-                                    <div className={cx('generation-question')}>
-                                        <Button type="question" onClick={regenerateInterviewQuestions} />
-                                        <span>Regenerate Questions</span>
+                            <label className={cx('form__confirm')}>
+                                <input type="checkbox" onChange={(e) => setSchedule({ ...schedule, formConfirm: e.target.checked })} />I agree so that sending
+                                an email to the candidate and interviewer based on the information.
+                            </label>
+
+                            <button
+                                disabled={!schedule.formConfirm}
+                                className={cx('form__submit-btn', {
+                                    'form__submit-btn--disable': !schedule.formConfirm,
+                                })}
+                                type="submit"
+                            >
+                                Send
+                            </button>
+                        </form>
+                    </>
+                )}
+            </ReviewModal>
+
+            {/* Assess interview session - Upcoming Interviews column */}
+            <ReviewModal
+                title={`Interview Assessment for ${session?.formData.candidate_name || 'Unknown'}`}
+                open={!!session}
+                onClose={closeSessionModal}
+                width={700}
+            >
+                {session && (
+                    <>
+                        <div className={cx('common-info')}>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Name:</strong> {session.formData.candidate_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Position:</strong> {session.formData.position}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Interviewer:</strong> {session.formData.interviewer_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Datetime:</strong> {new Date(session.formData.interview_datetime).toLocaleString()}
+                            </p>
+                        </div>
+
+                        <hr style={{ margin: '20px 0 30px' }} />
+
+                        <form onSubmit={handleInterviewSession}>
+                            <div className={cx('form__group')}>
+                                <label htmlFor="result-of-interview" className={cx('form__group-label')}>
+                                    Result of Interview
+                                </label>
+                                <select
+                                    id="result-of-interview"
+                                    className={cx('form__group-entry')}
+                                    onChange={(e) =>
+                                        setSession({
+                                            ...session,
+                                            formData: {
+                                                ...session.formData,
+                                                status: e.target.value as Status,
+                                            },
+                                        })
+                                    }
+                                >
+                                    {STATUS.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className={cx('form__group')}>
+                                <label htmlFor="comment-of-interview" className={cx('form__group-label')}>
+                                    Comment
+                                </label>
+                                <textarea id="comment-of-interview" className={cx('form__group-entry')} />
+                            </div>
+
+                            <label className={cx('form__confirm')}>
+                                <input type="checkbox" onChange={(e) => setSession({ ...session, formConfirm: e.target.checked })} />I agree so that notice this
+                                result to the candidate.
+                            </label>
+
+                            <button
+                                disabled={!session.formConfirm}
+                                className={cx('form__submit-btn', {
+                                    'form__submit-btn--disable': !session.formConfirm,
+                                })}
+                                type="submit"
+                            >
+                                Send
+                            </button>
+                        </form>
+                    </>
+                )}
+            </ReviewModal>
+
+            {/* Interview questions - Upcoming Interviews column */}
+            <ReviewModal title={`Interview Questions`} open={!!questions} onClose={closeInterviewQuestionModal}>
+                {questions && (
+                    <>
+                        <div className={cx('common-info')}>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Name:</strong> {questions.interviewSession.candidate_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Position:</strong> {questions.interviewSession.position}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Interviewer:</strong> {questions.interviewSession.interviewer_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Datetime:</strong> {new Date(questions.interviewSession.interview_datetime).toLocaleString()}
+                            </p>
+                        </div>
+
+                        <hr style={{ margin: '20px 0 30px' }} />
+
+                        {questions.isGenerating ? (
+                            <Spinner label="Generating interview questions, please wait for some times!" />
+                        ) : (
+                            <div>
+                                <div className={cx('generation-question')}>
+                                    <Button type="question" onClick={regenerateInterviewQuestions} />
+                                    <span>Regenerate Questions</span>
+                                </div>
+
+                                {questions.interviewQuestions.length == 0 ? (
+                                    <div className={cx('no-question')}>
+                                        <img src={dataEmpty} alt="There are no question available." width={80} />
+                                    </div>
+                                ) : (
+                                    questions.interviewQuestions.map((question, index) => (
+                                        <section key={question.id} className={cx('question')}>
+                                            <strong className={cx('question__item', 'question__item--ask')}>
+                                                <FaQuestionCircle className={cx('question__icon', 'question__icon--ask')} />
+                                                Question {index + 1}: {question.original_question}
+                                            </strong>
+                                            <p className={cx('question__item')}>
+                                                <FaCommentDots className={cx('question__icon', 'question__icon--answer')} />
+                                                {question.answer}
+                                            </p>
+                                        </section>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+            </ReviewModal>
+
+            {/* Interview Score Card - Upcoming Interviews column */}
+            <ReviewModal title={`Score card of ${scoreCard?.interviewSession.candidate_name || 'Unknown'}`} open={!!scoreCard} onClose={closeScoreCardModal}>
+                {scoreCard && (
+                    <>
+                        <div className={cx('common-info')}>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Name:</strong> {scoreCard?.interviewSession.candidate_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Position:</strong> {scoreCard?.interviewSession.position}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Interviewer:</strong> {scoreCard?.interviewSession.interviewer_name}
+                            </p>
+                            <p className={cx('common-info__personal-data')}>
+                                <strong>Datetime:</strong> {new Date(scoreCard?.interviewSession.interview_datetime).toLocaleString()}
+                            </p>
+                        </div>
+
+                        <hr style={{ margin: '20px 0 30px' }} />
+
+                        <div>
+                            {!scoreCard.interviewScoreCard ? (
+                                <form onSubmit={handleGetScoreCard}>
+                                    <div className={cx('form__group')}>
+                                        <label htmlFor="interview-score-card-template" className={cx('form__group-label')}>
+                                            Score card template:
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt"
+                                            id="interview-score-card-template"
+                                            onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TEMPLATE')}
+                                            className={cx('form__group-entry--file')}
+                                            required
+                                        />
+                                    </div>
+                                    <div className={cx('form__group')}>
+                                        <label htmlFor="interview-score-card-transcript" className={cx('form__group-label')}>
+                                            Interview transcript:
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt,.vtt"
+                                            id="interview-score-card-transcript"
+                                            onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TRANSCRIPT')}
+                                            className={cx('form__group-entry--file')}
+                                            required
+                                        />
+                                    </div>
+                                    <div className={cx('form__group')}>
+                                        <label htmlFor="interview-score-card-grade" className={cx('form__group-label')}>
+                                            Grade file (optional):
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.txt"
+                                            id="interview-score-card-grade"
+                                            onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_GRADE')}
+                                            className={cx('form__group-entry--file')}
+                                        />
                                     </div>
 
-                                    {!questions.interviewQuestions ? (
-                                        <div className={cx('no-question')}>
-                                            <img src={dataEmpty} alt="There are no question available." width={80} />
+                                    <button
+                                        disabled={!(scoreCard.interviewScoreCardTemplate && scoreCard.interviewScoreCardTranscript && !scoreCard.isGenerating)}
+                                        className={cx('form__submit-btn', {
+                                            'form__submit-btn--disable': !(
+                                                scoreCard.interviewScoreCardTemplate &&
+                                                scoreCard.interviewScoreCardTranscript &&
+                                                !scoreCard.isGenerating
+                                            ),
+                                        })}
+                                        type="submit"
+                                    >
+                                        {!scoreCard.isGenerating ? 'Submit' : 'Generating...'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className={cx('score-card')}>
+                                    <div className={cx('score-card__header')}>
+                                        <h2 className={cx('score-card__header-title')}>Interview Score Card</h2>
+                                        <div className={cx('score-card__header-action')}>
+                                            <button type="button" onClick={handleCopyScoreCard}>
+                                                <FiCopy />
+                                            </button>
+                                            <button type="button" onClick={handleDownloadScoreCard}>
+                                                <FiDownload />
+                                            </button>
                                         </div>
-                                    ) : (
-                                        questions.interviewQuestions?.map((question, index) => (
-                                            <section key={question.id} className={cx('question')}>
-                                                <strong className={cx('question__item', 'question__item--ask')}>
-                                                    <FaQuestionCircle className={cx('question__icon', 'question__icon--ask')} />
-                                                    Question {index + 1}: {question.original_question}
-                                                </strong>
-                                                <p className={cx('question__item')}>
-                                                    <FaCommentDots className={cx('question__icon', 'question__icon--answer')} />
-                                                    {question.answer}
-                                                </p>
-                                            </section>
-                                        ))
-                                    )}
+                                    </div>
+                                    <div className={cx('score-card__body')}>
+                                        <ReactMarkdown>{scoreCard.interviewScoreCard}</ReactMarkdown>
+                                    </div>
                                 </div>
                             )}
-                        </>
-                    )}
-                </ReviewModal>
-            </div>
+                        </div>
+                    </>
+                )}
+            </ReviewModal>
         </>
     );
 };

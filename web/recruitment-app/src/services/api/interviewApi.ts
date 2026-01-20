@@ -112,3 +112,37 @@ export const getAvailableInterviewQuestions = async (cvId: number): Promise<Inte
         return [];
     }
 };
+
+/**
+ * Get scord card after interviewing cadidate.
+ * @param jdId - ID of job description which candidate already applied.
+ * @param templateFile - The score card template.
+ * @param transcriptFile - The interview session record.
+ * @param gradeFile - The template of grade (optional).
+ * @returns Score card assessment as a string.
+ */
+export const generateScoreCards = async (jdId: number, templateFile: File, transcriptFile: File, gradeFile: File | null): Promise<string> => {
+    try {
+        const formData = new FormData();
+        formData.append('jdId', String(jdId));
+        formData.append('templateFile', templateFile);
+        formData.append('transcriptFile', transcriptFile);
+        if (gradeFile) {
+            formData.append('gradeFile', gradeFile);
+        }
+
+        interface ScoreCardResponse {
+            scorecard: string;
+        }
+
+        const response: ScoreCardResponse = await axiosClient.post('/scorecards/auto-fill', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.scorecard;
+    } catch (error) {
+        console.error('[DEBUG generateScoreCards]', error);
+        return 'We are unable to generate the scorecard at the moment. Please try again later.';
+    }
+};
