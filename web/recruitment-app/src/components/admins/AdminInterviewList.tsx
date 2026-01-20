@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
-import { FiMoreVertical, FiTrash2, FiTwitch } from 'react-icons/fi';
+import { FiCopy, FiDownload, FiMoreVertical, FiTrash2, FiTwitch } from 'react-icons/fi';
 import { setNumberOfInterview } from '../../services/redux/adminSlices/adminStatisticsSlice';
 import { FaCalendarAlt, FaCommentDots, FaPen, FaQuestionCircle, FaRegEdit } from 'react-icons/fa';
 import { getApprovedCVs } from '../../services/api/cvApi';
@@ -278,7 +278,7 @@ const AdminInterviewList = () => {
         }
     };
 
-    const handleGetScoreCards = useCallback(
+    const handleGetScoreCard = useCallback(
         async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
             e.preventDefault();
             setScoreCard((prev) => (prev ? { ...prev, isGenerating: true } : prev));
@@ -287,12 +287,35 @@ const AdminInterviewList = () => {
                 scoreCard.interviewSession.jd_id,
                 scoreCard.interviewScoreCardTemplate,
                 scoreCard.interviewScoreCardTranscript,
-                scoreCard.interviewScoreCardGrade || null,
+                scoreCard.interviewScoreCardGrade,
             );
             setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response, isGenerating: false } : prev));
         },
         [scoreCard],
     );
+
+    const handleCopyScoreCard = useCallback(() => {
+        if (scoreCard?.interviewScoreCard) {
+            navigator.clipboard.writeText(scoreCard.interviewScoreCard).then(
+                () => toast.success('Copied scorecard to clipboard.', { position: 'top-center', hideProgressBar: true }),
+                () => toast.error('Failed to copy scorecard.', { position: 'top-center', hideProgressBar: true }),
+            );
+        }
+    }, [scoreCard]);
+
+    const handleDownloadScoreCard = useCallback(() => {
+        if (scoreCard?.interviewScoreCard) {
+            const blob = new Blob([scoreCard.interviewScoreCard], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scorecard_${scoreCard.interviewSession.candidate_name}_${scoreCard.interviewSession.position}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+    }, [scoreCard]);
 
     const deleteInterviewCard = async (interviewCard: Interview) => {
         if (window.confirm(`Are you sure to delete the interview session of ${interviewCard.candidate_name}?`)) {
@@ -305,29 +328,6 @@ const AdminInterviewList = () => {
             });
         }
     };
-
-    const copyScorecardText = useCallback(() => {
-        const text = (scoreCard?.interviewScoreCard as any)?.scorecard as string | undefined;
-        if (!text) return;
-        navigator.clipboard.writeText(text).then(
-            () => toast.success('Copied scorecard to clipboard.', { position: 'top-center', hideProgressBar: true }),
-            () => toast.error('Failed to copy scorecard.', { position: 'top-center', hideProgressBar: true }),
-        );
-    }, [scoreCard?.interviewScoreCard]);
-
-    const downloadScorecardText = useCallback(() => {
-        const text = (scoreCard?.interviewScoreCard as any)?.scorecard as string | undefined;
-        if (!text) return;
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `scorecard_${scoreCard?.interviewSession.candidate_name || 'candidate'}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    }, [scoreCard?.interviewScoreCard, scoreCard?.interviewSession]);
 
     return (
         <>
@@ -799,7 +799,7 @@ const AdminInterviewList = () => {
 
                         <div>
                             {!scoreCard.interviewScoreCard ? (
-                                <form onSubmit={handleGetScoreCards}>
+                                <form onSubmit={handleGetScoreCard}>
                                     <div className={cx('form__group')}>
                                         <label htmlFor="interview-score-card-template" className={cx('form__group-label')}>
                                             Score card template:
@@ -854,16 +854,21 @@ const AdminInterviewList = () => {
                                     </button>
                                 </form>
                             ) : (
-                                <div className={cx('text-view')}>
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                        <button className={cx('form__submit-btn')} type="button" onClick={copyScorecardText}>
-                                            Copy
-                                        </button>
-                                        <button className={cx('form__submit-btn')} type="button" onClick={downloadScorecardText}>
-                                            Download
-                                        </button>
+                                <div className={cx('score-card')}>
+                                    <div className={cx('score-card__header')}>
+                                        <h2 className={cx('score-card__header-title')}>Interview Score Card</h2>
+                                        <div className={cx('score-card__header-action')}>
+                                            <button type="button" onClick={handleCopyScoreCard}>
+                                                <FiCopy />
+                                            </button>
+                                            <button type="button" onClick={handleDownloadScoreCard}>
+                                                <FiDownload />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <ReactMarkdown>{scoreCard.interviewScoreCard}</ReactMarkdown>
+                                    <div className={cx('score-card__body')}>
+                                        <ReactMarkdown>{scoreCard.interviewScoreCard}</ReactMarkdown>
+                                    </div>
                                 </div>
                             )}
                         </div>
