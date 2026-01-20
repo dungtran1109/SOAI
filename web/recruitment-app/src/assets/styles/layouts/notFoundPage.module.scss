@@ -1,0 +1,23 @@
+@use '../variables' as *;
+
+.not-found-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    min-height: 100vh;
+}
+
+.not-found-wrapper__block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.not-found-wrapper__block-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: $font-large-size;
+}

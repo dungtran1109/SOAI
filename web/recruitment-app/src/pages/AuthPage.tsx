@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiMail, FiUser } from 'react-icons/fi';
 import { signin, signup } from '../services/api/authApi';
 import { COOKIE_TOKEN_NAME } from '../shared/constants/browserStorages';
-import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../shared/constants/routes';
+import { PRIVATE_ADMIN_ROUTE, PRIVATE_USER_ROUTE, PUBLIC_ROUTE } from '../shared/constants/routes';
 import { authFormReducer, initAuthFormValue } from '../services/reducer/formReducer/authForm';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserLogin } from '../services/redux/authSlices/authSlice';
@@ -28,7 +28,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
 
     useEffect(() => {
         if (userAuthen.isAuthen) {
-            navigate(userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
+            navigate(userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PRIVATE_USER_ROUTE.openJob, { replace: true });
         }
         setLoading(false);
     }, [navigate, userAuthen.isAuthen, userAuthen.role]);
@@ -64,7 +64,7 @@ const AuthPage = ({ isSignin = false }: AuthProps) => {
                     });
 
                     dispatch(setUserLogin({ isAuthen: isAuthenticated(), role: getUserRole() }));
-                    navigate(userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PUBLIC_ROUTE.openJob, { replace: true });
+                    navigate(userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PRIVATE_USER_ROUTE.openJob, { replace: true });
                 } else {
                     await signup(signUpPayload);
                     dispatchFormValue({ type: 'RESET' });

@@ -1,8 +1,8 @@
+import { useSelector } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { adminRoute, userRoute } from './routes/protectedRoutes';
-import { authRoutes } from './routes/publicRoutes';
-import { useSelector } from 'react-redux';
+import { authRoutes, publicRoutes } from './routes/publicRoutes';
 import { PUBLIC_ROUTE } from './shared/constants/routes';
 import type { RootState } from './services/redux/store';
 import UserLayout from './components/users/UserLayout';
@@ -46,9 +46,11 @@ const App = () => {
                         )
                     }
                 />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<Navigate to={PUBLIC_ROUTE.signin} replace />} />
+
+                {publicRoutes.map((route) => {
+                    const Component = route.component;
+                    return <Route key={route.id} path={route.path} element={<Component />} />;
+                })}
             </Routes>
 
             <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover theme="colored" />
