@@ -10,7 +10,7 @@ export const PRIVATE_ADMIN_ROUTE = {
 export const PRIVATE_USER_ROUTE = {
     openJob: '/open-job',
     profile: '/user-profile',
-};
+} as const;
 
 export const PUBLIC_ROUTE = {
     notFound: '*',

@@ -3,7 +3,7 @@ import { ToastContainer } from 'react-toastify';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { adminRoute, userRoute } from './routes/protectedRoutes';
 import { authRoutes, publicRoutes } from './routes/publicRoutes';
-import { PUBLIC_ROUTE } from './shared/constants/routes';
+import { PRIVATE_ADMIN_ROUTE, PRIVATE_USER_ROUTE, PUBLIC_ROUTE } from './shared/constants/routes';
 import type { RootState } from './services/redux/store';
 import UserLayout from './components/users/UserLayout';
 import AdminLayout from './components/admins/AdminLayout';
@@ -40,7 +40,7 @@ const App = () => {
                     path="/"
                     element={
                         userAuthen.isAuthen ? (
-                            <Navigate to={userAuthen.role === 'ADMIN' ? adminRoute.routes[0].path : userRoute.routes[0].path} replace />
+                            <Navigate to={userAuthen.role === 'ADMIN' ? PRIVATE_ADMIN_ROUTE.dashboard : PRIVATE_USER_ROUTE.openJob} replace />
                         ) : (
                             <Navigate to={PUBLIC_ROUTE.signin} replace />
                         )
