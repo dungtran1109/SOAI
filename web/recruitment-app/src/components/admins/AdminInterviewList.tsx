@@ -16,6 +16,7 @@ import {
     generateScoreCards,
 } from '../../services/api/interviewApi';
 import { Button, ReviewModal, Spinner, Row, Col } from '../layouts';
+import ReactMarkdown from 'react-markdown';
 import { STATUS } from '../../shared/types/adminTypes';
 import { initInterviewFilterValue, interviewFilterReducer } from '../../services/reducer/filterReducer/interviewFilter';
 import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status, InterviewScoreCard } from '../../shared/types/adminTypes';
@@ -305,6 +306,29 @@ const AdminInterviewList = () => {
             });
         }
     };
+
+    const copyScorecardText = useCallback(() => {
+        const text = (scoreCard?.interviewScoreCard as any)?.scorecard as string | undefined;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(
+            () => toast.success('Copied scorecard to clipboard.', { position: 'top-center', hideProgressBar: true }),
+            () => toast.error('Failed to copy scorecard.', { position: 'top-center', hideProgressBar: true }),
+        );
+    }, [scoreCard?.interviewScoreCard]);
+
+    const downloadScorecardText = useCallback(() => {
+        const text = (scoreCard?.interviewScoreCard as any)?.scorecard as string | undefined;
+        if (!text) return;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `scorecard_${scoreCard?.interviewSession.candidate_name || 'candidate'}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }, [scoreCard?.interviewScoreCard, scoreCard?.interviewSession]);
 
     return (
         <>
@@ -835,7 +859,15 @@ const AdminInterviewList = () => {
                             ) : (
                                 scoreCard.interviewScoreCard && (scoreCard.interviewScoreCard as any).scorecard ? (
                                     <div className={cx('text-view')}>
-                                        <pre style={{ whiteSpace: 'pre-wrap' }}>{(scoreCard.interviewScoreCard as any).scorecard}</pre>
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                            <button className={cx('form__submit-btn')} type="button" onClick={copyScorecardText}>
+                                                Copy
+                                            </button>
+                                            <button className={cx('form__submit-btn')} type="button" onClick={downloadScorecardText}>
+                                                Download
+                                            </button>
+                                        </div>
+                                        <ReactMarkdown>{(scoreCard.interviewScoreCard as any).scorecard}</ReactMarkdown>
                                     </div>
                                 ) : (
                                     <table className={cx('admin-table')}>
