@@ -562,67 +562,130 @@ async def auto_fill_scorecard(
         jd_text = "\n".join([p for p in parts if p is not None])
     tpl_text = await _parse_file(templateFile)
     tr_text = await _parse_file(transcriptFile)
-
-    # Build a minimal schema from template lines
-    fields = [
-        {"label": line[:64], "type": "string"}
-        for line in tpl_text.splitlines()
-        if line.strip()
-    ]
-    schema = {"sections": [{"name": templateFile.filename, "fields": fields}]}
-
-    # Optional grade payload
-    grade = {}
-    if gradeFile is not None:
-        try:
-            content = await gradeFile.read()
-            decoded = content.decode("utf-8", errors="ignore")
-            grade = json.loads(decoded)
-        except Exception:
-            grade = {}
+    grade_text = await _parse_file(gradeFile) if gradeFile is not None else ""
 
     # GenAI path
     if (mode or "genai") == "genai":
         try:
-            system_prompt = (
-                "You are an extractor. Output strict JSON with keys: grades (object), confidence (object of floats 0..1), notes (string). "
-                "Use the provided schema to map fields."
-            )
-            user_payload = json.dumps(
-                {
-                    "schema": schema,
-                    "job_description": jd_text,
-                    "interview_transcript": tr_text,
-                    "provided_grades": grade,
-                }
-            )
-            ga = GenAI(model=model or None)
-            resp = ga.invoke(message=f"{system_prompt}\n{user_payload}")
-            content = resp.json().get("message") if hasattr(resp, "json") else resp.text
-            cleaned = clean_json_from_text(ensure_text(content))
-            obj = json.loads(cleaned)
-            proposed = obj.get("grades") or {}
-            confidence = obj.get("confidence") or {}
-            notes = obj.get("notes") or ""
+            system_prompt = f"""
+You are an AI interview evaluation assistant.
+
+Your task is to generate a structured interview summary and fill a scorecard template
+STRICTLY based on the provided inputs:
+- Job Description
+- Interview Transcript
+- Grade (optional)
+- Scorecard Template
+
+════════════════════
+GENERAL RULES
+════════════════════
+1. Read the FULL Job Description and Interview Transcript before generating any output.
+2. Use ONLY information explicitly stated in the Job Description or Interview Transcript.
+3. Do NOT infer, assume, guess, rephrase, or add new information.
+4. Do NOT include opinions, explanations, or ratings unless explicitly requested.
+5. Follow the output format EXACTLY as specified.
+
+════════════════════
+MISSING INFORMATION RULE
+════════════════════
+If any category or field is NOT explicitly mentioned or cannot be clearly derived from
+the Job Description or Interview Transcript, output EXACTLY:
+
+N/A (not mentioned in Interview Transcript or Job Description)
+
+If a grade is NOT provided via {grade_text}, use the same N/A text for that grade.
+
+════════════════════
+OUTPUT STRUCTURE (STRICT)
+════════════════════
+
+Start with the following header on the FIRST LINE ONLY:
+
+** AI-Generated Summary: Interview **
+
+Then output ONE blank line.
+
+After that:
+- Output ONLY the Category and Content pairs defined in the Scorecard Template.
+- Each category must contain exactly two lines:
+  1. Category name
+  2. Filled content
+- REMOVE all ratings, explanations, or extra text.
+- Preserve the original order and wording of the template.
+- Do NOT add or remove categories.
+
+════════════════════
+SCORECARD TEMPLATE TO FILL
+════════════════════
+
+{tpl_text}
+
+════════════════════
+EVALUATION & GRADE SECTION
+════════════════════
+
+**Candidate Evaluation & Grade**
+
+For each section below:
+- Use the provided grade if available.
+- If not available, use the exact N/A rule.
+- Explanation must be based ONLY on explicit evidence.
+
+Client & Commercial (C&C)
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+Leadership of self and others
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+Soft Skills
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+TEAM
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+Technical Knowledge
+Grade: <JT | TL | ST | EN | SE | CL | SC | N/A>
+Explanation: <OUTPUT>
+
+════════════════════
+FINAL GRADE
+════════════════════
+
+**Final Grade**
+**<ONE overall grade or N/A>**
+<OUTPUT>
+"""
+
+            user_payload = f"""
+Job Description:
+{jd_text}
+
+Interview Transcript:
+{tr_text}
+
+Grade (if provided):
+{grade_text}
+"""
+
+            ga = GenAI()
+            logger.debug("Invoking GenAI for scorecard auto-fill...")
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_payload},
+            ]
+            # Invoke GenAI with validated messages
+            resp = ga.invoke(messages=messages)
+            content = ensure_text(resp)
+
+            # Return the full formatted response
             return {
-                "proposed_grades": proposed,
-                "confidence": confidence,
-                "notes": notes,
+                "scorecard": content,
             }
         except Exception as e:
             logger.error(f"GenAI auto-fill failed, falling back: {e}")
-
-    # Deterministic fallback: naive keyword frequency mapping
-    base_text = f"{jd_text}\n{tr_text}".lower()
-    proposed = {}
-    for f in fields:
-        key = ensure_text(f.get("label", "")).lower()
-        if not key:
-            continue
-        score = float(base_text.count(key))
-        proposed[key] = min(1.0, score / 5.0)
-    return {
-        "proposed_grades": proposed,
-        "confidence": {k: 0.5 for k in proposed.keys()},
-        "notes": "Deterministic fallback applied",
-    }
+            return {"error": f"GenAI auto-fill failed: {str(e)}"}
