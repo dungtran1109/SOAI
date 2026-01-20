@@ -29,7 +29,7 @@ export const adminRoute: ProtectedRoute = {
         { id: 2, path: PRIVATE_ADMIN_ROUTE.cv, component: AdminCVPage },
         { id: 3, path: PRIVATE_ADMIN_ROUTE.job, component: AdminJDPage },
         { id: 4, path: PRIVATE_ADMIN_ROUTE.account, component: AdminAccountPage },
-        { id: 5, path: PRIVATE_ADMIN_ROUTE.aiAssistant, component: ChatPage },
+        { id: 5, path: PRIVATE_ADMIN_ROUTE.soaiAssistant, component: ChatPage },
     ],
 };
 

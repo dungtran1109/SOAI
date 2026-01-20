@@ -4,7 +4,7 @@ export const PRIVATE_ADMIN_ROUTE = {
     interview: '/admin/candidate/interviews',
     cv: '/admin/candidate/cvs',
     account: '/admin/accounts',
-    aiAssistant: '/soai-support',
+    soaiAssistant: '/soai-assistant',
 } as const;
 
 export const PRIVATE_USER_ROUTE = {

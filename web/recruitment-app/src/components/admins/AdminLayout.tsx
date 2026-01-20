@@ -17,7 +17,7 @@ const navMenu = [
     { label: 'Interviews', path: PRIVATE_ADMIN_ROUTE.interview, icon: <FiCalendar size={16} /> },
     { label: 'Candidate CVs', path: PRIVATE_ADMIN_ROUTE.cv, icon: <FiFileText size={16} /> },
     { label: 'Account Management', path: PRIVATE_ADMIN_ROUTE.account, icon: <FiUsers size={16} /> },
-    { label: `SOAI Assistant`, path: PRIVATE_ADMIN_ROUTE.aiAssistant, icon: <FiMessageCircle size={16} /> },
+    { label: `SOAI Assistant`, path: PRIVATE_ADMIN_ROUTE.soaiAssistant, icon: <FiMessageCircle size={16} /> },
 ];
 
 const AdminLayout = () => {
@@ -27,7 +27,7 @@ const AdminLayout = () => {
     const [disableAIChat, setDisableAIChat] = useState<boolean>(false);
 
     useEffect(() => {
-        setDisableAIChat(location.pathname === PRIVATE_ADMIN_ROUTE.aiAssistant);
+        setDisableAIChat(location.pathname === PRIVATE_ADMIN_ROUTE.soaiAssistant);
     }, [location.pathname]);
 
     const handleUserLogout = (): void => {

@@ -49,7 +49,7 @@ const ChatPopup = () => {
     return openChat ? (
         <div ref={chatRef} className={cx('chat-frame')}>
             <div className={cx('chat-header')}>
-                <Link to={PRIVATE_ADMIN_ROUTE.aiAssistant} className={cx('chat-header__name')}>
+                <Link to={PRIVATE_ADMIN_ROUTE.soaiAssistant} className={cx('chat-header__name')}>
                     SOAI Assistant
                 </Link>
                 <button className={cx('chat-header__close-btn')} onClick={() => setOpenChat(false)}>

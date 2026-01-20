@@ -8,6 +8,7 @@ interface Route {
     path: string;
     component: React.FC;
 }
+
 interface AuthRoute extends Omit<Route, 'component'> {
     component: React.ComponentType<{ isSignin: boolean }>;
     isSignin: boolean;
