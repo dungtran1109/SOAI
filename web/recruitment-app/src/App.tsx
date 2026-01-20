@@ -12,7 +12,7 @@ const App = () => {
     const userAuthen = useSelector((state: RootState) => state.authenSession);
 
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/recruitment">
             <Routes>
                 <Route>
                     {authRoutes.map((route) => {
@@ -34,6 +34,21 @@ const App = () => {
                         return <Route key={route.id} path={route.path} element={<Component />} />;
                     })}
                 </Route>
+
+                {/* Default route: redirect to signin if not authenticated, or to appropriate dashboard */}
+                <Route
+                    path="/"
+                    element={
+                        userAuthen.isAuthen ? (
+                            <Navigate to={userAuthen.role === 'ADMIN' ? adminRoute.routes[0].path : userRoute.routes[0].path} replace />
+                        ) : (
+                            <Navigate to={PUBLIC_ROUTE.signin} replace />
+                        )
+                    }
+                />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<Navigate to={PUBLIC_ROUTE.signin} replace />} />
             </Routes>
 
             <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={false} closeOnClick pauseOnHover theme="colored" />
