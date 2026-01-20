@@ -1,4 +1,4 @@
-import type { Interview, InterviewSchedule, InterviewSession, InterviewQuestion, InterviewScoreCard } from '../../shared/types/adminTypes';
+import type { Interview, InterviewSchedule, InterviewSession, InterviewQuestion } from '../../shared/types/adminTypes';
 import axiosClient from '../axios/axiosClient';
 
 /**
@@ -118,14 +118,10 @@ export const getAvailableInterviewQuestions = async (cvId: number): Promise<Inte
  * @param jdId - ID of job description which candidate already applied.
  * @param templateFile - The score card template.
  * @param transcriptFile - The interview session record.
- * @returns List of score cards.
+ * @param gradeFile - The template of grade (optional).
+ * @returns Score card assessment as a string.
  */
-export const generateScoreCards = async (
-    jdId: number,
-    templateFile: File,
-    transcriptFile: File,
-    gradeFile?: File | null,
-): Promise<InterviewScoreCard | null> => {
+export const generateScoreCards = async (jdId: number, templateFile: File, transcriptFile: File, gradeFile: File | null): Promise<string> => {
     try {
         const formData = new FormData();
         formData.append('jdId', String(jdId));
@@ -134,13 +130,19 @@ export const generateScoreCards = async (
         if (gradeFile) {
             formData.append('gradeFile', gradeFile);
         }
-        return axiosClient.post('/scorecards/auto-fill', formData, {
+
+        interface ScoreCardResponse {
+            scorecard: string;
+        }
+
+        const response: ScoreCardResponse = await axiosClient.post('/scorecards/auto-fill', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
         });
+        return response.scorecard;
     } catch (error) {
         console.error('[DEBUG generateScoreCards]', error);
-        return null;
+        return 'We are unable to generate the scorecard at the moment. Please try again later.';
     }
 };

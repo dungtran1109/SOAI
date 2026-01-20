@@ -602,7 +602,7 @@ OUTPUT STRUCTURE (STRICT)
 
 Start with the following header on the FIRST LINE ONLY:
 
-** AI-Generated Summary: Interview **
+**AI-Generated Summary: Interview**
 
 Then output ONE blank line.
 

@@ -16,10 +16,10 @@ import {
     generateScoreCards,
 } from '../../services/api/interviewApi';
 import { Button, ReviewModal, Spinner, Row, Col } from '../layouts';
-import ReactMarkdown from 'react-markdown';
 import { STATUS } from '../../shared/types/adminTypes';
 import { initInterviewFilterValue, interviewFilterReducer } from '../../services/reducer/filterReducer/interviewFilter';
-import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status, InterviewScoreCard } from '../../shared/types/adminTypes';
+import type { CV, Interview, InterviewQuestion, InterviewSession, InterviewSchedule, Status } from '../../shared/types/adminTypes';
+import ReactMarkdown from 'react-markdown';
 import classNames from 'classnames/bind';
 import frameStyles from '../../assets/styles/admins/adminFrame.module.scss';
 import styles from '../../assets/styles/admins/adminInterviewList.module.scss';
@@ -48,7 +48,7 @@ interface InterviewScoreCardModal {
     interviewScoreCardTemplate: File | null;
     interviewScoreCardTranscript: File | null;
     interviewScoreCardGrade: File | null;
-    interviewScoreCard: InterviewScoreCard | null;
+    interviewScoreCard: string;
     isGenerating: boolean;
 }
 
@@ -221,7 +221,7 @@ const AdminInterviewList = () => {
             interviewScoreCardTranscript: null,
             interviewScoreCardTemplate: null,
             interviewScoreCardGrade: null,
-            interviewScoreCard: null,
+            interviewScoreCard: '',
             isGenerating: false,
         });
     };
@@ -264,8 +264,7 @@ const AdminInterviewList = () => {
                 setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTemplate: file } : prevState));
             } else if (type === 'SCORE_CARD_TRANSCRIPT') {
                 setScoreCard((prevState) => (prevState ? { ...prevState, interviewScoreCardTranscript: file } : prevState));
-            } else {
-                // Grade file: allow txt, pdf, doc, docx
+            } else if (type === 'SCORE_CARD_GRADE') {
                 if (['text/vtt'].includes(file.type)) {
                     throw new Error('Grade file does not support VTT files.');
                 }
@@ -288,7 +287,7 @@ const AdminInterviewList = () => {
                 scoreCard.interviewSession.jd_id,
                 scoreCard.interviewScoreCardTemplate,
                 scoreCard.interviewScoreCardTranscript,
-                scoreCard.interviewScoreCardGrade || undefined,
+                scoreCard.interviewScoreCardGrade || null,
             );
             setScoreCard((prev) => (prev ? { ...prev, interviewScoreCard: response, isGenerating: false } : prev));
         },
@@ -811,6 +810,7 @@ const AdminInterviewList = () => {
                                             id="interview-score-card-template"
                                             onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TEMPLATE')}
                                             className={cx('form__group-entry--file')}
+                                            required
                                         />
                                     </div>
                                     <div className={cx('form__group')}>
@@ -823,6 +823,7 @@ const AdminInterviewList = () => {
                                             id="interview-score-card-transcript"
                                             onChange={(e) => handleUploadInterviewScoreCard(e, 'SCORE_CARD_TRANSCRIPT')}
                                             className={cx('form__group-entry--file')}
+                                            required
                                         />
                                     </div>
                                     <div className={cx('form__group')}>
@@ -839,11 +840,7 @@ const AdminInterviewList = () => {
                                     </div>
 
                                     <button
-                                        disabled={!(
-                                            scoreCard.interviewScoreCardTemplate &&
-                                            scoreCard.interviewScoreCardTranscript &&
-                                            !scoreCard.isGenerating
-                                        )}
+                                        disabled={!(scoreCard.interviewScoreCardTemplate && scoreCard.interviewScoreCardTranscript && !scoreCard.isGenerating)}
                                         className={cx('form__submit-btn', {
                                             'form__submit-btn--disable': !(
                                                 scoreCard.interviewScoreCardTemplate &&
@@ -857,42 +854,17 @@ const AdminInterviewList = () => {
                                     </button>
                                 </form>
                             ) : (
-                                scoreCard.interviewScoreCard && (scoreCard.interviewScoreCard as any).scorecard ? (
-                                    <div className={cx('text-view')}>
-                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                            <button className={cx('form__submit-btn')} type="button" onClick={copyScorecardText}>
-                                                Copy
-                                            </button>
-                                            <button className={cx('form__submit-btn')} type="button" onClick={downloadScorecardText}>
-                                                Download
-                                            </button>
-                                        </div>
-                                        <ReactMarkdown>{(scoreCard.interviewScoreCard as any).scorecard}</ReactMarkdown>
+                                <div className={cx('text-view')}>
+                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                        <button className={cx('form__submit-btn')} type="button" onClick={copyScorecardText}>
+                                            Copy
+                                        </button>
+                                        <button className={cx('form__submit-btn')} type="button" onClick={downloadScorecardText}>
+                                            Download
+                                        </button>
                                     </div>
-                                ) : (
-                                    <table className={cx('admin-table')}>
-                                        <thead>
-                                            <tr>
-                                                <th className={cx('admin-table__column-title')}>Description</th>
-                                                <th className={cx('admin-table__column-title')}>Confidence</th>
-                                                <th className={cx('admin-table__column-title')}>Proposal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {Object.keys(scoreCard.interviewScoreCard.proposed_grades).map((cardItem) => {
-                                                return (
-                                                    <tr key={cardItem}>
-                                                        <td className={cx('admin-table__column-value')}>{cardItem}</td>
-                                                        <td className={cx('admin-table__column-value')}>{scoreCard.interviewScoreCard?.confidence[cardItem]}</td>
-                                                        <td className={cx('admin-table__column-value')}>
-                                                            {scoreCard.interviewScoreCard?.proposed_grades[cardItem]}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                )
+                                    <ReactMarkdown>{scoreCard.interviewScoreCard}</ReactMarkdown>
+                                </div>
                             )}
                         </div>
                     </>
