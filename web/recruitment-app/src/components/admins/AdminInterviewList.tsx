@@ -309,7 +309,7 @@ const AdminInterviewList = () => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `scorecard_${scoreCard.interviewSession.candidate_name}_${scoreCard.interviewSession.position}.txt`;
+            a.download = `scorecard_${scoreCard.interviewSession.candidate_name}_${scoreCard.interviewSession.position}.md`;
             document.body.appendChild(a);
             a.click();
             a.remove();

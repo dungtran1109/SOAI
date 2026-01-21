@@ -1,4 +1,4 @@
-import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../shared/constants/routes';
+import { PRIVATE_ADMIN_ROUTE, PRIVATE_USER_ROUTE } from '../shared/constants/routes';
 import type { Role } from '../shared/types/authTypes';
 import React from 'react';
 import AdminDashBoardPage from '../pages/AdminDashBoardPage';
@@ -29,14 +29,14 @@ export const adminRoute: ProtectedRoute = {
         { id: 2, path: PRIVATE_ADMIN_ROUTE.cv, component: AdminCVPage },
         { id: 3, path: PRIVATE_ADMIN_ROUTE.job, component: AdminJDPage },
         { id: 4, path: PRIVATE_ADMIN_ROUTE.account, component: AdminAccountPage },
-        { id: 5, path: PRIVATE_ADMIN_ROUTE.aiAssistant, component: ChatPage },
+        { id: 5, path: PRIVATE_ADMIN_ROUTE.soaiAssistant, component: ChatPage },
     ],
 };
 
 export const userRoute: ProtectedRoute = {
     role: 'USER',
     routes: [
-        { id: 0, path: PUBLIC_ROUTE.profile, component: UserProfile },
-        { id: 1, path: PUBLIC_ROUTE.openJob, component: UserJobPage },
+        { id: 0, path: PRIVATE_USER_ROUTE.profile, component: UserProfile },
+        { id: 1, path: PRIVATE_USER_ROUTE.openJob, component: UserJobPage },
     ],
 };

@@ -1,12 +1,14 @@
 # Ignore dependencies and build artifacts
-main-app/node_modules
-main-app/build
-main-app/*.log
+recruitment-app/.vscode
+recruitment-app/node_modules
+recruitment-app/build
+recruitment-app/*.log
 
 # Ignore version control and environment config
-main-app/.git
-main-app/.env
-main-app/.env.*         # if using dotenv variants
+recruitment-app/.git
+recruitment-app/.gitignore
+recruitment-app/.env
+recruitment-app/.env.*         # if using dotenv variants
 
 # Ignore Docker context noise
 *.log

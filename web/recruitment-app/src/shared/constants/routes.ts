@@ -1,15 +1,19 @@
 export const PRIVATE_ADMIN_ROUTE = {
     dashboard: '/admin/dashboard',
-    account: '/admin/accounts',
-    cv: '/admin/candidate/cvs',
-    job: '/admin/dashboard/job/descriptions',
+    job: '/admin/job/descriptions',
     interview: '/admin/candidate/interviews',
-    aiAssistant: '/ai-support',
+    cv: '/admin/candidate/cvs',
+    account: '/admin/accounts',
+    soaiAssistant: '/soai-assistant',
+} as const;
+
+export const PRIVATE_USER_ROUTE = {
+    openJob: '/open-job',
+    profile: '/user-profile',
 } as const;
 
 export const PUBLIC_ROUTE = {
+    notFound: '*',
     signin: '/signin',
     signup: '/signup',
-    openJob: '/open-job',
-    profile: 'user-profile',
 } as const;
