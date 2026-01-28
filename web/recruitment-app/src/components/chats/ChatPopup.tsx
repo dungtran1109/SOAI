@@ -61,7 +61,7 @@ const ChatPopup = () => {
             </div>
         </div>
     ) : (
-        <button className={cx('chat-popup-btn')} onClick={handleOpenChat}>
+        <button className={cx('chat-popup-btn')} onClick={handleOpenChat} aria-pressed={isActive} aria-label="Open chat">
             <img src={BotAI} alt={CHAT_ROLE.AI} className={cx('chat-popup-btn__img')} />
         </button>
     );
