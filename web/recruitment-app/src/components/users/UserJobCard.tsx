@@ -16,14 +16,14 @@ const calculateDays = (date: string): number => {
     const startDate = new Date(date);
     const today = new Date();
 
-    const diffTime = today.getTime() - startDate.getTime();
+    const diffTime = startDate.getTime() - today.getTime();
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 };
 
 const UserJobCard = React.memo(({ job, onClick, highlight = false }: UserJobCardProps) => {
-    return (
+    return calculateDays(job.datetime) > 0 ? (
         <div className={cx('job', { 'job-highlight': highlight })} onClick={() => onClick(job)}>
-            <p className={cx('job__datetime')}>Posted {calculateDays(job.datetime)} days ago</p>
+            <p className={cx('job__datetime')}>Only {calculateDays(job.datetime)} days left.</p>
             <h3 className={cx('job__title')}>
                 [{job.level}] {job.position}
             </h3>
@@ -36,7 +36,7 @@ const UserJobCard = React.memo(({ job, onClick, highlight = false }: UserJobCard
                 <span>{job.location}</span>
             </address>
         </div>
-    );
+    ) : null;
 });
 
 export default UserJobCard;

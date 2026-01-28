@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Col, Row, StatsCard } from '../components/layouts';
+import { getUserName } from '../shared/helpers/authUtils';
 import type { RootState } from '../services/redux/store';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/admins/adminDashBoardPage.module.scss';
@@ -19,7 +20,7 @@ const AdminDashBoardPage = () => {
 
     return (
         <div className={cx('admin-dashboard')}>
-            <h1 className={cx('admin-dashboard__item', 'admin-dashboard__item--title')}>Welcome Admin</h1>
+            <h1 className={cx('admin-dashboard__item', 'admin-dashboard__item--title')}>Welcome {getUserName()}</h1>
             <p className={cx('admin-dashboard__item', 'admin-dashboard__item--subtitle')}>Monitor all candidate applications and interview tasks here.</p>
 
             <Row space={10} className={cx('admin-dashboard__item')}>

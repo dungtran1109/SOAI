@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setUserLogout } from '../../services/redux/authSlices/authSlice';
 import { PRIVATE_ADMIN_ROUTE, PUBLIC_ROUTE } from '../../shared/constants/routes';
 import { FiBriefcase, FiCalendar, FiFileText, FiGrid, FiLogOut, FiMessageCircle, FiUsers } from 'react-icons/fi';
+import { getUserName } from '../../shared/helpers/authUtils';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/admins/adminLayout.module.scss';
 import SmartRecruitmentLogo from '../../assets/images/smart-recruitment-admin-logo.png';
@@ -60,7 +61,7 @@ const AdminLayout = () => {
                     <div className={cx('sidebar__footer')}>
                         <img src={SmartRecruitmentLogo} alt="Admin Avatar" className={cx('sidebar__footer-avatar')} />
                         <div className={cx('sidebar__footer-account')}>
-                            <p className={cx('sidebar__footer-account-name')}>Admin</p>
+                            <p className={cx('sidebar__footer-account-name')}>{getUserName()}</p>
                             <p className={cx('sidebar__footer-account-email')}>smart.recruit.ai@gmail.com</p>
                         </div>
                         <button className={cx('sidebar__logout-btn')} onClick={handleUserLogout} title="Logout">
