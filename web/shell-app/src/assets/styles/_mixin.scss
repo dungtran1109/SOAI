@@ -1,0 +1,34 @@
+@use './variables' as *;
+
+@mixin scale-font($sm-size, $md-size, $lg-size, $xl-size) {
+    font-size: $xl-size;
+    line-height: calc($xl-size + 0.4rem);
+
+    @media screen and (max-width: $lg) {
+        font-size: $lg-size;
+        line-height: calc($lg-size + 0.4rem);
+    }
+
+    @media screen and (max-width: $md) {
+        font-size: $md-size;
+        line-height: calc($md-size + 0.4rem);
+    }
+
+    @media screen and (max-width: $sm) {
+        font-size: $sm-size;
+        line-height: calc($sm-size + 0.4rem);
+    }
+}
+
+@mixin dropdown-animation($translateY, $duration, $delay) {
+    @keyframes dropdown {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    opacity: 0;
+    transform: translateY($translateY);
+    animation: dropdown $duration ease-in-out $delay forwards;
+}

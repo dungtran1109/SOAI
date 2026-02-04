@@ -1,0 +1,104 @@
+@use '../variables' as *;
+@use '../mixin' as *;
+
+.home {
+    margin-bottom: 40px;
+}
+
+.home-introduce {
+    background-image: url('../../images/lines.png');
+    background-position: 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+    // background-size: 100% auto;
+}
+
+.welcome {
+    height: 100%;
+    text-align: center;
+    align-content: center;
+    padding: 10px;
+}
+
+.welcome-textbox {
+    display: inline-block;
+    text-align: center;
+    max-width: 500px;
+    margin: 50px 0;
+    transform: translateY(-50px);
+}
+
+.welcome-textbox__title {
+    font-size: 3rem;
+    line-height: 3.4rem;
+    font-weight: bold;
+    margin: 20px 0;
+    color: $primary-color;
+    opacity: 0;
+
+    @include scale-font(2.4rem, 2.6rem, 3rem, 4rem);
+    @include dropdown-animation(30px, 1.6s, 0.4s);
+}
+
+.welcome-textbox__subtitle {
+    font-size: $font-large-size;
+    line-height: 2.4rem;
+    opacity: 0;
+
+    @include scale-font(1.3rem, 1.5rem, 1.6rem, 2rem);
+    @include dropdown-animation(-30px, 1.6s, 0.4s);
+}
+
+.welcome-textbox__subtitle.welcome-textbox__subtitle--description {
+    font-style: italic;
+}
+
+.welcome-control {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    transform: translateY(-60px);
+}
+
+.welcome-control__btn {
+    padding: 8px 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    background: none;
+    transition: all 0.2s ease-in;
+}
+
+.welcome-control__btn--explore {
+    border: 1px solid $primary-color;
+    color: $primary-color;
+    @include dropdown-animation(40px, 1.6s, 0.8s);
+
+    &:hover {
+        background-color: $primary-color;
+        color: $text-white-color;
+    }
+}
+
+.welcome-control__btn--contact {
+    background-color: $success-color;
+    color: $text-white-color;
+    @include dropdown-animation(40px, 1.8s, 1s);
+
+    &:hover {
+        background-color: #35a781;
+        color: $text-white-color;
+    }
+}
+
+.home__app {
+    margin-top: 30px;
+}
+
+@media screen and (max-width: $md) {
+    .home__app {
+        margin: 30px 8px;
+    }
+}

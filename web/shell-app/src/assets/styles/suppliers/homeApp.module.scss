@@ -1,0 +1,156 @@
+@use '../variables' as *;
+
+$__border-radius: 8px;
+
+.app-header__subtitle {
+    font-style: italic;
+    margin-top: 16px;
+    color: #868686;
+}
+
+.app-control {
+    margin: 20px 0;
+}
+
+.search {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: $__border-radius;
+    border: 1px solid #e5e7eb;
+    outline: none;
+
+    &:focus {
+        border-color: #c7d2fe;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    }
+}
+
+.filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.filter__type {
+    padding: 8px 10px;
+    min-width: 50px;
+    font-size: $font-small-size;
+    color: #374151;
+    cursor: pointer;
+    border-radius: 999px;
+    text-transform: capitalize;
+    border: 1px solid #e5e7eb;
+    background-color: #fff;
+
+    &:hover {
+        background-color: #f9fafb;
+    }
+}
+
+.filter__type.filter__type--active {
+    color: #111827;
+    border-color: #c7d2fe;
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.app-wrapper {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+
+    @media (min-width: $sm) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: $md) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@keyframes dropIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.app-wrapper__card {
+    padding: 14px;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid $success-color;
+    border-radius: $__border-radius;
+    background-color: #fff;
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+    transform: translateY(-24px);
+    animation: dropIn 1.2s ease forwards;
+    opacity: 0;
+
+    &:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+    }
+}
+
+.app-wrapper__card.app-wrapper__card--recruitment {
+    border-left: 4px solid $primary-color;
+}
+
+.app-wrapper__card.app-wrapper__card--communication {
+    border-left: 4px solid $success-color;
+}
+
+.app-wrapper__card.app-wrapper__card--storage {
+    border-left: 4px solid $warning-color;
+}
+
+.app-wrapper__card.app-wrapper__card--design {
+    border-left: 4px solid $error-color;
+}
+
+.app-wrapper__card-title {
+    font-size: 1.8rem;
+}
+
+.app-wrapper__card-description {
+    font-size: $font-small-size;
+    margin: 8px 0 0;
+    min-height: 34px;
+    color: #6b7280;
+}
+
+.app-wrapper__card-action {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.app-wrapper__card-action-btn {
+    padding: 7px 12px;
+    font-weight: 600;
+    border-radius: $__border-radius;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.app-wrapper__card-action-btn.app-wrapper__card-action-btn--primary {
+    color: #fff;
+    background-color: #4cb873;
+
+    &:hover {
+        opacity: 0.92;
+    }
+}
+
+.app-wrapper__card-action-btn.app-wrapper__card-action-btn--ghost {
+    color: #111827;
+    border-color: #e5e7eb;
+    background-color: #fff;
+
+    &:hover {
+        background-color: #f9fafb;
+    }
+}
