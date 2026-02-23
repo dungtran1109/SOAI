@@ -2,8 +2,9 @@
 
 .header {
     display: flex;
-    justify-content: space-between;
+    justify-content: left;
     align-items: center;
+    gap: 100px;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -30,8 +31,9 @@
 
 .header__nav-item {
     height: 100%;
+    font-weight: 600;
     align-content: center;
-    color: $text-black-color;
+    color: #868686;
     user-select: none;
     cursor: pointer;
     transition: color 0.1s ease-out;

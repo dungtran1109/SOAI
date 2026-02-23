@@ -5,14 +5,6 @@
     margin-bottom: 40px;
 }
 
-.home-introduce {
-    background-image: url('../../images/lines.png');
-    background-position: 0;
-    background-size: cover;
-    background-repeat: no-repeat;
-    // background-size: 100% auto;
-}
-
 .welcome {
     height: 100%;
     text-align: center;
@@ -23,34 +15,37 @@
 .welcome-textbox {
     display: inline-block;
     text-align: center;
-    max-width: 500px;
+    // max-width: 500px;
     margin: 50px 0;
     transform: translateY(-50px);
 }
 
 .welcome-textbox__title {
     font-size: 3rem;
-    line-height: 3.4rem;
+    line-height: 4rem;
     font-weight: bold;
     margin: 20px 0;
-    color: $primary-color;
     opacity: 0;
+    color: transparent;
+    background-image: linear-gradient(to right, $primary-color, rgb(50, 204, 101));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 
-    @include scale-font(2.4rem, 2.6rem, 3rem, 4rem);
+    @include scale-font(2.4rem, 2.6rem, 3rem, 4.4rem);
     @include dropdown-animation(30px, 1.6s, 0.4s);
 }
 
 .welcome-textbox__subtitle {
+    font-style: italic;
     font-size: $font-large-size;
     line-height: 2.4rem;
+    color: #6b7280;
+
     opacity: 0;
 
     @include scale-font(1.3rem, 1.5rem, 1.6rem, 2rem);
     @include dropdown-animation(-30px, 1.6s, 0.4s);
-}
-
-.welcome-textbox__subtitle.welcome-textbox__subtitle--description {
-    font-style: italic;
 }
 
 .welcome-control {
@@ -61,7 +56,7 @@
 }
 
 .welcome-control__btn {
-    padding: 8px 14px;
+    padding: 12px 18px;
     font-weight: 500;
     border-radius: 6px;
     border: none;
@@ -72,13 +67,12 @@
 }
 
 .welcome-control__btn--explore {
-    border: 1px solid $primary-color;
-    color: $primary-color;
+    background-color: $primary-color;
+    color: $text-white-color;
     @include dropdown-animation(40px, 1.6s, 0.8s);
 
     &:hover {
-        background-color: $primary-color;
-        color: $text-white-color;
+        background-color: #3d78d8;
     }
 }
 
@@ -89,7 +83,6 @@
 
     &:hover {
         background-color: #35a781;
-        color: $text-white-color;
     }
 }
 

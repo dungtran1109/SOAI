@@ -2,21 +2,21 @@
 
 @mixin scale-font($sm-size, $md-size, $lg-size, $xl-size) {
     font-size: $xl-size;
-    line-height: calc($xl-size + 0.4rem);
+    line-height: calc($xl-size + 1.8rem);
 
     @media screen and (max-width: $lg) {
         font-size: $lg-size;
-        line-height: calc($lg-size + 0.4rem);
+        line-height: calc($lg-size + 1.8rem);
     }
 
     @media screen and (max-width: $md) {
         font-size: $md-size;
-        line-height: calc($md-size + 0.4rem);
+        line-height: calc($md-size + 1.8rem);
     }
 
     @media screen and (max-width: $sm) {
         font-size: $sm-size;
-        line-height: calc($sm-size + 0.4rem);
+        line-height: calc($sm-size + 1.8rem);
     }
 }
 

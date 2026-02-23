@@ -1,28 +1,33 @@
 import { Col, Container, Row } from '../components/responsives';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/suppliers/homePage.module.scss';
-import abc from '../assets/images/abc.png';
+import abc from '../assets/images/tower.png';
 import HomeApp from '../components/suppliers/HomeApp';
+import { FiArrowRight } from 'react-icons/fi';
+import { handleScrollIntoView } from '../shared/helpers/commonUtils';
 
 const cx = classNames.bind(styles);
 
 const HomePage = () => {
     return (
         <div id="home-welcome" className={cx('home')}>
-            <Row className={cx('home-introduce')}>
+            <Row>
                 <Col size={{ lg: 7, xl: 8 }}>
                     <div className={cx('welcome')}>
                         <div className={cx('welcome-textbox')}>
-                            <p className={cx('welcome-textbox__subtitle')}>Good day 👋 everyone.</p>
-                            <p className={cx('welcome-textbox__title')}>Welcome to SOAI system.</p>
-                            <p className={cx('welcome-textbox__subtitle', 'welcome-textbox__subtitle--description')}>
-                                The central place to access connected applications.
+                            <p className={cx('welcome-textbox__title')}>SOAI Integrations</p>
+                            <p className={cx('welcome-textbox__subtitle')}>
+                                Good day 👋 everyone. Welcome to the central place where accesses connected applications.
                             </p>
                         </div>
 
                         <section className={cx('welcome-control')}>
-                            <button className={cx('welcome-control__btn', 'welcome-control__btn--explore')}>Explore</button>
-                            <button className={cx('welcome-control__btn', 'welcome-control__btn--contact')}>Contact Us</button>
+                            <button className={cx('welcome-control__btn', 'welcome-control__btn--contact')} onClick={() => handleScrollIntoView('footer')}>
+                                Contact Us
+                            </button>
+                            <button className={cx('welcome-control__btn', 'welcome-control__btn--explore')} onClick={() => handleScrollIntoView('home-app')}>
+                                Explore <FiArrowRight />
+                            </button>
                         </section>
                     </div>
                 </Col>
