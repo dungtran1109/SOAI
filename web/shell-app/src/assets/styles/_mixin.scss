@@ -32,3 +32,16 @@
     transform: translateY($translateY);
     animation: dropdown $duration ease-in-out $delay forwards;
 }
+
+@mixin move-left-animation($translateX, $duration, $delay) {
+    @keyframes moveLeft {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    opacity: 0;
+    transform: translateX($translateX);
+    animation: moveLeft $duration ease-in-out $delay forwards;
+}

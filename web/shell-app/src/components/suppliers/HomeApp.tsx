@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useInView } from 'react-intersection-observer';
+import { toast } from 'react-toastify';
 import { APP_TYPES, APPS, type AppType } from '../../shared/contants/common';
 import classNames from 'classnames/bind';
 import styles from '../../assets/styles/suppliers/homeApp.module.scss';
-import { useInView } from 'react-intersection-observer';
 
 const cx = classNames.bind(styles);
 
@@ -13,9 +14,9 @@ export interface InView {
 }
 
 const HomeApp = () => {
+    const navigate = useNavigate();
     const [search, setSearch] = useState<string>('');
     const [filter, setFilter] = useState<AppType>('ALL');
-    const navigate = useNavigate();
     const { ref, inView }: InView = useInView({ threshold: 0.8, triggerOnce: true, initialInView: false });
 
     const filtered = useMemo(() => {
@@ -30,7 +31,6 @@ const HomeApp = () => {
     return (
         <section id="home-app">
             <div className={cx('app-header')}>
-                <h1 className={cx('app-header__title')}>Applications</h1>
                 <p className={cx('app-header__subtitle')}>Manage connections and quickly jump into our tools.</p>
             </div>
 
@@ -83,7 +83,7 @@ const HomeApp = () => {
                                     <button
                                         type="button"
                                         className={cx('app-wrapper__card-action-btn', 'app-wrapper__card-action-btn--ghost')}
-                                        onClick={() => alert(`Details: ${app.description}`)}
+                                        onClick={() => toast.info('This feature is currently under development.')}
                                     >
                                         Details
                                     </button>

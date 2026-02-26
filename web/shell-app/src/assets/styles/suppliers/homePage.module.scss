@@ -5,6 +5,13 @@
     margin-bottom: 40px;
 }
 
+.home__intro {
+    background-color: #d3e9e2;
+    background-image: url('../../images/technologybg.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
 .welcome {
     height: 100%;
     text-align: center;
@@ -67,8 +74,12 @@
 }
 
 .welcome-control__btn--explore {
-    background-color: $primary-color;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
     color: $text-white-color;
+    background-color: $primary-color;
     @include dropdown-animation(40px, 1.6s, 0.8s);
 
     &:hover {
@@ -77,13 +88,21 @@
 }
 
 .welcome-control__btn--contact {
-    background-color: $success-color;
     color: $text-white-color;
+    background-color: $success-color;
     @include dropdown-animation(40px, 1.8s, 1s);
 
     &:hover {
         background-color: #35a781;
     }
+}
+
+.ai-image {
+    z-index: 1;
+    height: auto;
+    user-select: none;
+    opacity: 0.6;
+    @include move-left-animation(0, 2.2s, 0s);
 }
 
 .home__app {

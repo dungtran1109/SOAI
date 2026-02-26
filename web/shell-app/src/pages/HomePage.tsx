@@ -1,7 +1,7 @@
 import { Col, Container, Row } from '../components/responsives';
 import classNames from 'classnames/bind';
 import styles from '../assets/styles/suppliers/homePage.module.scss';
-import abc from '../assets/images/tower.png';
+import tower from '../assets/images/tower.png';
 import HomeApp from '../components/suppliers/HomeApp';
 import { FiArrowRight } from 'react-icons/fi';
 import { handleScrollIntoView } from '../shared/helpers/commonUtils';
@@ -11,7 +11,7 @@ const cx = classNames.bind(styles);
 const HomePage = () => {
     return (
         <div id="home-welcome" className={cx('home')}>
-            <Row>
+            <Row className={cx('home__intro')}>
                 <Col size={{ lg: 7, xl: 8 }}>
                     <div className={cx('welcome')}>
                         <div className={cx('welcome-textbox')}>
@@ -23,7 +23,7 @@ const HomePage = () => {
 
                         <section className={cx('welcome-control')}>
                             <button className={cx('welcome-control__btn', 'welcome-control__btn--contact')} onClick={() => handleScrollIntoView('footer')}>
-                                Contact Us
+                                SOAI Assistant
                             </button>
                             <button className={cx('welcome-control__btn', 'welcome-control__btn--explore')} onClick={() => handleScrollIntoView('home-app')}>
                                 Explore <FiArrowRight />
@@ -32,9 +32,7 @@ const HomePage = () => {
                     </div>
                 </Col>
                 <Col size={{ xs: 0, sm: 0, md: 0, lg: 5, xl: 4 }}>
-                    <div>
-                        <img src={abc} alt="abc" width={360} />
-                    </div>
+                    <img src={tower} alt="tower" width={360} className={cx('ai-image')} />
                 </Col>
             </Row>
 
