@@ -1,6 +1,5 @@
 @use '../variables' as *;
 
-$background-linear-gradient: linear-gradient(269.85deg, #54151c 0%, #121212 54.89%);
 $text-custom-white-color: #a6a6a6;
 
 .footer-frame {
@@ -10,11 +9,11 @@ $text-custom-white-color: #a6a6a6;
 .footer {
     margin-top: 4px;
     min-height: 100px;
-    padding: 30px;
     text-align: center;
+    padding: 30px;
+    color: #e5e7eb;
+    background-color: #0b1c2d;
     box-shadow: 0 2px 8px rgba(172, 172, 172, 0.1);
-    background: $background-linear-gradient;
-    color: $text-custom-white-color;
 }
 
 @media screen and (max-width: calc($lg - 1px)) {
