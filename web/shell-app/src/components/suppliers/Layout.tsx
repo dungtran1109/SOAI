@@ -4,6 +4,7 @@ import classNames from 'classnames/bind';
 import styles from '../../assets/styles/suppliers/layout.module.scss';
 import logo from '../../assets/images/logo.png';
 import Footer from './Footer';
+import { toast } from 'react-toastify';
 
 const cx = classNames.bind(styles);
 
@@ -20,7 +21,7 @@ const Layout = () => {
                     <Link to="#" className={cx('header__nav-item')} onClick={() => handleScrollIntoView('home-app')}>
                         App
                     </Link>
-                    <Link to="#" className={cx('header__nav-item')} onClick={() => handleScrollIntoView('footer')}>
+                    <Link to="#" className={cx('header__nav-item')} onClick={() => toast.info('This feature is currently under development.')}>
                         SOAI
                     </Link>
                 </nav>

@@ -19,6 +19,11 @@ const HomeApp = () => {
     const [filter, setFilter] = useState<AppType>('ALL');
     const { ref, inView }: InView = useInView({ threshold: 0.8, triggerOnce: true, initialInView: false });
 
+    const handleNavigate = (path: string) => {
+        navigate(path);
+        window.location.reload();
+    };
+
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
         return APPS.filter((app) => {
@@ -75,7 +80,7 @@ const HomeApp = () => {
                                     <button
                                         type="button"
                                         className={cx('app-wrapper__card-action-btn', 'app-wrapper__card-action-btn--primary')}
-                                        onClick={() => navigate(app.path)}
+                                        onClick={() => handleNavigate(app.path)}
                                     >
                                         Open
                                     </button>

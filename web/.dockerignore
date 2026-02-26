@@ -3,12 +3,20 @@ recruitment-app/.vscode
 recruitment-app/node_modules
 recruitment-app/build
 recruitment-app/*.log
+shell-app/.vscode
+shell-app/node_modules
+shell-app/build
+shell-app/*.log
 
 # Ignore version control and environment config
 recruitment-app/.git
 recruitment-app/.gitignore
 recruitment-app/.env
 recruitment-app/.env.*         # if using dotenv variants
+shell-app/.git
+shell-app/.gitignore
+shell-app/.env
+shell-app/.env.*         # if using dotenv variants
 
 # Ignore Docker context noise
 *.log

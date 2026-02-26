@@ -5,6 +5,7 @@ import tower from '../assets/images/tower.png';
 import HomeApp from '../components/suppliers/HomeApp';
 import { FiArrowRight } from 'react-icons/fi';
 import { handleScrollIntoView } from '../shared/helpers/commonUtils';
+import { toast } from 'react-toastify';
 
 const cx = classNames.bind(styles);
 
@@ -22,7 +23,10 @@ const HomePage = () => {
                         </div>
 
                         <section className={cx('welcome-control')}>
-                            <button className={cx('welcome-control__btn', 'welcome-control__btn--contact')} onClick={() => handleScrollIntoView('footer')}>
+                            <button
+                                className={cx('welcome-control__btn', 'welcome-control__btn--contact')}
+                                onClick={() => toast.info('This feature is currently under development.')}
+                            >
                                 SOAI Assistant
                             </button>
                             <button className={cx('welcome-control__btn', 'welcome-control__btn--explore')} onClick={() => handleScrollIntoView('home-app')}>
